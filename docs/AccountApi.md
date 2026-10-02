@@ -25,7 +25,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**accountSshKeysUpdate**](#accountsshkeysupdate) | **PUT** /api/account/ssh-keys/{id}/ | |
 
 # **accountApiTokensCreate**
-> APITokenCreate accountApiTokensCreate(aPITokenCreate)
+> APITokenCreate accountApiTokensCreate(aPITokenCreateRequest)
 
 Manage your API tokens
 
@@ -35,16 +35,16 @@ Manage your API tokens
 import {
     AccountApi,
     Configuration,
-    APITokenCreate
+    APITokenCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new AccountApi(configuration);
 
-let aPITokenCreate: APITokenCreate; //
+let aPITokenCreateRequest: APITokenCreateRequest; //
 
 const { status, data } = await apiInstance.accountApiTokensCreate(
-    aPITokenCreate
+    aPITokenCreateRequest
 );
 ```
 
@@ -52,7 +52,7 @@ const { status, data } = await apiInstance.accountApiTokensCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **aPITokenCreate** | **APITokenCreate**|  | |
+| **aPITokenCreateRequest** | **APITokenCreateRequest**|  | |
 
 
 ### Return type
@@ -179,7 +179,7 @@ const { status, data } = await apiInstance.accountApiTokensList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **accountCompaniesCreate**
-> Company accountCompaniesCreate(company)
+> Company accountCompaniesCreate(companyRequest)
 
 Manage your companies
 
@@ -189,16 +189,16 @@ Manage your companies
 import {
     AccountApi,
     Configuration,
-    Company
+    CompanyRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new AccountApi(configuration);
 
-let company: Company; //
+let companyRequest: CompanyRequest; //
 
 const { status, data } = await apiInstance.accountCompaniesCreate(
-    company
+    companyRequest
 );
 ```
 
@@ -206,7 +206,7 @@ const { status, data } = await apiInstance.accountCompaniesCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **company** | **Company**|  | |
+| **companyRequest** | **CompanyRequest**|  | |
 
 
 ### Return type
@@ -343,18 +343,18 @@ Manage your companies
 import {
     AccountApi,
     Configuration,
-    PatchedCompany
+    PatchedCompanyRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new AccountApi(configuration);
 
 let id: number; //A unique integer value identifying this company. (default to undefined)
-let patchedCompany: PatchedCompany; // (optional)
+let patchedCompanyRequest: PatchedCompanyRequest; // (optional)
 
 const { status, data } = await apiInstance.accountCompaniesPartialUpdate(
     id,
-    patchedCompany
+    patchedCompanyRequest
 );
 ```
 
@@ -362,7 +362,7 @@ const { status, data } = await apiInstance.accountCompaniesPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedCompany** | **PatchedCompany**|  | |
+| **patchedCompanyRequest** | **PatchedCompanyRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this company. | defaults to undefined|
 
 
@@ -439,7 +439,7 @@ const { status, data } = await apiInstance.accountCompaniesRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **accountCompaniesUpdate**
-> Company accountCompaniesUpdate(company)
+> Company accountCompaniesUpdate(companyRequest)
 
 Manage your companies
 
@@ -449,18 +449,18 @@ Manage your companies
 import {
     AccountApi,
     Configuration,
-    Company
+    CompanyRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new AccountApi(configuration);
 
 let id: number; //A unique integer value identifying this company. (default to undefined)
-let company: Company; //
+let companyRequest: CompanyRequest; //
 
 const { status, data } = await apiInstance.accountCompaniesUpdate(
     id,
-    company
+    companyRequest
 );
 ```
 
@@ -468,7 +468,7 @@ const { status, data } = await apiInstance.accountCompaniesUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **company** | **Company**|  | |
+| **companyRequest** | **CompanyRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this company. | defaults to undefined|
 
 
@@ -555,16 +555,16 @@ Manage your profile data
 import {
     AccountApi,
     Configuration,
-    PatchedProfile
+    PatchedProfileRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new AccountApi(configuration);
 
-let patchedProfile: PatchedProfile; // (optional)
+let patchedProfileRequest: PatchedProfileRequest; // (optional)
 
 const { status, data } = await apiInstance.accountProfilePartialUpdate(
-    patchedProfile
+    patchedProfileRequest
 );
 ```
 
@@ -572,7 +572,7 @@ const { status, data } = await apiInstance.accountProfilePartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedProfile** | **PatchedProfile**|  | |
+| **patchedProfileRequest** | **PatchedProfileRequest**|  | |
 
 
 ### Return type
@@ -641,7 +641,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **accountProfileUpdate**
-> Profile accountProfileUpdate(profile)
+> Profile accountProfileUpdate(profileRequest)
 
 Manage your profile data
 
@@ -651,16 +651,16 @@ Manage your profile data
 import {
     AccountApi,
     Configuration,
-    Profile
+    ProfileRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new AccountApi(configuration);
 
-let profile: Profile; //
+let profileRequest: ProfileRequest; //
 
 const { status, data } = await apiInstance.accountProfileUpdate(
-    profile
+    profileRequest
 );
 ```
 
@@ -668,7 +668,7 @@ const { status, data } = await apiInstance.accountProfileUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **profile** | **Profile**|  | |
+| **profileRequest** | **ProfileRequest**|  | |
 
 
 ### Return type
@@ -693,7 +693,7 @@ const { status, data } = await apiInstance.accountProfileUpdate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **accountSshKeysCreate**
-> SSHKey accountSshKeysCreate()
+> SSHKey accountSshKeysCreate(sSHKeyRequest)
 
 Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
 
@@ -703,16 +703,16 @@ Account context + IAM role enforcement for the account residue: billing identity
 import {
     AccountApi,
     Configuration,
-    SSHKey
+    SSHKeyRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new AccountApi(configuration);
 
-let sSHKey: SSHKey; // (optional)
+let sSHKeyRequest: SSHKeyRequest; //
 
 const { status, data } = await apiInstance.accountSshKeysCreate(
-    sSHKey
+    sSHKeyRequest
 );
 ```
 
@@ -720,7 +720,7 @@ const { status, data } = await apiInstance.accountSshKeysCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **sSHKey** | **SSHKey**|  | |
+| **sSHKeyRequest** | **SSHKeyRequest**|  | |
 
 
 ### Return type
@@ -857,18 +857,18 @@ Account context + IAM role enforcement for the account residue: billing identity
 import {
     AccountApi,
     Configuration,
-    PatchedSSHKey
+    PatchedSSHKeyUpdateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new AccountApi(configuration);
 
 let id: string; // (default to undefined)
-let patchedSSHKey: PatchedSSHKey; // (optional)
+let patchedSSHKeyUpdateRequest: PatchedSSHKeyUpdateRequest; // (optional)
 
 const { status, data } = await apiInstance.accountSshKeysPartialUpdate(
     id,
-    patchedSSHKey
+    patchedSSHKeyUpdateRequest
 );
 ```
 
@@ -876,7 +876,7 @@ const { status, data } = await apiInstance.accountSshKeysPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedSSHKey** | **PatchedSSHKey**|  | |
+| **patchedSSHKeyUpdateRequest** | **PatchedSSHKeyUpdateRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 
@@ -963,18 +963,18 @@ Account context + IAM role enforcement for the account residue: billing identity
 import {
     AccountApi,
     Configuration,
-    SSHKey
+    SSHKeyUpdateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new AccountApi(configuration);
 
 let id: string; // (default to undefined)
-let sSHKey: SSHKey; // (optional)
+let sSHKeyUpdateRequest: SSHKeyUpdateRequest; // (optional)
 
 const { status, data } = await apiInstance.accountSshKeysUpdate(
     id,
-    sSHKey
+    sSHKeyUpdateRequest
 );
 ```
 
@@ -982,7 +982,7 @@ const { status, data } = await apiInstance.accountSshKeysUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **sSHKey** | **SSHKey**|  | |
+| **sSHKeyUpdateRequest** | **SSHKeyUpdateRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 

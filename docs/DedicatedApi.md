@@ -62,7 +62,7 @@ const { status, data } = await apiInstance.dedicatedServersList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **dedicatedServersPowerCreate**
-> PowerActionResponse dedicatedServersPowerCreate(powerAction)
+> PowerActionResponse dedicatedServersPowerCreate(powerActionRequest)
 
 Execute a power management action (start, stop, restart, shutdown).
 
@@ -72,18 +72,18 @@ Execute a power management action (start, stop, restart, shutdown).
 import {
     DedicatedApi,
     Configuration,
-    PowerAction
+    PowerActionRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DedicatedApi(configuration);
 
 let id: string; // (default to undefined)
-let powerAction: PowerAction; //
+let powerActionRequest: PowerActionRequest; //
 
 const { status, data } = await apiInstance.dedicatedServersPowerCreate(
     id,
-    powerAction
+    powerActionRequest
 );
 ```
 
@@ -91,7 +91,7 @@ const { status, data } = await apiInstance.dedicatedServersPowerCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **powerAction** | **PowerAction**|  | |
+| **powerActionRequest** | **PowerActionRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 
@@ -117,7 +117,7 @@ const { status, data } = await apiInstance.dedicatedServersPowerCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **dedicatedServersRdnsCreate**
-> RDNSUpdateResponse dedicatedServersRdnsCreate(dedicatedRDNS)
+> RDNSUpdateResponse dedicatedServersRdnsCreate(dedicatedRDNSRequest)
 
 Update reverse DNS for a dedicated server IP.
 
@@ -127,18 +127,18 @@ Update reverse DNS for a dedicated server IP.
 import {
     DedicatedApi,
     Configuration,
-    DedicatedRDNS
+    DedicatedRDNSRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DedicatedApi(configuration);
 
 let id: string; // (default to undefined)
-let dedicatedRDNS: DedicatedRDNS; //
+let dedicatedRDNSRequest: DedicatedRDNSRequest; //
 
 const { status, data } = await apiInstance.dedicatedServersRdnsCreate(
     id,
-    dedicatedRDNS
+    dedicatedRDNSRequest
 );
 ```
 
@@ -146,7 +146,7 @@ const { status, data } = await apiInstance.dedicatedServersRdnsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **dedicatedRDNS** | **DedicatedRDNS**|  | |
+| **dedicatedRDNSRequest** | **DedicatedRDNSRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 
@@ -172,7 +172,7 @@ const { status, data } = await apiInstance.dedicatedServersRdnsCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **dedicatedServersReinstallCreate**
-> ReinstallResponse dedicatedServersReinstallCreate(reinstall)
+> ReinstallResponse dedicatedServersReinstallCreate(reinstallRequest)
 
 Reinstall the dedicated server with a new operating system.
 
@@ -182,18 +182,18 @@ Reinstall the dedicated server with a new operating system.
 import {
     DedicatedApi,
     Configuration,
-    Reinstall
+    ReinstallRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DedicatedApi(configuration);
 
 let id: string; // (default to undefined)
-let reinstall: Reinstall; //
+let reinstallRequest: ReinstallRequest; //
 
 const { status, data } = await apiInstance.dedicatedServersReinstallCreate(
     id,
-    reinstall
+    reinstallRequest
 );
 ```
 
@@ -201,7 +201,7 @@ const { status, data } = await apiInstance.dedicatedServersReinstallCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **reinstall** | **Reinstall**|  | |
+| **reinstallRequest** | **ReinstallRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 

@@ -16,8 +16,8 @@ Name | Type | Description | Notes
 **bounce_rate_pct** | **string** |  | [readonly] [default to undefined]
 **complaint_rate_pct** | **string** |  | [readonly] [default to undefined]
 **dedicated_ip_addon** | **boolean** |  | [readonly] [default to undefined]
-**quota_monthly** | **string** |  | [readonly] [default to undefined]
-**price_monthly_eur** | **string** |  | [readonly] [default to undefined]
+**quota_monthly** | **number** |  | [readonly] [default to undefined]
+**price_monthly_eur** | **number** |  | [readonly] [default to undefined]
 
 ## Example
 

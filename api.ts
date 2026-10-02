@@ -35,8 +35,17 @@ export interface APITokenCreate {
     'scope'?: ScopeEnum;
     'key': string;
     'created': string;
-    'account': string | null;
-    'membership_status': string | null;
+    'account'?: string | null;
+    'membership_status'?: string | null;
+}
+
+
+/**
+ * Label bound tokens with their account + membership status (spec §4.2).  A dark deployment (flag off) with only personal rows keeps the exact pre-feature response shape; a bound row is always labeled so it cannot be mistaken for a personal token even after an emergency disable.
+ */
+export interface APITokenCreateRequest {
+    'name': string;
+    'scope'?: ScopeEnum;
 }
 
 
@@ -51,12 +60,12 @@ export interface APITokenList {
     'created': string;
     'last_used': string | null;
     'request_count': number;
-    'account': string | null;
-    'membership_status': string | null;
+    'account'?: string | null;
+    'membership_status'?: string | null;
 }
 
 
-export interface ActivateFreeDNS {
+export interface ActivateFreeDNSRequest {
     /**
      * Domain name or primary key of the domain to activate.
      */
@@ -99,6 +108,17 @@ export interface Address {
 }
 
 
+export interface AddressRequest {
+    'country': CountryEnum;
+    'city'?: string;
+    'region'?: string;
+    'zipcode'?: string;
+    'address'?: string;
+    'region_fk'?: number | null;
+    'locality_fk'?: number | null;
+}
+
+
 export interface ApiCredential {
     'id': number;
     'label': string;
@@ -107,6 +127,10 @@ export interface ApiCredential {
     'active': boolean;
     'created_at': string;
     'revoked_at': string | null;
+}
+export interface ApiCredentialCreated {
+    'credential': ApiCredential;
+    'key': string;
 }
 export interface AttachIPv4Request {
     /**
@@ -139,11 +163,27 @@ export interface AttachIPv6Response {
     'rebooted': boolean;
 }
 export interface AttachVolume {
+    'attached': boolean;
+}
+export interface AttachVolumeRequest {
     /**
      * Server ID
      */
     'vm': number;
 }
+export interface AttachmentRequest {
+    'name': string;
+    'content_type': string;
+    'data': string;
+}
+
+export const BlankEnum = {
+    Empty: '',
+} as const;
+
+export type BlankEnum = typeof BlankEnum[keyof typeof BlankEnum];
+
+
 export interface BootISO {
     'slug': string;
     'name': string;
@@ -187,7 +227,7 @@ export interface BucketCancelResponse {
     'id': number;
     'status': string;
 }
-export interface BucketCreate {
+export interface BucketCreateRequest {
     'name': string;
     'quota_gb': number;
     'public_read'?: boolean;
@@ -199,10 +239,10 @@ export interface BucketCredentials {
     'access_key': string;
     'secret_key': string;
 }
-export interface BucketResize {
+export interface BucketResizeRequest {
     'quota_gb': number;
 }
-export interface BucketVisibility {
+export interface BucketVisibilityRequest {
     'public_read': boolean;
 }
 export interface CLISessionCreateResponse {
@@ -262,21 +302,21 @@ export const CategoryEnum = {
 export type CategoryEnum = typeof CategoryEnum[keyof typeof CategoryEnum];
 
 
-export interface ChangeBillingCycle {
+export interface ChangeBillingCycleRequest {
     'billing_cycle_id': number;
 }
 export interface ChangeBillingCycleResponse {
     'message': string;
     'billing_cycle': string;
 }
-export interface ChangeCompany {
+export interface ChangeCompanyRequest {
     'company_id'?: number | null;
 }
 export interface ChangeCompanyResponse {
     'message': string;
     'company': { [key: string]: any; } | null;
 }
-export interface ChangePassword {
+export interface ChangePasswordRequest {
     'password': string;
 }
 export interface CheckAvailability {
@@ -285,7 +325,13 @@ export interface CheckAvailability {
      */
     'domain': string;
 }
-export interface ClusterAdd {
+export interface CheckAvailabilityRequest {
+    /**
+     * Domain with tld, ex: example.com
+     */
+    'domain': string;
+}
+export interface ClusterAddRequest {
     'cluster_type': ClusterTypeEnum;
     'name'?: string;
     /**
@@ -312,24 +358,202 @@ export interface ClusterDetail {
     'status': ResourceStatusEnum;
     'name'?: string;
     'generation': string;
-    'cluster_type': string;
-    'kube_version': string;
+    'cluster_type': string | null;
+    'kube_version': string | null;
     'price_per_month': string;
     'price_per_hour': number;
     'features'?: Array<FeaturesEnum>;
     'features_ready': boolean;
-    'kubeconfig_valid_until': string;
-    'ipv4_address': string;
-    'ipv6_address': string;
+    'kubeconfig_valid_until': string | null;
+    'ipv4_address': string | null;
+    'ipv6_address': string | null;
     'dual_stack': boolean;
     'protected'?: boolean;
-    'talos_version': string;
+    'talos_version': string | null;
     'talos_upgrade_available': boolean;
-    'talos_next_version': string;
-    'storage_quota_gb': number;
-    'last_pool_used_bytes': number;
-    'last_storage_sync_at': string;
+    'talos_next_version': string | null;
+    'storage_quota_gb': number | null;
+    'last_pool_used_bytes': number | null;
+    'last_storage_sync_at': string | null;
 }
+
+
+export interface ClusterDetailRequest {
+    'name'?: string;
+    'price_per_month': string;
+    'features'?: Array<FeaturesEnum>;
+    'protected'?: boolean;
+}
+/**
+ * The cluster\'s encryption state. Read-only, in full.  Every field here is written by the encryption action service or by the restart recheck; none of them is writable through any serializer, which is what keeps ``start_encryption_operation`` the only write path.  PUBLISHED WHETHER OR NOT ``K8S_ENCRYPTION_ENABLED`` IS SET, and that is not an oversight -- the spec requires it, so that the global gate \"cannot strand an `unknown` cluster\": the read, an already-queued operation and the staff reconcile recovery all stay reachable while the feature is dark, and only the ordinary toggle POST answers 404. So this is the one flag whose only call site is ``set_encryption``.  It also makes the API and the panel disagree about what a disabled feature exposes: ``cluster_fe.views.encryption_context`` returns None while the flag is off and the detail page drops the whole card. That difference is PUSH against PULL. The panel would put a red \"State unknown\" badge in front of every customer who opened their cluster page, for a feature they have not been told about; a caller who requested this resource by name asked the question, and answering it honestly is not advertising. Read either side\'s reason and the other one is half the argument -- they are one decision.
+ */
+export interface ClusterEncryption {
+    'mode': string;
+    'status': ClusterEncryptionStatusEnum;
+    'changed_at': string | null;
+    'verified_at': string | null;
+    'restart_required': boolean;
+    'restart_required_at': string | null;
+    'restart_checked_at': string | null;
+    'stale_pod_count': number | null;
+    'reason': ClusterEncryptionReasonEnum;
+    'error': string;
+    /**
+     * Evidence from the NEWEST operation, which may not have any yet.  A freshly queued operation carries an empty ``verification_result``, so this blanks the moment a toggle is admitted while ``mode`` and ``status`` still describe the last verified state. An empty map therefore means \"no evidence from the current operation\", NEVER \"verification failed\" -- read ``operation.status`` to tell them apart. Showing the previous operation\'s rows instead would label evidence for one mode as evidence for another.
+     */
+    'per_node': { [key: string]: any; };
+    'operation': ClusterEncryptionOperation | null;
+}
+
+export const ClusterEncryptionReasonEnum = {
+    FeatureUnavailable: 'feature_unavailable',
+    ClusterOperationInProgress: 'cluster_operation_in_progress',
+    ResourceNotActive: 'resource_not_active',
+    ClusterNotProvisioned: 'cluster_not_provisioned',
+    InvalidEncryptionMode: 'invalid_encryption_mode',
+    WorkloadRestartAckRequired: 'workload_restart_ack_required',
+    EncryptionStateUnknown: 'encryption_state_unknown',
+    EncryptionAlreadyInRequestedMode: 'encryption_already_in_requested_mode',
+    ReconcileRequiresStaff: 'reconcile_requires_staff',
+    ReconcileRequiresUnknownState: 'reconcile_requires_unknown_state',
+    CiliumVersionMismatch: 'cilium_version_mismatch',
+    KernelWireguardUnavailable: 'kernel_wireguard_unavailable',
+    KernelNodesUnknown: 'kernel_nodes_unknown',
+    HelmUpgradeFailed: 'helm_upgrade_failed',
+    HelmRollbackFailed: 'helm_rollback_failed',
+    CiliumRolloutFailed: 'cilium_rollout_failed',
+    CiliumNodeKeyMissing: 'cilium_node_key_missing',
+    CiliumPeerVerificationFailed: 'cilium_peer_verification_failed',
+    CiliumAgentUnreadable: 'cilium_agent_unreadable',
+    CiliumAgentStateMismatch: 'cilium_agent_state_mismatch',
+    CiliumEncryptionNotActive: 'cilium_encryption_not_active',
+    CiliumEncryptionStillActive: 'cilium_encryption_still_active',
+    CiliumNodesUnknown: 'cilium_nodes_unknown',
+    CiliumModeUnsupported: 'cilium_mode_unsupported',
+    CiliumVerificationMisconfigured: 'cilium_verification_misconfigured',
+    RestartRecheckFailed: 'restart_recheck_failed',
+    PlatformRestartIncomplete: 'platform_restart_incomplete',
+    EncryptionTaskAborted: 'encryption_task_aborted',
+    DispatchPending: 'dispatch_pending',
+    Empty: '',
+} as const;
+
+export type ClusterEncryptionReasonEnum = typeof ClusterEncryptionReasonEnum[keyof typeof ClusterEncryptionReasonEnum];
+
+export interface ClusterEncryptionError {
+    'message': string;
+    'reason'?: EncryptionReasonCodeEnum;
+    'extra'?: { [key: string]: any; };
+    'code'?: string;
+}
+
+
+/**
+ * One encryption change, as the customer sees it.  ``verification_result`` is deliberately absent: the evidence is published once, sanitised, as the state\'s ``per_node`` -- two copies of a JSON column are two places for key material to escape from.
+ */
+export interface ClusterEncryptionOperation {
+    'id': number;
+    'kind': string;
+    'status': string;
+    'requested_mode': string;
+    'previous_mode': string;
+    'reason': ClusterEncryptionOperationReasonEnum;
+    'message': string;
+    'override_unverifiable': boolean;
+    'request_id': string;
+    'created_at': string;
+    'finished_at': string | null;
+}
+
+export const ClusterEncryptionOperationReasonEnum = {
+    FeatureUnavailable: 'feature_unavailable',
+    ClusterOperationInProgress: 'cluster_operation_in_progress',
+    ResourceNotActive: 'resource_not_active',
+    ClusterNotProvisioned: 'cluster_not_provisioned',
+    InvalidEncryptionMode: 'invalid_encryption_mode',
+    WorkloadRestartAckRequired: 'workload_restart_ack_required',
+    EncryptionStateUnknown: 'encryption_state_unknown',
+    EncryptionAlreadyInRequestedMode: 'encryption_already_in_requested_mode',
+    ReconcileRequiresStaff: 'reconcile_requires_staff',
+    ReconcileRequiresUnknownState: 'reconcile_requires_unknown_state',
+    CiliumVersionMismatch: 'cilium_version_mismatch',
+    KernelWireguardUnavailable: 'kernel_wireguard_unavailable',
+    KernelNodesUnknown: 'kernel_nodes_unknown',
+    HelmUpgradeFailed: 'helm_upgrade_failed',
+    HelmRollbackFailed: 'helm_rollback_failed',
+    CiliumRolloutFailed: 'cilium_rollout_failed',
+    CiliumNodeKeyMissing: 'cilium_node_key_missing',
+    CiliumPeerVerificationFailed: 'cilium_peer_verification_failed',
+    CiliumAgentUnreadable: 'cilium_agent_unreadable',
+    CiliumAgentStateMismatch: 'cilium_agent_state_mismatch',
+    CiliumEncryptionNotActive: 'cilium_encryption_not_active',
+    CiliumEncryptionStillActive: 'cilium_encryption_still_active',
+    CiliumNodesUnknown: 'cilium_nodes_unknown',
+    CiliumModeUnsupported: 'cilium_mode_unsupported',
+    CiliumVerificationMisconfigured: 'cilium_verification_misconfigured',
+    RestartRecheckFailed: 'restart_recheck_failed',
+    PlatformRestartIncomplete: 'platform_restart_incomplete',
+    EncryptionTaskAborted: 'encryption_task_aborted',
+    DispatchPending: 'dispatch_pending',
+    Empty: '',
+} as const;
+
+export type ClusterEncryptionOperationReasonEnum = typeof ClusterEncryptionOperationReasonEnum[keyof typeof ClusterEncryptionOperationReasonEnum];
+
+/**
+ * The staff reconcile body, which alone may carry the override.  A SEPARATE component rather than an optional field on the shared one. The toggle route ignores the flag entirely, so declaring it in one body would hand a generated client an argument that silently does nothing on half the routes carrying it -- the same class of published untruth the rest of this feature\'s schema work exists to prevent.
+ */
+export interface ClusterEncryptionReconcileRequest {
+    /**
+     * Target encryption mode: no encryption, or WireGuard.  * `none` - none * `wireguard` - wireguard
+     */
+    'mode': EncryptionModeEnum;
+    /**
+     * Confirms the caller accepts that workloads must be restarted after the change.
+     */
+    'acknowledge_workload_restart'?: boolean;
+    /**
+     * Record this mode even if verification refuses, together with what was observed. Only the unencrypted mode can be asserted this way: an encrypted state always requires positive per-node evidence.
+     */
+    'override_unverifiable'?: boolean;
+}
+
+
+export interface ClusterEncryptionRefusal {
+    'reason': EncryptionReasonCodeEnum;
+    'message': string;
+}
+
+
+/**
+ * The body of a toggle or a staff reconcile.  Field errors are re-raised as ``EncryptionConflict`` rather than left as DRF validation errors: the endpoint answers every refusal with the feature\'s stable reason code, and a body that switched shape depending on WHICH refusal it was would force a client to parse two.
+ */
+export interface ClusterEncryptionRequest {
+    /**
+     * Target encryption mode: no encryption, or WireGuard.  * `none` - none * `wireguard` - wireguard
+     */
+    'mode': EncryptionModeEnum;
+    /**
+     * Confirms the caller accepts that workloads must be restarted after the change.
+     */
+    'acknowledge_workload_restart'?: boolean;
+}
+
+
+/**
+ * * `disabled` - Disabled * `enabling` - Enabling * `enabled_restart_required` - Enabled — workload restart required * `enabled` - Encrypted (WireGuard) * `disabling` - Disabling * `unknown` - State unknown
+ */
+
+export const ClusterEncryptionStatusEnum = {
+    Disabled: 'disabled',
+    Enabling: 'enabling',
+    EnabledRestartRequired: 'enabled_restart_required',
+    Enabled: 'enabled',
+    Disabling: 'disabling',
+    Unknown: 'unknown',
+} as const;
+
+export type ClusterEncryptionStatusEnum = typeof ClusterEncryptionStatusEnum[keyof typeof ClusterEncryptionStatusEnum];
 
 
 export interface ClusterPackage {
@@ -369,6 +593,16 @@ export interface Company {
     'contact_email'?: string;
     'address'?: Address;
 }
+export interface CompanyRequest {
+    'name': string;
+    'cif_vat'?: string;
+    'reg'?: string;
+    'iban'?: string;
+    'bank'?: string;
+    'contact_name'?: string;
+    'contact_email'?: string;
+    'address'?: AddressRequest;
+}
 export interface ConnectVMRequest {
     /**
      * VM resource PK or hostname
@@ -405,7 +639,7 @@ export const ContactTypeEnum = {
 export type ContactTypeEnum = typeof ContactTypeEnum[keyof typeof ContactTypeEnum];
 
 
-export interface ContactsUpdate {
+export interface ContactsUpdateRequest {
     /**
      * Contact type to update  * `registrant` - registrant * `admin` - admin * `tech` - tech * `billing` - billing
      */
@@ -684,10 +918,24 @@ export const CountryEnum = {
 export type CountryEnum = typeof CountryEnum[keyof typeof CountryEnum];
 
 
+export interface CredentialCreateRequest {
+    'label'?: string;
+}
 /**
  * A glue / \"personal DNS\" record: registers a child nameserver host at the registry as ``<name>.<domain>`` pointing at ``ip`` (and optional ``ip2``). Required before another domain can delegate to that nameserver.
  */
 export interface DNSGlue {
+    /**
+     * only subdomain part
+     */
+    'name': string;
+    'ip': string;
+    'ip2'?: string | null;
+}
+/**
+ * A glue / \"personal DNS\" record: registers a child nameserver host at the registry as ``<name>.<domain>`` pointing at ``ip`` (and optional ``ip2``). Required before another domain can delegate to that nameserver.
+ */
+export interface DNSGlueRequest {
     /**
      * only subdomain part
      */
@@ -720,7 +968,7 @@ export interface DNSRecord {
 /**
  * Validate input for creating or editing a DNS record.
  */
-export interface DNSRecordCreate {
+export interface DNSRecordCreateRequest {
     /**
      * Record hostname (use \'@\' or leave empty for zone apex).
      */
@@ -813,7 +1061,7 @@ export interface DNSRecordMutateResponse {
     'message': string;
     'record'?: DNSRecord;
 }
-export interface DeactivateFreeDNS {
+export interface DeactivateFreeDNSRequest {
     /**
      * Domain name or primary key of the domain to deactivate.
      */
@@ -825,7 +1073,7 @@ export interface DeactivateFreeDNS {
 export interface DeactivateFreeDNSResponse {
     'message': string;
 }
-export interface DedicatedRDNS {
+export interface DedicatedRDNSRequest {
     'ip_id': number;
     'reverse_dns': string;
 }
@@ -843,13 +1091,22 @@ export interface DedicatedServer {
     'next_invoice': string;
     'created': string;
     'billing_cycle': string;
-    'server_status': string;
-    'ips': string;
-    'os_name': string;
+    'server_status': DedicatedServerStatus | null;
+    'ips': Array<DedicatedServerIP>;
+    'os_name': string | null;
 }
 
 
-export interface DeleteRecord {
+export interface DedicatedServerIP {
+    'id': number;
+    'ip': string;
+    'reverse_dns': string;
+}
+export interface DedicatedServerStatus {
+    'status'?: string;
+    'statusText': string;
+}
+export interface DeleteRecordRequest {
     /**
      * Line number of the DNS record to delete.
      */
@@ -883,7 +1140,7 @@ export interface Deposit {
 }
 
 
-export interface DepositCreate {
+export interface DepositCreateRequest {
     'amount': number;
 }
 /**
@@ -900,7 +1157,7 @@ export const DepositStatusEnum = {
 export type DepositStatusEnum = typeof DepositStatusEnum[keyof typeof DepositStatusEnum];
 
 
-export interface DestroyProtection {
+export interface DestroyProtectionRequest {
     'destroy_protection': boolean;
 }
 export interface DestroyProtectionResponse {
@@ -964,7 +1221,7 @@ export interface Domain {
     'service_status': string | null;
     'contacts': any;
 }
-export interface DomainAdd {
+export interface DomainAddRequest {
     'name': string;
     'dns_source': DnsSourceEnum;
     'managed_domain'?: number | null;
@@ -978,6 +1235,17 @@ export interface DomainCancelResponse {
     'status': string;
 }
 export interface DomainCreate {
+    /**
+     * Domain with tld, ex: example.com
+     */
+    'domain': string;
+    /**
+     * List of 2-5 name-servers separated by comma.
+     */
+    'nameservers'?: string;
+    'years'?: number;
+}
+export interface DomainCreateRequest {
     /**
      * Domain with tld, ex: example.com
      */
@@ -1005,6 +1273,28 @@ export interface DomainRegistrant {
 }
 
 
+export interface DomainRegistrantRequest {
+    'first_name': string;
+    'last_name': string;
+    'company'?: string | null;
+    'address': string;
+    'city': string;
+    'region': string;
+    'postal_code': string;
+    'country': CountryEnum;
+    'email': string;
+    'phone': string;
+    'cif_cnp'?: string | null;
+    'reg_com'?: string | null;
+}
+
+
+export interface DomainRequest {
+    /**
+     * List of 2-5 name-servers separated by comma.
+     */
+    'nameservers'?: string;
+}
 export interface EligibleVM {
     'id': number;
     'hostname': string;
@@ -1019,6 +1309,41 @@ export interface EmailHistory {
     'address': string;
     'read': boolean;
 }
+export interface EmailMessageList {
+    'results': Array<EmailMessageSummary>;
+    'count': number;
+    'page': number;
+    'per_page': number;
+}
+export interface EmailMessageSummary {
+    'message_id': string;
+    'status': string;
+    'last_event_at': string;
+}
+export interface EmailReputation {
+    'bounce_rate_pct': string;
+    'complaint_rate_pct': string;
+    'msgs_sent_24h': number;
+    'msgs_sent_30d': number;
+}
+export interface EmailSendResponse {
+    'message_id': any | null;
+    'queued_at': string;
+    'status': EmailSendResponseStatusEnum;
+}
+
+
+/**
+ * * `queued` - queued
+ */
+
+export const EmailSendResponseStatusEnum = {
+    Queued: 'queued',
+} as const;
+
+export type EmailSendResponseStatusEnum = typeof EmailSendResponseStatusEnum[keyof typeof EmailSendResponseStatusEnum];
+
+
 export interface EmailService {
     'id': number;
     'tier': string;
@@ -1031,9 +1356,67 @@ export interface EmailService {
     'bounce_rate_pct': string;
     'complaint_rate_pct': string;
     'dedicated_ip_addon': boolean;
-    'quota_monthly': string;
-    'price_monthly_eur': string;
+    'quota_monthly': number;
+    'price_monthly_eur': number;
 }
+
+
+export interface EmailStats {
+    'start': string;
+    'end': string;
+    'totals': StatsTotals;
+    'days': Array<StatsDay>;
+    'reputation': EmailReputation;
+}
+/**
+ * * `none` - none * `wireguard` - wireguard
+ */
+
+export const EncryptionModeEnum = {
+    None: 'none',
+    Wireguard: 'wireguard',
+} as const;
+
+export type EncryptionModeEnum = typeof EncryptionModeEnum[keyof typeof EncryptionModeEnum];
+
+
+/**
+ * * `feature_unavailable` - feature_unavailable * `cluster_operation_in_progress` - cluster_operation_in_progress * `resource_not_active` - resource_not_active * `cluster_not_provisioned` - cluster_not_provisioned * `invalid_encryption_mode` - invalid_encryption_mode * `workload_restart_ack_required` - workload_restart_ack_required * `encryption_state_unknown` - encryption_state_unknown * `encryption_already_in_requested_mode` - encryption_already_in_requested_mode * `reconcile_requires_staff` - reconcile_requires_staff * `reconcile_requires_unknown_state` - reconcile_requires_unknown_state * `cilium_version_mismatch` - cilium_version_mismatch * `kernel_wireguard_unavailable` - kernel_wireguard_unavailable * `kernel_nodes_unknown` - kernel_nodes_unknown * `helm_upgrade_failed` - helm_upgrade_failed * `helm_rollback_failed` - helm_rollback_failed * `cilium_rollout_failed` - cilium_rollout_failed * `cilium_node_key_missing` - cilium_node_key_missing * `cilium_peer_verification_failed` - cilium_peer_verification_failed * `cilium_agent_unreadable` - cilium_agent_unreadable * `cilium_agent_state_mismatch` - cilium_agent_state_mismatch * `cilium_encryption_not_active` - cilium_encryption_not_active * `cilium_encryption_still_active` - cilium_encryption_still_active * `cilium_nodes_unknown` - cilium_nodes_unknown * `cilium_mode_unsupported` - cilium_mode_unsupported * `cilium_verification_misconfigured` - cilium_verification_misconfigured * `restart_recheck_failed` - restart_recheck_failed * `platform_restart_incomplete` - platform_restart_incomplete * `encryption_task_aborted` - encryption_task_aborted * `dispatch_pending` - dispatch_pending
+ */
+
+export const EncryptionReasonCodeEnum = {
+    FeatureUnavailable: 'feature_unavailable',
+    ClusterOperationInProgress: 'cluster_operation_in_progress',
+    ResourceNotActive: 'resource_not_active',
+    ClusterNotProvisioned: 'cluster_not_provisioned',
+    InvalidEncryptionMode: 'invalid_encryption_mode',
+    WorkloadRestartAckRequired: 'workload_restart_ack_required',
+    EncryptionStateUnknown: 'encryption_state_unknown',
+    EncryptionAlreadyInRequestedMode: 'encryption_already_in_requested_mode',
+    ReconcileRequiresStaff: 'reconcile_requires_staff',
+    ReconcileRequiresUnknownState: 'reconcile_requires_unknown_state',
+    CiliumVersionMismatch: 'cilium_version_mismatch',
+    KernelWireguardUnavailable: 'kernel_wireguard_unavailable',
+    KernelNodesUnknown: 'kernel_nodes_unknown',
+    HelmUpgradeFailed: 'helm_upgrade_failed',
+    HelmRollbackFailed: 'helm_rollback_failed',
+    CiliumRolloutFailed: 'cilium_rollout_failed',
+    CiliumNodeKeyMissing: 'cilium_node_key_missing',
+    CiliumPeerVerificationFailed: 'cilium_peer_verification_failed',
+    CiliumAgentUnreadable: 'cilium_agent_unreadable',
+    CiliumAgentStateMismatch: 'cilium_agent_state_mismatch',
+    CiliumEncryptionNotActive: 'cilium_encryption_not_active',
+    CiliumEncryptionStillActive: 'cilium_encryption_still_active',
+    CiliumNodesUnknown: 'cilium_nodes_unknown',
+    CiliumModeUnsupported: 'cilium_mode_unsupported',
+    CiliumVerificationMisconfigured: 'cilium_verification_misconfigured',
+    RestartRecheckFailed: 'restart_recheck_failed',
+    PlatformRestartIncomplete: 'platform_restart_incomplete',
+    EncryptionTaskAborted: 'encryption_task_aborted',
+    DispatchPending: 'dispatch_pending',
+} as const;
+
+export type EncryptionReasonCodeEnum = typeof EncryptionReasonCodeEnum[keyof typeof EncryptionReasonCodeEnum];
 
 
 export interface FeatureUpgradeRequest {
@@ -1051,7 +1434,7 @@ export interface FeatureUpgradeResponse {
     'message': string;
 }
 /**
- * * `cert-manager` - Certificate manager * `ceph-csi` - Ceph CSI * `metrics-server` - Metrics Server * `cloudnative-pg` - CloudNative PG * `mariadb-operator` - MariaDB Operator * `mongodb-operator` - MongoDB Operator
+ * * `cert-manager` - Certificate manager * `ceph-csi` - Ceph CSI * `metrics-server` - Metrics Server * `cloudnative-pg` - CloudNative PG * `mariadb-operator` - MariaDB Operator * `mongodb-operator` - MongoDB Operator * `lb-envoy-metrics` - Load balancer metrics
  */
 
 export const FeaturesEnum = {
@@ -1061,6 +1444,7 @@ export const FeaturesEnum = {
     CloudnativePg: 'cloudnative-pg',
     MariadbOperator: 'mariadb-operator',
     MongodbOperator: 'mongodb-operator',
+    LbEnvoyMetrics: 'lb-envoy-metrics',
 } as const;
 
 export type FeaturesEnum = typeof FeaturesEnum[keyof typeof FeaturesEnum];
@@ -1106,6 +1490,31 @@ export const FirewallRuleDirectionEnum = {
 export type FirewallRuleDirectionEnum = typeof FirewallRuleDirectionEnum[keyof typeof FirewallRuleDirectionEnum];
 
 
+export interface FirewallRuleRequest {
+    'direction': FirewallRuleDirectionEnum;
+    'action': FwPolicyOutEnum;
+    'protocol'?: string;
+    /**
+     * single IP, range (20.34.101.207-201.3.9.99) or comma separated list
+     */
+    'source'?: string;
+    /**
+     * numbers (0-65535), range (\"\\d+:\\d+\", like \"80:85\"), comma separated list
+     */
+    'sport'?: string;
+    /**
+     * single IP, range (20.34.101.207-201.3.9.99) or comma separated list
+     */
+    'destination'?: string;
+    /**
+     * numbers (0-65535), range (\"\\d+:\\d+\", like \"80:85\"), comma separated list
+     */
+    'dport'?: string;
+    'enabled'?: boolean;
+    'position'?: number;
+}
+
+
 export interface FirewallRulesSet {
     'id': number;
     'name': string;
@@ -1118,6 +1527,9 @@ export interface FirewallRulesSet {
 }
 
 
+export interface FirewallRulesSetRequest {
+    'name': string;
+}
 /**
  * * `validated` - Validated * `invalid` - Invalid * `pending` - Pending
  */
@@ -1165,7 +1577,7 @@ export interface FloatingIPv4 {
 export interface FloatingIPv4AuthorizeResponse {
     'authorized': boolean;
 }
-export interface FloatingIPv4Create {
+export interface FloatingIPv4CreateRequest {
     'label'?: string;
 }
 export interface FloatingIPv4UnauthorizeResponse {
@@ -1184,7 +1596,7 @@ export interface FloatingIPv6 {
 export interface FloatingIPv6AuthorizeResponse {
     'authorized': boolean;
 }
-export interface FloatingIPv6Create {
+export interface FloatingIPv6CreateRequest {
     'label'?: string;
 }
 export interface FloatingIPv6UnauthorizeResponse {
@@ -1269,6 +1681,37 @@ export interface HTTPRoute {
     'created': string;
     'updated': string;
 }
+/**
+ * Serializer for HTTPRoute resources with automatic certificate issuance.
+ */
+export interface HTTPRouteRequest {
+    'name': string;
+    'namespace'?: string;
+    /**
+     * List of hostnames to route (e.g., [\"example.com\", \"www.example.com\"])
+     */
+    'hostnames': Array<string>;
+    /**
+     * Name of the backend Kubernetes Service
+     */
+    'backend_service_name': string;
+    /**
+     * Port of the backend Service
+     */
+    'backend_service_port': number;
+    /**
+     * Namespace of the backend Service
+     */
+    'backend_namespace'?: string;
+    /**
+     * Path prefix to match (default: /)
+     */
+    'path_prefix'?: string;
+    /**
+     * Enable TLS termination with automatic certificate issuance
+     */
+    'enable_tls'?: boolean;
+}
 export interface HardwareGeneration {
     'slug': string;
     'name': string;
@@ -1306,9 +1749,9 @@ export interface HostingService {
     'next_invoice': string;
     'created': string;
     'billing_cycle': string;
-    'package_name': string;
-    'node_url': string;
-    'username': string;
+    'package_name': string | null;
+    'node_url': string | null;
+    'username': string | null;
 }
 
 
@@ -1321,6 +1764,27 @@ export interface InboundRoute {
     'forward_to'?: string;
     'active'?: boolean;
     'created_at': string;
+}
+
+
+export interface InboundRouteCreateRequest {
+    'pattern': string;
+    'mode': ModeEnum;
+    'webhook_url'?: string;
+    'forward_to'?: string;
+}
+
+
+export interface InboundRouteWriteResponse {
+    'id': number;
+    'domain': number;
+    'pattern': string;
+    'mode': ModeEnum;
+    'webhook_url'?: string;
+    'forward_to'?: string;
+    'active'?: boolean;
+    'created_at': string;
+    'webhook_secret'?: string;
 }
 
 
@@ -1341,7 +1805,7 @@ export interface InvoiceDetail {
     'client_info': any;
     'invoice_info': any;
     'payment_method': string;
-    'services': string;
+    'services': Array<InvoiceService>;
 }
 
 
@@ -1360,6 +1824,11 @@ export interface InvoiceList {
 }
 
 
+export interface InvoiceService {
+    'id': number;
+    'hostname': string;
+    'status': string;
+}
 /**
  * * `unpaid` - Unpaid * `paid` - Paid * `paid_with_funds` - Paid with funds * `overdue` - Overdue * `processing` - Processing * `cancelled` - Cancelled * `refunded` - Refunded
  */
@@ -1385,6 +1854,13 @@ export interface IsoBootRequest {
 }
 export interface K8sPortForward {
     'id': number;
+    'internal_ip': string;
+    'port': number;
+    'protocol': ProtocolEnum;
+}
+
+
+export interface K8sPortForwardRequest {
     'internal_ip': string;
     'port': number;
     'protocol': ProtocolEnum;
@@ -1468,7 +1944,61 @@ export const LBFirewallRuleDirectionEnum = {
 export type LBFirewallRuleDirectionEnum = typeof LBFirewallRuleDirectionEnum[keyof typeof LBFirewallRuleDirectionEnum];
 
 
-export interface LowBalanceSettings {
+export interface LBFirewallRuleRequest {
+    'direction'?: LBFirewallRuleDirectionEnum;
+    'action'?: LBFirewallRuleActionEnum;
+    /**
+     * tcp, udp, icmp, etc.
+     */
+    'protocol'?: string;
+    /**
+     * IP address or CIDR
+     */
+    'source'?: string;
+    /**
+     * Port or range (e.g., 1024-65535)
+     */
+    'sport'?: string;
+    /**
+     * IP address or CIDR
+     */
+    'destination'?: string;
+    /**
+     * Port or range (e.g., 80, 8000-9000)
+     */
+    'dport'?: string;
+    'comment'?: string;
+    'enabled'?: boolean;
+    /**
+     * Rule order (lower = higher priority)
+     */
+    'position'?: number;
+}
+
+
+export interface LBUpgradeDispatchResponse {
+    'operation_id': string;
+    'status': string;
+}
+export interface LBUpgradePlanResponse {
+    'inspection_id': string;
+    'convergence': string;
+    'level': number | null;
+    'actions': Array<string>;
+    'blockers': Array<string>;
+    'can_execute': boolean;
+}
+export interface LBUpgradeRequest {
+    /**
+     * Return the computed plan without performing it
+     */
+    'dry_run'?: boolean;
+    /**
+     * The plan identifier returned by a dry run
+     */
+    'inspection_id'?: string;
+}
+export interface LowBalanceSettingsRequest {
     'threshold_type': ThresholdTypeEnum;
     'threshold_amount'?: string | null;
     'threshold_days'?: number | null;
@@ -1487,7 +2017,7 @@ export const ModeEnum = {
 export type ModeEnum = typeof ModeEnum[keyof typeof ModeEnum];
 
 
-export interface NameserversUpdate {
+export interface NameserversUpdateRequest {
     /**
      * List of 2-5 nameserver hostnames
      */
@@ -1507,6 +2037,98 @@ export interface NodeMetricsResponse {
     'disk': number;
     'maxdisk': number;
 }
+/**
+ * What a customer may see about their own node operation.  The omissions are the point. Private address, Node UID, VMID, Proxmox placement, and every request/task/lease field stay on the staff serializer: they name internal topology, and a status endpoint is not where that becomes public.
+ */
+export interface NodeOperation {
+    'id': number;
+    'kind': NodeOperationKindEnum;
+    'source': NodeOperationSourceEnum;
+    'target_hostname': string;
+    'status': NodeOperationStatusEnum;
+    'reason': string;
+    'message': string;
+    'bypass_pdb': boolean;
+    'delete_unmanaged_pods': boolean;
+    'local_data_loss_accepted': boolean;
+    'bypass_pdb_confirmed_at': string | null;
+    'unmanaged_pods_confirmed_at': string | null;
+    /**
+     * Who requested the operation (user email or staff name). Never token material.
+     */
+    'actor_label': string;
+    'created_at': string;
+    'updated_at': string;
+    'finished_at': string | null;
+    'allowed_actions': Array<string>;
+}
+
+
+/**
+ * * `delete` - Delete * `reboot` - Reboot
+ */
+
+export const NodeOperationKindEnum = {
+    Delete: 'delete',
+    Reboot: 'reboot',
+} as const;
+
+export type NodeOperationKindEnum = typeof NodeOperationKindEnum[keyof typeof NodeOperationKindEnum];
+
+
+/**
+ * A reboot destroys the same local data a delete does, and says so.
+ */
+export interface NodeOperationRebootRequest {
+    /**
+     * Acknowledge that data kept on the node itself is destroyed. The drain always deletes emptyDir.
+     */
+    'local_data_loss_accepted'?: boolean;
+}
+/**
+ * The two independent overrides, and the acknowledgement each one needs.  Both flags are tri-state and the third state is what matters: `null`/absent means \"leave it as it is\". A plain boolean default would turn every request that names one flag into a request that silently un-forces the other, and `retry_node_operation` refuses an un-force rather than applying it.
+ */
+export interface NodeOperationRetryRequest {
+    'bypass_pdb'?: boolean | null;
+    'delete_unmanaged_pods'?: boolean | null;
+    'acknowledge_pdb_bypass'?: boolean;
+    'acknowledge_unmanaged_pod_deletion'?: boolean;
+}
+/**
+ * * `panel` - Control panel * `api` - API * `system` - System
+ */
+
+export const NodeOperationSourceEnum = {
+    Panel: 'panel',
+    Api: 'api',
+    System: 'system',
+} as const;
+
+export type NodeOperationSourceEnum = typeof NodeOperationSourceEnum[keyof typeof NodeOperationSourceEnum];
+
+
+/**
+ * * `pending` - Pending * `cordoning` - Cordoning * `draining` - Draining * `blocked` - Blocked * `detaching` - Detaching volumes * `executing` - Executing * `waiting_ready` - Waiting for Ready * `finalizing` - Finalizing * `succeeded` - Succeeded * `failed` - Failed * `needs_attention` - Needs attention * `aborted` - Aborted
+ */
+
+export const NodeOperationStatusEnum = {
+    Pending: 'pending',
+    Cordoning: 'cordoning',
+    Draining: 'draining',
+    Blocked: 'blocked',
+    Detaching: 'detaching',
+    Executing: 'executing',
+    WaitingReady: 'waiting_ready',
+    Finalizing: 'finalizing',
+    Succeeded: 'succeeded',
+    Failed: 'failed',
+    NeedsAttention: 'needs_attention',
+    Aborted: 'aborted',
+} as const;
+
+export type NodeOperationStatusEnum = typeof NodeOperationStatusEnum[keyof typeof NodeOperationStatusEnum];
+
+
 export interface NodeRRDResponse {
     'data': Array<any>;
     'timeframe': string;
@@ -1524,7 +2146,7 @@ export interface OSImage {
      * Display name for users
      */
     'name': string;
-    'family_name': string;
+    'family_name': string | null;
     /**
      * Default version within this family (shown pre-selected)
      */
@@ -1565,12 +2187,6 @@ export interface PaginatedApiCredentialList {
     'next'?: string | null;
     'previous'?: string | null;
     'results': Array<ApiCredential>;
-}
-export interface PaginatedBootISOList {
-    'count': number;
-    'next'?: string | null;
-    'previous'?: string | null;
-    'results': Array<BootISO>;
 }
 export interface PaginatedClusterDetailList {
     'count': number;
@@ -1692,11 +2308,23 @@ export interface PaginatedLBFirewallRuleList {
     'previous'?: string | null;
     'results': Array<LBFirewallRule>;
 }
+export interface PaginatedNodeOperationList {
+    'count': number;
+    'next'?: string | null;
+    'previous'?: string | null;
+    'results': Array<NodeOperation>;
+}
 export interface PaginatedOSImageList {
     'count': number;
     'next'?: string | null;
     'previous'?: string | null;
     'results': Array<OSImage>;
+}
+export interface PaginatedPoolRemovalJournalList {
+    'count': number;
+    'next'?: string | null;
+    'previous'?: string | null;
+    'results': Array<PoolRemovalJournal>;
 }
 export interface PaginatedPrivateNetworkList {
     'count': number;
@@ -1770,12 +2398,6 @@ export interface PaginatedSmtpCredentialList {
     'previous'?: string | null;
     'results': Array<SmtpCredential>;
 }
-export interface PaginatedSnapshotList {
-    'count': number;
-    'next'?: string | null;
-    'previous'?: string | null;
-    'results': Array<Snapshot>;
-}
 export interface PaginatedStorageProductList {
     'count': number;
     'next'?: string | null;
@@ -1818,33 +2440,13 @@ export interface PaginatedUDPRouteList {
     'previous'?: string | null;
     'results': Array<UDPRoute>;
 }
-export interface PatchedClusterDetail {
-    'id'?: number;
-    'status'?: ResourceStatusEnum;
+export interface PatchedClusterDetailRequest {
     'name'?: string;
-    'generation'?: string;
-    'cluster_type'?: string;
-    'kube_version'?: string;
     'price_per_month'?: string;
-    'price_per_hour'?: number;
     'features'?: Array<FeaturesEnum>;
-    'features_ready'?: boolean;
-    'kubeconfig_valid_until'?: string;
-    'ipv4_address'?: string;
-    'ipv6_address'?: string;
-    'dual_stack'?: boolean;
     'protected'?: boolean;
-    'talos_version'?: string;
-    'talos_upgrade_available'?: boolean;
-    'talos_next_version'?: string;
-    'storage_quota_gb'?: number;
-    'last_pool_used_bytes'?: number;
-    'last_storage_sync_at'?: string;
 }
-
-
-export interface PatchedCompany {
-    'id'?: number;
+export interface PatchedCompanyRequest {
     'name'?: string;
     'cif_vat'?: string;
     'reg'?: string;
@@ -1852,33 +2454,9 @@ export interface PatchedCompany {
     'bank'?: string;
     'contact_name'?: string;
     'contact_email'?: string;
-    'address'?: Address;
+    'address'?: AddressRequest;
 }
-export interface PatchedDomain {
-    'id'?: number;
-    'domain'?: string;
-    'tld'?: TLD;
-    /**
-     * Domain name is encoded with IDN
-     */
-    'idna'?: boolean;
-    /**
-     * List of 2-5 name-servers separated by comma.
-     */
-    'nameservers'?: string;
-    'expiration_date'?: string;
-    'registration_date'?: string | null;
-    'service'?: Service | null;
-    'idna_name'?: string;
-    'max_renew_years'?: number;
-    /**
-     * Service status
-     */
-    'service_status'?: string | null;
-    'contacts'?: any;
-}
-export interface PatchedDomainRegistrant {
-    'id'?: number;
+export interface PatchedDomainRegistrantRequest {
     'first_name'?: string;
     'last_name'?: string;
     'company'?: string | null;
@@ -1894,25 +2472,13 @@ export interface PatchedDomainRegistrant {
 }
 
 
-export interface PatchedEmailService {
-    'id'?: number;
-    'tier'?: string;
-    'status'?: ResourceStatusEnum;
-    'sandbox_mode'?: boolean;
-    'auto_suspended'?: boolean;
-    'auto_suspend_reason'?: string;
-    'msgs_sent_24h'?: number;
-    'msgs_sent_30d'?: number;
-    'bounce_rate_pct'?: string;
-    'complaint_rate_pct'?: string;
-    'dedicated_ip_addon'?: boolean;
-    'quota_monthly'?: string;
-    'price_monthly_eur'?: string;
+export interface PatchedDomainRequest {
+    /**
+     * List of 2-5 name-servers separated by comma.
+     */
+    'nameservers'?: string;
 }
-
-
-export interface PatchedFirewallRule {
-    'id'?: number;
+export interface PatchedFirewallRuleRequest {
     'direction'?: FirewallRuleDirectionEnum;
     'action'?: FwPolicyOutEnum;
     'protocol'?: string;
@@ -1934,28 +2500,16 @@ export interface PatchedFirewallRule {
     'dport'?: string;
     'enabled'?: boolean;
     'position'?: number;
-    'has_error'?: boolean;
-    'error_message'?: string;
 }
 
 
-export interface PatchedFirewallRulesSet {
-    'id'?: number;
+export interface PatchedFirewallRulesSetRequest {
     'name'?: string;
-    'status'?: FirewallRulesSetStatusEnum;
-    'rules'?: Array<FirewallRule>;
-    /**
-     * used with free tier vm
-     */
-    'read_only'?: boolean;
 }
-
-
 /**
  * Serializer for HTTPRoute resources with automatic certificate issuance.
  */
-export interface PatchedHTTPRoute {
-    'id'?: number;
+export interface PatchedHTTPRouteRequest {
     'name'?: string;
     'namespace'?: string;
     /**
@@ -1982,33 +2536,23 @@ export interface PatchedHTTPRoute {
      * Enable TLS termination with automatic certificate issuance
      */
     'enable_tls'?: boolean;
-    'status_ready'?: boolean | null;
-    'status_message'?: string;
-    'created'?: string;
-    'updated'?: string;
 }
-export interface PatchedInboundRoute {
-    'id'?: number;
-    'domain'?: number;
+export interface PatchedInboundRouteCreateRequest {
     'pattern'?: string;
     'mode'?: ModeEnum;
     'webhook_url'?: string;
     'forward_to'?: string;
-    'active'?: boolean;
-    'created_at'?: string;
 }
 
 
-export interface PatchedK8sPortForward {
-    'id'?: number;
+export interface PatchedK8sPortForwardRequest {
     'internal_ip'?: string;
     'port'?: number;
     'protocol'?: ProtocolEnum;
 }
 
 
-export interface PatchedLBFirewallRule {
-    'id'?: number;
+export interface PatchedLBFirewallRuleRequest {
     'direction'?: LBFirewallRuleDirectionEnum;
     'action'?: LBFirewallRuleActionEnum;
     /**
@@ -2037,94 +2581,36 @@ export interface PatchedLBFirewallRule {
      * Rule order (lower = higher priority)
      */
     'position'?: number;
-    'created'?: string;
-    'updated'?: string;
 }
 
 
-export interface PatchedPrivateNetwork {
-    'id'?: number;
-    /**
-     * CIDR format
-     */
-    'slug'?: string;
-    /**
-     * CIDR format
-     */
-    'address'?: string;
+export interface PatchedPrivateNetworkUpdateRequest {
     'gateway'?: string | null;
-    'provisioned'?: boolean;
-    'servers'?: Array<{ [key: string]: string; }>;
 }
-export interface PatchedProfile {
+export interface PatchedProfileRequest {
     'first_name'?: string;
     'last_name'?: string;
-    'funds'?: string;
     'phone'?: string;
 }
-export interface PatchedResourcePool {
-    'id'?: number;
-    'package'?: string;
-    'generation'?: string;
-    'size'?: string;
-    'nodes'?: Array<ResourcePoolNode>;
+export interface PatchedResourcePoolRequest {
     'new_size'?: number;
+    'local_data_loss_accepted'?: boolean;
 }
-export interface PatchedSSHKey {
-    'id'?: number;
+export interface PatchedSSHKeyUpdateRequest {
     'alias'?: string;
-    'fingerprint'?: string;
-    'key'?: string;
 }
-export interface PatchedServerDetail {
-    'id'?: number;
-    'hostname'?: string;
+export interface PatchedServerDetailRequest {
     'project'?: string;
-    'image'?: string;
-    'package'?: string;
-    'cpus'?: number;
-    'memory'?: number;
-    'disk_size'?: number;
-    'generation'?: string;
-    'machine'?: { [key: string]: any; };
-    'volumes'?: Array<Volume>;
-    'networks'?: { [key: string]: any; };
-    'floating_ips'?: Array<FloatingIPSummary>;
     'password'?: string;
     /**
      * Public key to apply for SSH login. Applying a non-empty key regenerates cloud-init and reboots a running server. Clearing removes the key from future cloud-init data, but does not revoke keys already in the guest.
      */
     'ssh_pub_key'?: string;
-    'status'?: ResourceStatusEnum;
-    'username'?: string;
-    /**
-     * Prevents the server from being destroyed until disabled.
-     */
-    'destroy_protection'?: boolean;
-    /**
-     * Enables Proxmox HA — automatic restart and migration on node failure.
-     */
-    'ha_enabled'?: boolean;
-    /**
-     * Customer installed their own OS from an ISO; cloud-init features no longer apply
-     */
-    'custom_os'?: boolean;
-    'rescue_mode'?: boolean;
-    'boot_iso'?: string | null;
-    'rescue_supported'?: boolean;
 }
-
-
-export interface PatchedSubscribe {
-    'tier'?: TierEnum;
-}
-
-
 /**
  * Serializer for TCPRoute resources with port validation.
  */
-export interface PatchedTCPRoute {
-    'id'?: number;
+export interface PatchedTCPRouteRequest {
     'name'?: string;
     'namespace'?: string;
     /**
@@ -2143,16 +2629,11 @@ export interface PatchedTCPRoute {
      * Namespace of the backend Service
      */
     'backend_namespace'?: string;
-    'status_ready'?: boolean | null;
-    'status_message'?: string;
-    'created'?: string;
-    'updated'?: string;
 }
 /**
  * Serializer for UDPRoute resources with port validation.
  */
-export interface PatchedUDPRoute {
-    'id'?: number;
+export interface PatchedUDPRouteRequest {
     'name'?: string;
     'namespace'?: string;
     /**
@@ -2171,33 +2652,83 @@ export interface PatchedUDPRoute {
      * Namespace of the backend Service
      */
     'backend_namespace'?: string;
-    'status_ready'?: boolean | null;
-    'status_message'?: string;
-    'created'?: string;
-    'updated'?: string;
 }
-export interface PatchedVolume {
-    'id'?: number;
+export interface PatchedVolumeUpdateRequest {
     'project'?: string;
     'alias'?: string;
     /**
      * GB
      */
     'size'?: number;
-    /**
-     * ID or slug
-     */
-    'product'?: string;
-    'attached'?: boolean;
-    'server'?: string;
 }
 export interface PayWithFundsResponse {
     'message': string;
     'balance': string;
 }
-export interface PowerAction {
-    'action': PowerActionActionEnum;
+/**
+ * One worker a journal is removing, and how far its removal got.
+ */
+export interface PoolRemovalItem {
+    'target_hostname': string;
+    'cordoned_at': string | null;
+    'drained_at': string | null;
+    'detached_at': string | null;
+    'validated_at': string | null;
+    'reset_started_at': string | null;
+    'reset_completed_at': string | null;
+    'node_deleted_at': string | null;
+    'vm_deleted_at': string | null;
+    'uncordoned_at': string | null;
 }
+/**
+ * What a customer may see about a downsize or pool deletion.  There is no `source` here and the row records none. The spec\'s \"pool journals apply the same split\" is about the customer/staff partition, not a field-for-field mirror of the node operation: a journal\'s initiator is already `actor_label`, and a `source` column would have to be threaded through four call sites to say something no reader distinguishes. The day a `source=\"system\"` caller exists it becomes an additive `AddField`; until then it would be a column nothing can populate truthfully.
+ */
+export interface PoolRemovalJournal {
+    'id': number;
+    'kind': PoolRemovalJournalKindEnum;
+    'status': PoolRemovalJournalStatusEnum;
+    'reason': string;
+    'message': string;
+    'requested_pool_size': number | null;
+    'local_data_loss_accepted': boolean;
+    /**
+     * Who requested the removal (user email or staff name). Never token material.
+     */
+    'actor_label': string;
+    'created_at': string;
+    'updated_at': string;
+    'finished_at': string | null;
+    'items': Array<PoolRemovalItem>;
+    'allowed_actions': Array<string>;
+}
+
+
+/**
+ * * `downsize` - Downsize * `pool_delete` - Pool delete
+ */
+
+export const PoolRemovalJournalKindEnum = {
+    Downsize: 'downsize',
+    PoolDelete: 'pool_delete',
+} as const;
+
+export type PoolRemovalJournalKindEnum = typeof PoolRemovalJournalKindEnum[keyof typeof PoolRemovalJournalKindEnum];
+
+
+/**
+ * * `pending` - Pending * `preflight` - Preflight * `destructive` - Destructive phase * `needs_attention` - Needs attention * `failed` - Failed * `succeeded` - Succeeded
+ */
+
+export const PoolRemovalJournalStatusEnum = {
+    Pending: 'pending',
+    Preflight: 'preflight',
+    Destructive: 'destructive',
+    NeedsAttention: 'needs_attention',
+    Failed: 'failed',
+    Succeeded: 'succeeded',
+} as const;
+
+export type PoolRemovalJournalStatusEnum = typeof PoolRemovalJournalStatusEnum[keyof typeof PoolRemovalJournalStatusEnum];
 
 
 /**
@@ -2212,6 +2743,11 @@ export const PowerActionActionEnum = {
 } as const;
 
 export type PowerActionActionEnum = typeof PowerActionActionEnum[keyof typeof PowerActionActionEnum];
+
+
+export interface PowerActionRequest {
+    'action': PowerActionActionEnum;
+}
 
 
 export interface PowerActionResponse {
@@ -2253,23 +2789,38 @@ export interface PrivateNetwork {
     'provisioned': boolean;
     'servers': Array<{ [key: string]: string; }>;
 }
-export interface PrivateNetworkAddHost {
+export interface PrivateNetworkAddHostRequest {
     /**
      * Server hostname
      */
     'server': string;
     'address'?: string;
 }
-export interface PrivateNetworkRemoveHost {
+export interface PrivateNetworkRemoveHostRequest {
     /**
      * Server hostname or private IP
      */
     'server': string;
 }
+export interface PrivateNetworkRequest {
+    /**
+     * CIDR format
+     */
+    'address': string;
+    'gateway'?: string | null;
+}
+export interface PrivateNetworkUpdateRequest {
+    'gateway'?: string | null;
+}
 export interface Profile {
     'first_name': string;
     'last_name': string;
     'funds': string;
+    'phone': string;
+}
+export interface ProfileRequest {
+    'first_name': string;
+    'last_name': string;
     'phone': string;
 }
 /**
@@ -2291,7 +2842,14 @@ export interface PublicIPv4 {
     'gateway': string;
     'prefix': number;
     'attached': boolean;
+    /**
+     * Hostname of the server this address is attached to. Empty when it is not attached.
+     */
     'server': string;
+    /**
+     * ID of the attached server, as used by /api/cloud/servers/{id}/. Null when the address is not attached to a cloud server.
+     */
+    'server_id': number | null;
 }
 export interface PublicIPv6 {
     'id': number;
@@ -2300,12 +2858,29 @@ export interface PublicIPv6 {
     'gateway': string;
     'prefix': number;
     'attached': boolean;
+    /**
+     * Hostname of the server this address is attached to. Empty when it is not attached.
+     */
     'server': string;
+    /**
+     * ID of the attached server, as used by /api/cloud/servers/{id}/. Null when the address is not attached to a cloud server.
+     */
+    'server_id': number | null;
 }
 export interface PublicInterface {
     'interface': string;
     'ipv4': string;
     'ipv6': string;
+    /**
+     * ID or slug
+     */
+    'fw_rules_set'?: string | null;
+    'fw_policy_in'?: FwPolicyOutEnum;
+    'fw_policy_out'?: FwPolicyOutEnum;
+}
+
+
+export interface PublicInterfaceRequest {
     /**
      * ID or slug
      */
@@ -2332,7 +2907,7 @@ export const ReasonEnum = {
 export type ReasonEnum = typeof ReasonEnum[keyof typeof ReasonEnum];
 
 
-export interface Reinstall {
+export interface ReinstallRequest {
     'os_id': number;
 }
 export interface ReinstallResponse {
@@ -2342,6 +2917,9 @@ export interface RemoveServerResponse {
     'removed': boolean;
 }
 export interface RenewDomain {
+    'years': number;
+}
+export interface RenewDomainRequest {
     'years': number;
 }
 export interface RescueEnterQueued {
@@ -2354,11 +2932,10 @@ export interface ResourcePool {
     'id': number;
     'package': string;
     'generation': string;
-    'size': string;
+    'size': number;
     'nodes': Array<ResourcePoolNode>;
-    'new_size'?: number;
 }
-export interface ResourcePoolAdd {
+export interface ResourcePoolAddRequest {
     /**
      * ID or slug
      */
@@ -2372,7 +2949,11 @@ export interface ResourcePoolAddResponse {
 export interface ResourcePoolNode {
     'id': number;
     'name': string;
-    'ip': string;
+    'ip': string | null;
+}
+export interface ResourcePoolRequest {
+    'new_size'?: number;
+    'local_data_loss_accepted'?: boolean;
 }
 /**
  * * `pending` - Pending * `active` - Active * `provisioning` - Provisioning * `suspending` - Suspending * `suspended` - Suspended * `resuming` - Resuming * `cancelling` - Cancelling * `cancelled` - Cancelled * `terminating` - Terminating * `terminated` - Terminated * `failed` - Failed * `upgrading` - Upgrading
@@ -2405,17 +2986,33 @@ export interface ReverseDNS {
      */
     'reverse_dns': string;
 }
+export interface ReverseDNSRequest {
+    /**
+     * Fully-qualified domain name for PTR record (e.g., host.example.com)
+     */
+    'reverse_dns': string;
+}
 export interface SSHKey {
     'id': number;
     'alias'?: string;
     'fingerprint': string;
     'key': string;
 }
+export interface SSHKeyRequest {
+    'alias'?: string;
+    'key': string;
+}
+export interface SSHKeyUpdateRequest {
+    'alias'?: string;
+}
 export interface SandboxAddress {
     'id': number;
     'address': string;
     'verified_at': string | null;
     'created_at': string;
+}
+export interface SandboxAddressRequest {
+    'address': string;
 }
 /**
  * * `read_only` - Read only * `read_write` - Read & Write
@@ -2429,6 +3026,20 @@ export const ScopeEnum = {
 export type ScopeEnum = typeof ScopeEnum[keyof typeof ScopeEnum];
 
 
+export interface SendRequest {
+    'from_address': string;
+    'to': Array<string>;
+    'cc'?: Array<string>;
+    'bcc'?: Array<string>;
+    'reply_to'?: string;
+    'subject': string;
+    'html_body'?: string;
+    'plain_body'?: string;
+    'headers'?: { [key: string]: string; };
+    'track_opens'?: boolean;
+    'track_clicks'?: boolean;
+    'attachments'?: Array<AttachmentRequest>;
+}
 export interface SendingDomain {
     'id': number;
     'name': string;
@@ -2483,14 +3094,14 @@ export interface Server {
      * Customer installed their own OS from an ISO; cloud-init features no longer apply
      */
     'custom_os': boolean;
-    'networks': { [key: string]: any; };
+    'networks': ServerNetworks;
     'rescue_mode': boolean;
     'boot_iso': string | null;
     'rescue_supported': boolean;
 }
 
 
-export interface ServerAdd {
+export interface ServerAddRequest {
     /**
      * ID or slug
      */
@@ -2573,9 +3184,8 @@ export interface ServerDetail {
     'generation': string;
     'machine': { [key: string]: any; };
     'volumes': Array<Volume>;
-    'networks': { [key: string]: any; };
+    'networks': ServerNetworks;
     'floating_ips': Array<FloatingIPSummary>;
-    'password'?: string;
     /**
      * Public key to apply for SSH login. Applying a non-empty key regenerates cloud-init and reboots a running server. Clearing removes the key from future cloud-init data, but does not revoke keys already in the guest.
      */
@@ -2600,6 +3210,23 @@ export interface ServerDetail {
 }
 
 
+export interface ServerDetailRequest {
+    'project'?: string;
+    'password'?: string;
+    /**
+     * Public key to apply for SSH login. Applying a non-empty key regenerates cloud-init and reboots a running server. Clearing removes the key from future cloud-init data, but does not revoke keys already in the guest.
+     */
+    'ssh_pub_key'?: string;
+}
+export interface ServerNetworks {
+    'public': ServerPublicNetwork;
+    'private': Array<ServerPrivateInterface>;
+}
+export interface ServerPrivateInterface {
+    'interface': string;
+    'address': string;
+    'network': string;
+}
 export interface ServerProduct {
     'id': number;
     'slug': string;
@@ -2613,11 +3240,59 @@ export interface ServerProduct {
     'traffic': number;
     'available_generations': Array<string>;
 }
-export interface ServerProductUpgrade {
+export interface ServerProductUpgradeRequest {
     /**
      * ID or slug
      */
     'package': string;
+}
+export interface ServerPublicInterface {
+    'interface': string;
+    'ipv4': string;
+    'ipv6': string;
+    'primary': boolean;
+}
+export interface ServerPublicNetwork {
+    'interface'?: string;
+    'ipv4'?: string;
+    'ipv6'?: string;
+    'interfaces'?: Array<ServerPublicInterface>;
+}
+export interface ServerTrafficResponse {
+    'year': number;
+    'month': number;
+    'as_of': string | null;
+    'status': string;
+    'bytes_in': number;
+    'bytes_out': number;
+    'bytes_total': number;
+    'included_tb': number | null;
+    'used_units': number;
+    /**
+     * Usage rounded up to six decimal places; bytes_total is exact.
+     */
+    'used_tb': string;
+    /**
+     * Of bytes_total, the part that may be charged.
+     */
+    'billable_bytes': number;
+    'billable_units': number;
+    /**
+     * Billable usage rounded up to six decimal places; billable_bytes is exact.
+     */
+    'billable_tb': string;
+    /**
+     * First fully billable day, when one date describes the usage. May fall after the reported month. Null when all usage is billable or streams have different boundaries; use billable_bytes for the billable total.
+     */
+    'billable_from': string | null;
+    'charged_tb': number;
+    'charged_amount': string;
+    'price_per_tb': string | null;
+    'currency': string;
+    'unit_bytes': number;
+    'remaining_bytes': number | null;
+    'last_sample_at': string | null;
+    'daily': Array<{ [key: string]: any; }>;
 }
 export interface ServerUpgradeResponse {
     'upgrading': boolean;
@@ -2693,6 +3368,10 @@ export interface SmtpCredential {
     'created_at': string;
     'revoked_at': string | null;
 }
+export interface SmtpCredentialCreated {
+    'credential': SmtpCredential;
+    'password': string;
+}
 export interface Snapshot {
     'name': string;
     'description'?: string;
@@ -2701,16 +3380,16 @@ export interface Snapshot {
     'includes_memory': boolean;
     'is_current': boolean;
 }
-export interface SnapshotCreate {
+export interface SnapshotCreateQueued {
+    'queued': boolean;
+}
+export interface SnapshotCreateRequest {
     /**
      * Must start with a letter; letters, numbers, \"_\" and \"-\" only (2-40 characters).
      */
     'name': string;
     'description'?: string;
     'include_memory'?: boolean;
-}
-export interface SnapshotCreateQueued {
-    'queued': boolean;
 }
 export interface SnapshotDeleteQueued {
     'queued': boolean;
@@ -2730,6 +3409,27 @@ export const SourceEnum = {
 export type SourceEnum = typeof SourceEnum[keyof typeof SourceEnum];
 
 
+export interface StatsDay {
+    'sent': number;
+    'delivered': number;
+    'hard_bounce': number;
+    'soft_bounce': number;
+    'complaint': number;
+    'opened': number;
+    'clicked': number;
+    'rejected': number;
+    'day': string;
+}
+export interface StatsTotals {
+    'sent': number;
+    'delivered': number;
+    'hard_bounce': number;
+    'soft_bounce': number;
+    'complaint': number;
+    'opened': number;
+    'clicked': number;
+    'rejected': number;
+}
 export interface StorageProduct {
     'id': number;
     'slug': string;
@@ -2740,10 +3440,10 @@ export interface StorageProduct {
      * price per quantity units per month (if applicable)
      */
     'price': string;
-    'min_size': string;
-    'max_size': string;
+    'min_size': number;
+    'max_size': number;
 }
-export interface Subscribe {
+export interface SubscribeRequest {
     'tier': TierEnum;
 }
 
@@ -2774,6 +3474,10 @@ export const SubscriptionStatusEnum = {
 export type SubscriptionStatusEnum = typeof SubscriptionStatusEnum[keyof typeof SubscriptionStatusEnum];
 
 
+export interface SuppressionAddRequest {
+    'address': string;
+    'detail'?: string;
+}
 export interface SuppressionEntry {
     'id': number;
     'address': string;
@@ -2810,6 +3514,29 @@ export interface TCPRoute {
     'status_message': string;
     'created': string;
     'updated': string;
+}
+/**
+ * Serializer for TCPRoute resources with port validation.
+ */
+export interface TCPRouteRequest {
+    'name': string;
+    'namespace'?: string;
+    /**
+     * External port to expose (blocked: 22, 6443, 50000, 50001)
+     */
+    'port': number;
+    /**
+     * Name of the backend Kubernetes Service
+     */
+    'backend_service_name': string;
+    /**
+     * Port of the backend Service
+     */
+    'backend_service_port': number;
+    /**
+     * Namespace of the backend Service
+     */
+    'backend_namespace'?: string;
 }
 export interface TLD {
     'id': number;
@@ -2852,16 +3579,6 @@ export interface TicketCloseResponse {
     'message': string;
     'status': string;
 }
-export interface TicketCreate {
-    'subject': string;
-    'department': number;
-    'priority'?: TicketCreatePriorityEnum;
-    'service_id'?: number | null;
-    'message': string;
-    'attachment'?: string | null;
-}
-
-
 /**
  * * `low` - low * `medium` - medium * `high` - high
  */
@@ -2873,6 +3590,16 @@ export const TicketCreatePriorityEnum = {
 } as const;
 
 export type TicketCreatePriorityEnum = typeof TicketCreatePriorityEnum[keyof typeof TicketCreatePriorityEnum];
+
+
+export interface TicketCreateRequest {
+    'subject': string;
+    'department': number;
+    'priority'?: TicketCreatePriorityEnum;
+    'service_id'?: number | null;
+    'message': string;
+    'attachment'?: File;
+}
 
 
 export interface TicketDetail {
@@ -2903,7 +3630,7 @@ export interface TicketMessage {
     'date': string;
     'message': string;
     'author_name': string;
-    'has_attachment': string;
+    'has_attachment': boolean;
     'attachment_filename': string;
 }
 /**
@@ -2923,9 +3650,9 @@ export interface TicketReopenResponse {
     'message': string;
     'status': string;
 }
-export interface TicketReply {
+export interface TicketReplyRequest {
     'message': string;
-    'attachment'?: string | null;
+    'attachment'?: File;
 }
 export interface TicketReplyResponse {
     'message': string;
@@ -2965,7 +3692,20 @@ export interface ToggleCloudVMAccessResponse {
     'enabled': boolean;
     'message': string;
 }
+export interface ToggleInboundRequest {
+    'enable'?: boolean;
+}
 export interface TransferRoDomain {
+    /**
+     * Domain with tld, ex: example.com
+     */
+    'domain': string;
+    /**
+     * Auth code
+     */
+    'auth_code': string;
+}
+export interface TransferRoDomainRequest {
     /**
      * Domain with tld, ex: example.com
      */
@@ -3004,6 +3744,29 @@ export interface UDPRoute {
     'updated': string;
 }
 /**
+ * Serializer for UDPRoute resources with port validation.
+ */
+export interface UDPRouteRequest {
+    'name': string;
+    'namespace'?: string;
+    /**
+     * External port to expose
+     */
+    'port': number;
+    /**
+     * Name of the backend Kubernetes Service
+     */
+    'backend_service_name': string;
+    /**
+     * Port of the backend Service
+     */
+    'backend_service_port': number;
+    /**
+     * Namespace of the backend Service
+     */
+    'backend_namespace'?: string;
+}
+/**
  * * `ipv4` - ipv4 * `ipv6` - ipv6
  */
 
@@ -3030,6 +3793,26 @@ export interface Volume {
     'attached': boolean;
     'server': string;
 }
+export interface VolumeRequest {
+    'project'?: string;
+    'alias'?: string;
+    /**
+     * GB
+     */
+    'size': number;
+    /**
+     * ID or slug
+     */
+    'product': string;
+}
+export interface VolumeUpdateRequest {
+    'project'?: string;
+    'alias'?: string;
+    /**
+     * GB
+     */
+    'size': number;
+}
 
 /**
  * AccountApi - axios parameter creator
@@ -3038,13 +3821,13 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
     return {
         /**
          * Manage your API tokens
-         * @param {APITokenCreate} aPITokenCreate 
+         * @param {APITokenCreateRequest} aPITokenCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountApiTokensCreate: async (aPITokenCreate: APITokenCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'aPITokenCreate' is not null or undefined
-            assertParamExists('accountApiTokensCreate', 'aPITokenCreate', aPITokenCreate)
+        accountApiTokensCreate: async (aPITokenCreateRequest: APITokenCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'aPITokenCreateRequest' is not null or undefined
+            assertParamExists('accountApiTokensCreate', 'aPITokenCreateRequest', aPITokenCreateRequest)
             const localVarPath = `/api/account/api-tokens/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3068,7 +3851,7 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(aPITokenCreate, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(aPITokenCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3153,13 +3936,13 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * Manage your companies
-         * @param {Company} company 
+         * @param {CompanyRequest} companyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountCompaniesCreate: async (company: Company, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'company' is not null or undefined
-            assertParamExists('accountCompaniesCreate', 'company', company)
+        accountCompaniesCreate: async (companyRequest: CompanyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'companyRequest' is not null or undefined
+            assertParamExists('accountCompaniesCreate', 'companyRequest', companyRequest)
             const localVarPath = `/api/account/companies/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3183,7 +3966,7 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(company, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(companyRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3269,11 +4052,11 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Manage your companies
          * @param {number} id A unique integer value identifying this company.
-         * @param {PatchedCompany} [patchedCompany] 
+         * @param {PatchedCompanyRequest} [patchedCompanyRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountCompaniesPartialUpdate: async (id: number, patchedCompany?: PatchedCompany, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        accountCompaniesPartialUpdate: async (id: number, patchedCompanyRequest?: PatchedCompanyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('accountCompaniesPartialUpdate', 'id', id)
             const localVarPath = `/api/account/companies/{id}/`
@@ -3300,7 +4083,7 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedCompany, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedCompanyRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3348,15 +4131,15 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Manage your companies
          * @param {number} id A unique integer value identifying this company.
-         * @param {Company} company 
+         * @param {CompanyRequest} companyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountCompaniesUpdate: async (id: number, company: Company, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        accountCompaniesUpdate: async (id: number, companyRequest: CompanyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('accountCompaniesUpdate', 'id', id)
-            // verify required parameter 'company' is not null or undefined
-            assertParamExists('accountCompaniesUpdate', 'company', company)
+            // verify required parameter 'companyRequest' is not null or undefined
+            assertParamExists('accountCompaniesUpdate', 'companyRequest', companyRequest)
             const localVarPath = `/api/account/companies/{id}/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -3381,7 +4164,7 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(company, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(companyRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3429,11 +4212,11 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * Manage your profile data
-         * @param {PatchedProfile} [patchedProfile] 
+         * @param {PatchedProfileRequest} [patchedProfileRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountProfilePartialUpdate: async (patchedProfile?: PatchedProfile, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        accountProfilePartialUpdate: async (patchedProfileRequest?: PatchedProfileRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/account/profile`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3457,7 +4240,7 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedProfile, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedProfileRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3500,13 +4283,13 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * Manage your profile data
-         * @param {Profile} profile 
+         * @param {ProfileRequest} profileRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountProfileUpdate: async (profile: Profile, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'profile' is not null or undefined
-            assertParamExists('accountProfileUpdate', 'profile', profile)
+        accountProfileUpdate: async (profileRequest: ProfileRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'profileRequest' is not null or undefined
+            assertParamExists('accountProfileUpdate', 'profileRequest', profileRequest)
             const localVarPath = `/api/account/profile`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3530,7 +4313,7 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(profile, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(profileRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3539,11 +4322,13 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
-         * @param {SSHKey} [sSHKey] 
+         * @param {SSHKeyRequest} sSHKeyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountSshKeysCreate: async (sSHKey?: SSHKey, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        accountSshKeysCreate: async (sSHKeyRequest: SSHKeyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'sSHKeyRequest' is not null or undefined
+            assertParamExists('accountSshKeysCreate', 'sSHKeyRequest', sSHKeyRequest)
             const localVarPath = `/api/account/ssh-keys/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3567,7 +4352,7 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(sSHKey, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(sSHKeyRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3653,11 +4438,11 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
          * @param {string} id 
-         * @param {PatchedSSHKey} [patchedSSHKey] 
+         * @param {PatchedSSHKeyUpdateRequest} [patchedSSHKeyUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountSshKeysPartialUpdate: async (id: string, patchedSSHKey?: PatchedSSHKey, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        accountSshKeysPartialUpdate: async (id: string, patchedSSHKeyUpdateRequest?: PatchedSSHKeyUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('accountSshKeysPartialUpdate', 'id', id)
             const localVarPath = `/api/account/ssh-keys/{id}/`
@@ -3684,7 +4469,7 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedSSHKey, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedSSHKeyUpdateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3732,11 +4517,11 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
          * @param {string} id 
-         * @param {SSHKey} [sSHKey] 
+         * @param {SSHKeyUpdateRequest} [sSHKeyUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountSshKeysUpdate: async (id: string, sSHKey?: SSHKey, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        accountSshKeysUpdate: async (id: string, sSHKeyUpdateRequest?: SSHKeyUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('accountSshKeysUpdate', 'id', id)
             const localVarPath = `/api/account/ssh-keys/{id}/`
@@ -3763,7 +4548,7 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(sSHKey, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(sSHKeyUpdateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3781,12 +4566,12 @@ export const AccountApiFp = function(configuration?: Configuration) {
     return {
         /**
          * Manage your API tokens
-         * @param {APITokenCreate} aPITokenCreate 
+         * @param {APITokenCreateRequest} aPITokenCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async accountApiTokensCreate(aPITokenCreate: APITokenCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APITokenCreate>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.accountApiTokensCreate(aPITokenCreate, options);
+        async accountApiTokensCreate(aPITokenCreateRequest: APITokenCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APITokenCreate>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.accountApiTokensCreate(aPITokenCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AccountApi.accountApiTokensCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -3817,12 +4602,12 @@ export const AccountApiFp = function(configuration?: Configuration) {
         },
         /**
          * Manage your companies
-         * @param {Company} company 
+         * @param {CompanyRequest} companyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async accountCompaniesCreate(company: Company, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Company>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.accountCompaniesCreate(company, options);
+        async accountCompaniesCreate(companyRequest: CompanyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Company>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.accountCompaniesCreate(companyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AccountApi.accountCompaniesCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -3854,12 +4639,12 @@ export const AccountApiFp = function(configuration?: Configuration) {
         /**
          * Manage your companies
          * @param {number} id A unique integer value identifying this company.
-         * @param {PatchedCompany} [patchedCompany] 
+         * @param {PatchedCompanyRequest} [patchedCompanyRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async accountCompaniesPartialUpdate(id: number, patchedCompany?: PatchedCompany, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Company>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.accountCompaniesPartialUpdate(id, patchedCompany, options);
+        async accountCompaniesPartialUpdate(id: number, patchedCompanyRequest?: PatchedCompanyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Company>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.accountCompaniesPartialUpdate(id, patchedCompanyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AccountApi.accountCompaniesPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -3879,12 +4664,12 @@ export const AccountApiFp = function(configuration?: Configuration) {
         /**
          * Manage your companies
          * @param {number} id A unique integer value identifying this company.
-         * @param {Company} company 
+         * @param {CompanyRequest} companyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async accountCompaniesUpdate(id: number, company: Company, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Company>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.accountCompaniesUpdate(id, company, options);
+        async accountCompaniesUpdate(id: number, companyRequest: CompanyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Company>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.accountCompaniesUpdate(id, companyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AccountApi.accountCompaniesUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -3903,12 +4688,12 @@ export const AccountApiFp = function(configuration?: Configuration) {
         },
         /**
          * Manage your profile data
-         * @param {PatchedProfile} [patchedProfile] 
+         * @param {PatchedProfileRequest} [patchedProfileRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async accountProfilePartialUpdate(patchedProfile?: PatchedProfile, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Profile>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.accountProfilePartialUpdate(patchedProfile, options);
+        async accountProfilePartialUpdate(patchedProfileRequest?: PatchedProfileRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Profile>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.accountProfilePartialUpdate(patchedProfileRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AccountApi.accountProfilePartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -3926,24 +4711,24 @@ export const AccountApiFp = function(configuration?: Configuration) {
         },
         /**
          * Manage your profile data
-         * @param {Profile} profile 
+         * @param {ProfileRequest} profileRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async accountProfileUpdate(profile: Profile, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Profile>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.accountProfileUpdate(profile, options);
+        async accountProfileUpdate(profileRequest: ProfileRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Profile>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.accountProfileUpdate(profileRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AccountApi.accountProfileUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
-         * @param {SSHKey} [sSHKey] 
+         * @param {SSHKeyRequest} sSHKeyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async accountSshKeysCreate(sSHKey?: SSHKey, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SSHKey>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.accountSshKeysCreate(sSHKey, options);
+        async accountSshKeysCreate(sSHKeyRequest: SSHKeyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SSHKey>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.accountSshKeysCreate(sSHKeyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AccountApi.accountSshKeysCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -3975,12 +4760,12 @@ export const AccountApiFp = function(configuration?: Configuration) {
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
          * @param {string} id 
-         * @param {PatchedSSHKey} [patchedSSHKey] 
+         * @param {PatchedSSHKeyUpdateRequest} [patchedSSHKeyUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async accountSshKeysPartialUpdate(id: string, patchedSSHKey?: PatchedSSHKey, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SSHKey>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.accountSshKeysPartialUpdate(id, patchedSSHKey, options);
+        async accountSshKeysPartialUpdate(id: string, patchedSSHKeyUpdateRequest?: PatchedSSHKeyUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SSHKey>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.accountSshKeysPartialUpdate(id, patchedSSHKeyUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AccountApi.accountSshKeysPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -4000,12 +4785,12 @@ export const AccountApiFp = function(configuration?: Configuration) {
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
          * @param {string} id 
-         * @param {SSHKey} [sSHKey] 
+         * @param {SSHKeyUpdateRequest} [sSHKeyUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async accountSshKeysUpdate(id: string, sSHKey?: SSHKey, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SSHKey>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.accountSshKeysUpdate(id, sSHKey, options);
+        async accountSshKeysUpdate(id: string, sSHKeyUpdateRequest?: SSHKeyUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SSHKey>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.accountSshKeysUpdate(id, sSHKeyUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AccountApi.accountSshKeysUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -4021,12 +4806,12 @@ export const AccountApiFactory = function (configuration?: Configuration, basePa
     return {
         /**
          * Manage your API tokens
-         * @param {APITokenCreate} aPITokenCreate 
+         * @param {APITokenCreateRequest} aPITokenCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountApiTokensCreate(aPITokenCreate: APITokenCreate, options?: RawAxiosRequestConfig): AxiosPromise<APITokenCreate> {
-            return localVarFp.accountApiTokensCreate(aPITokenCreate, options).then((request) => request(axios, basePath));
+        accountApiTokensCreate(aPITokenCreateRequest: APITokenCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<APITokenCreate> {
+            return localVarFp.accountApiTokensCreate(aPITokenCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your API tokens
@@ -4048,12 +4833,12 @@ export const AccountApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * Manage your companies
-         * @param {Company} company 
+         * @param {CompanyRequest} companyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountCompaniesCreate(company: Company, options?: RawAxiosRequestConfig): AxiosPromise<Company> {
-            return localVarFp.accountCompaniesCreate(company, options).then((request) => request(axios, basePath));
+        accountCompaniesCreate(companyRequest: CompanyRequest, options?: RawAxiosRequestConfig): AxiosPromise<Company> {
+            return localVarFp.accountCompaniesCreate(companyRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your companies
@@ -4076,12 +4861,12 @@ export const AccountApiFactory = function (configuration?: Configuration, basePa
         /**
          * Manage your companies
          * @param {number} id A unique integer value identifying this company.
-         * @param {PatchedCompany} [patchedCompany] 
+         * @param {PatchedCompanyRequest} [patchedCompanyRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountCompaniesPartialUpdate(id: number, patchedCompany?: PatchedCompany, options?: RawAxiosRequestConfig): AxiosPromise<Company> {
-            return localVarFp.accountCompaniesPartialUpdate(id, patchedCompany, options).then((request) => request(axios, basePath));
+        accountCompaniesPartialUpdate(id: number, patchedCompanyRequest?: PatchedCompanyRequest, options?: RawAxiosRequestConfig): AxiosPromise<Company> {
+            return localVarFp.accountCompaniesPartialUpdate(id, patchedCompanyRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your companies
@@ -4095,12 +4880,12 @@ export const AccountApiFactory = function (configuration?: Configuration, basePa
         /**
          * Manage your companies
          * @param {number} id A unique integer value identifying this company.
-         * @param {Company} company 
+         * @param {CompanyRequest} companyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountCompaniesUpdate(id: number, company: Company, options?: RawAxiosRequestConfig): AxiosPromise<Company> {
-            return localVarFp.accountCompaniesUpdate(id, company, options).then((request) => request(axios, basePath));
+        accountCompaniesUpdate(id: number, companyRequest: CompanyRequest, options?: RawAxiosRequestConfig): AxiosPromise<Company> {
+            return localVarFp.accountCompaniesUpdate(id, companyRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List email history for the authenticated user.
@@ -4113,12 +4898,12 @@ export const AccountApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * Manage your profile data
-         * @param {PatchedProfile} [patchedProfile] 
+         * @param {PatchedProfileRequest} [patchedProfileRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountProfilePartialUpdate(patchedProfile?: PatchedProfile, options?: RawAxiosRequestConfig): AxiosPromise<Profile> {
-            return localVarFp.accountProfilePartialUpdate(patchedProfile, options).then((request) => request(axios, basePath));
+        accountProfilePartialUpdate(patchedProfileRequest?: PatchedProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<Profile> {
+            return localVarFp.accountProfilePartialUpdate(patchedProfileRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your profile data
@@ -4130,21 +4915,21 @@ export const AccountApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * Manage your profile data
-         * @param {Profile} profile 
+         * @param {ProfileRequest} profileRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountProfileUpdate(profile: Profile, options?: RawAxiosRequestConfig): AxiosPromise<Profile> {
-            return localVarFp.accountProfileUpdate(profile, options).then((request) => request(axios, basePath));
+        accountProfileUpdate(profileRequest: ProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<Profile> {
+            return localVarFp.accountProfileUpdate(profileRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
-         * @param {SSHKey} [sSHKey] 
+         * @param {SSHKeyRequest} sSHKeyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountSshKeysCreate(sSHKey?: SSHKey, options?: RawAxiosRequestConfig): AxiosPromise<SSHKey> {
-            return localVarFp.accountSshKeysCreate(sSHKey, options).then((request) => request(axios, basePath));
+        accountSshKeysCreate(sSHKeyRequest: SSHKeyRequest, options?: RawAxiosRequestConfig): AxiosPromise<SSHKey> {
+            return localVarFp.accountSshKeysCreate(sSHKeyRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
@@ -4167,12 +4952,12 @@ export const AccountApiFactory = function (configuration?: Configuration, basePa
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
          * @param {string} id 
-         * @param {PatchedSSHKey} [patchedSSHKey] 
+         * @param {PatchedSSHKeyUpdateRequest} [patchedSSHKeyUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountSshKeysPartialUpdate(id: string, patchedSSHKey?: PatchedSSHKey, options?: RawAxiosRequestConfig): AxiosPromise<SSHKey> {
-            return localVarFp.accountSshKeysPartialUpdate(id, patchedSSHKey, options).then((request) => request(axios, basePath));
+        accountSshKeysPartialUpdate(id: string, patchedSSHKeyUpdateRequest?: PatchedSSHKeyUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<SSHKey> {
+            return localVarFp.accountSshKeysPartialUpdate(id, patchedSSHKeyUpdateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
@@ -4186,12 +4971,12 @@ export const AccountApiFactory = function (configuration?: Configuration, basePa
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
          * @param {string} id 
-         * @param {SSHKey} [sSHKey] 
+         * @param {SSHKeyUpdateRequest} [sSHKeyUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        accountSshKeysUpdate(id: string, sSHKey?: SSHKey, options?: RawAxiosRequestConfig): AxiosPromise<SSHKey> {
-            return localVarFp.accountSshKeysUpdate(id, sSHKey, options).then((request) => request(axios, basePath));
+        accountSshKeysUpdate(id: string, sSHKeyUpdateRequest?: SSHKeyUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<SSHKey> {
+            return localVarFp.accountSshKeysUpdate(id, sSHKeyUpdateRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -4202,12 +4987,12 @@ export const AccountApiFactory = function (configuration?: Configuration, basePa
 export class AccountApi extends BaseAPI {
     /**
      * Manage your API tokens
-     * @param {APITokenCreate} aPITokenCreate 
+     * @param {APITokenCreateRequest} aPITokenCreateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public accountApiTokensCreate(aPITokenCreate: APITokenCreate, options?: RawAxiosRequestConfig) {
-        return AccountApiFp(this.configuration).accountApiTokensCreate(aPITokenCreate, options).then((request) => request(this.axios, this.basePath));
+    public accountApiTokensCreate(aPITokenCreateRequest: APITokenCreateRequest, options?: RawAxiosRequestConfig) {
+        return AccountApiFp(this.configuration).accountApiTokensCreate(aPITokenCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4232,12 +5017,12 @@ export class AccountApi extends BaseAPI {
 
     /**
      * Manage your companies
-     * @param {Company} company 
+     * @param {CompanyRequest} companyRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public accountCompaniesCreate(company: Company, options?: RawAxiosRequestConfig) {
-        return AccountApiFp(this.configuration).accountCompaniesCreate(company, options).then((request) => request(this.axios, this.basePath));
+    public accountCompaniesCreate(companyRequest: CompanyRequest, options?: RawAxiosRequestConfig) {
+        return AccountApiFp(this.configuration).accountCompaniesCreate(companyRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4263,12 +5048,12 @@ export class AccountApi extends BaseAPI {
     /**
      * Manage your companies
      * @param {number} id A unique integer value identifying this company.
-     * @param {PatchedCompany} [patchedCompany] 
+     * @param {PatchedCompanyRequest} [patchedCompanyRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public accountCompaniesPartialUpdate(id: number, patchedCompany?: PatchedCompany, options?: RawAxiosRequestConfig) {
-        return AccountApiFp(this.configuration).accountCompaniesPartialUpdate(id, patchedCompany, options).then((request) => request(this.axios, this.basePath));
+    public accountCompaniesPartialUpdate(id: number, patchedCompanyRequest?: PatchedCompanyRequest, options?: RawAxiosRequestConfig) {
+        return AccountApiFp(this.configuration).accountCompaniesPartialUpdate(id, patchedCompanyRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4284,12 +5069,12 @@ export class AccountApi extends BaseAPI {
     /**
      * Manage your companies
      * @param {number} id A unique integer value identifying this company.
-     * @param {Company} company 
+     * @param {CompanyRequest} companyRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public accountCompaniesUpdate(id: number, company: Company, options?: RawAxiosRequestConfig) {
-        return AccountApiFp(this.configuration).accountCompaniesUpdate(id, company, options).then((request) => request(this.axios, this.basePath));
+    public accountCompaniesUpdate(id: number, companyRequest: CompanyRequest, options?: RawAxiosRequestConfig) {
+        return AccountApiFp(this.configuration).accountCompaniesUpdate(id, companyRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4304,12 +5089,12 @@ export class AccountApi extends BaseAPI {
 
     /**
      * Manage your profile data
-     * @param {PatchedProfile} [patchedProfile] 
+     * @param {PatchedProfileRequest} [patchedProfileRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public accountProfilePartialUpdate(patchedProfile?: PatchedProfile, options?: RawAxiosRequestConfig) {
-        return AccountApiFp(this.configuration).accountProfilePartialUpdate(patchedProfile, options).then((request) => request(this.axios, this.basePath));
+    public accountProfilePartialUpdate(patchedProfileRequest?: PatchedProfileRequest, options?: RawAxiosRequestConfig) {
+        return AccountApiFp(this.configuration).accountProfilePartialUpdate(patchedProfileRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4323,22 +5108,22 @@ export class AccountApi extends BaseAPI {
 
     /**
      * Manage your profile data
-     * @param {Profile} profile 
+     * @param {ProfileRequest} profileRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public accountProfileUpdate(profile: Profile, options?: RawAxiosRequestConfig) {
-        return AccountApiFp(this.configuration).accountProfileUpdate(profile, options).then((request) => request(this.axios, this.basePath));
+    public accountProfileUpdate(profileRequest: ProfileRequest, options?: RawAxiosRequestConfig) {
+        return AccountApiFp(this.configuration).accountProfileUpdate(profileRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
-     * @param {SSHKey} [sSHKey] 
+     * @param {SSHKeyRequest} sSHKeyRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public accountSshKeysCreate(sSHKey?: SSHKey, options?: RawAxiosRequestConfig) {
-        return AccountApiFp(this.configuration).accountSshKeysCreate(sSHKey, options).then((request) => request(this.axios, this.basePath));
+    public accountSshKeysCreate(sSHKeyRequest: SSHKeyRequest, options?: RawAxiosRequestConfig) {
+        return AccountApiFp(this.configuration).accountSshKeysCreate(sSHKeyRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4364,12 +5149,12 @@ export class AccountApi extends BaseAPI {
     /**
      * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
      * @param {string} id 
-     * @param {PatchedSSHKey} [patchedSSHKey] 
+     * @param {PatchedSSHKeyUpdateRequest} [patchedSSHKeyUpdateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public accountSshKeysPartialUpdate(id: string, patchedSSHKey?: PatchedSSHKey, options?: RawAxiosRequestConfig) {
-        return AccountApiFp(this.configuration).accountSshKeysPartialUpdate(id, patchedSSHKey, options).then((request) => request(this.axios, this.basePath));
+    public accountSshKeysPartialUpdate(id: string, patchedSSHKeyUpdateRequest?: PatchedSSHKeyUpdateRequest, options?: RawAxiosRequestConfig) {
+        return AccountApiFp(this.configuration).accountSshKeysPartialUpdate(id, patchedSSHKeyUpdateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4385,12 +5170,12 @@ export class AccountApi extends BaseAPI {
     /**
      * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
      * @param {string} id 
-     * @param {SSHKey} [sSHKey] 
+     * @param {SSHKeyUpdateRequest} [sSHKeyUpdateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public accountSshKeysUpdate(id: string, sSHKey?: SSHKey, options?: RawAxiosRequestConfig) {
-        return AccountApiFp(this.configuration).accountSshKeysUpdate(id, sSHKey, options).then((request) => request(this.axios, this.basePath));
+    public accountSshKeysUpdate(id: string, sSHKeyUpdateRequest?: SSHKeyUpdateRequest, options?: RawAxiosRequestConfig) {
+        return AccountApiFp(this.configuration).accountSshKeysUpdate(id, sSHKeyUpdateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -4557,13 +5342,13 @@ export const BillingApiAxiosParamCreator = function (configuration?: Configurati
     return {
         /**
          * Create a new funds deposit.
-         * @param {DepositCreate} depositCreate 
+         * @param {DepositCreateRequest} depositCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        billingDepositsCreate: async (depositCreate: DepositCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'depositCreate' is not null or undefined
-            assertParamExists('billingDepositsCreate', 'depositCreate', depositCreate)
+        billingDepositsCreate: async (depositCreateRequest: DepositCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'depositCreateRequest' is not null or undefined
+            assertParamExists('billingDepositsCreate', 'depositCreateRequest', depositCreateRequest)
             const localVarPath = `/api/billing/deposits/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4587,7 +5372,7 @@ export const BillingApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(depositCreate, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(depositCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4746,13 +5531,13 @@ export const BillingApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * Update low-balance notification settings.
-         * @param {LowBalanceSettings} lowBalanceSettings 
+         * @param {LowBalanceSettingsRequest} lowBalanceSettingsRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        billingFundsNotificationSettingsCreate: async (lowBalanceSettings: LowBalanceSettings, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'lowBalanceSettings' is not null or undefined
-            assertParamExists('billingFundsNotificationSettingsCreate', 'lowBalanceSettings', lowBalanceSettings)
+        billingFundsNotificationSettingsCreate: async (lowBalanceSettingsRequest: LowBalanceSettingsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'lowBalanceSettingsRequest' is not null or undefined
+            assertParamExists('billingFundsNotificationSettingsCreate', 'lowBalanceSettingsRequest', lowBalanceSettingsRequest)
             const localVarPath = `/api/billing/funds/notification-settings/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4776,7 +5561,7 @@ export const BillingApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(lowBalanceSettings, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(lowBalanceSettingsRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4977,15 +5762,15 @@ export const BillingApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Change the billing cycle of a service.
          * @param {string} id 
-         * @param {ChangeBillingCycle} changeBillingCycle 
+         * @param {ChangeBillingCycleRequest} changeBillingCycleRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        billingServicesChangeBillingCycleCreate: async (id: string, changeBillingCycle: ChangeBillingCycle, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        billingServicesChangeBillingCycleCreate: async (id: string, changeBillingCycleRequest: ChangeBillingCycleRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('billingServicesChangeBillingCycleCreate', 'id', id)
-            // verify required parameter 'changeBillingCycle' is not null or undefined
-            assertParamExists('billingServicesChangeBillingCycleCreate', 'changeBillingCycle', changeBillingCycle)
+            // verify required parameter 'changeBillingCycleRequest' is not null or undefined
+            assertParamExists('billingServicesChangeBillingCycleCreate', 'changeBillingCycleRequest', changeBillingCycleRequest)
             const localVarPath = `/api/billing/services/{id}/change-billing-cycle/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -5010,7 +5795,7 @@ export const BillingApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(changeBillingCycle, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(changeBillingCycleRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -5020,11 +5805,11 @@ export const BillingApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Change the company associated with a service.
          * @param {string} id 
-         * @param {ChangeCompany} [changeCompany] 
+         * @param {ChangeCompanyRequest} [changeCompanyRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        billingServicesChangeCompanyCreate: async (id: string, changeCompany?: ChangeCompany, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        billingServicesChangeCompanyCreate: async (id: string, changeCompanyRequest?: ChangeCompanyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('billingServicesChangeCompanyCreate', 'id', id)
             const localVarPath = `/api/billing/services/{id}/change-company/`
@@ -5051,7 +5836,7 @@ export const BillingApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(changeCompany, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(changeCompanyRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -5261,12 +6046,12 @@ export const BillingApiFp = function(configuration?: Configuration) {
     return {
         /**
          * Create a new funds deposit.
-         * @param {DepositCreate} depositCreate 
+         * @param {DepositCreateRequest} depositCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async billingDepositsCreate(depositCreate: DepositCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Deposit>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.billingDepositsCreate(depositCreate, options);
+        async billingDepositsCreate(depositCreateRequest: DepositCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Deposit>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.billingDepositsCreate(depositCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BillingApi.billingDepositsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -5320,12 +6105,12 @@ export const BillingApiFp = function(configuration?: Configuration) {
         },
         /**
          * Update low-balance notification settings.
-         * @param {LowBalanceSettings} lowBalanceSettings 
+         * @param {LowBalanceSettingsRequest} lowBalanceSettingsRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async billingFundsNotificationSettingsCreate(lowBalanceSettings: LowBalanceSettings, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NotificationSettingsResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.billingFundsNotificationSettingsCreate(lowBalanceSettings, options);
+        async billingFundsNotificationSettingsCreate(lowBalanceSettingsRequest: LowBalanceSettingsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NotificationSettingsResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.billingFundsNotificationSettingsCreate(lowBalanceSettingsRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BillingApi.billingFundsNotificationSettingsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -5393,12 +6178,12 @@ export const BillingApiFp = function(configuration?: Configuration) {
         /**
          * Change the billing cycle of a service.
          * @param {string} id 
-         * @param {ChangeBillingCycle} changeBillingCycle 
+         * @param {ChangeBillingCycleRequest} changeBillingCycleRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async billingServicesChangeBillingCycleCreate(id: string, changeBillingCycle: ChangeBillingCycle, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ChangeBillingCycleResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.billingServicesChangeBillingCycleCreate(id, changeBillingCycle, options);
+        async billingServicesChangeBillingCycleCreate(id: string, changeBillingCycleRequest: ChangeBillingCycleRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ChangeBillingCycleResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.billingServicesChangeBillingCycleCreate(id, changeBillingCycleRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BillingApi.billingServicesChangeBillingCycleCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -5406,12 +6191,12 @@ export const BillingApiFp = function(configuration?: Configuration) {
         /**
          * Change the company associated with a service.
          * @param {string} id 
-         * @param {ChangeCompany} [changeCompany] 
+         * @param {ChangeCompanyRequest} [changeCompanyRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async billingServicesChangeCompanyCreate(id: string, changeCompany?: ChangeCompany, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ChangeCompanyResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.billingServicesChangeCompanyCreate(id, changeCompany, options);
+        async billingServicesChangeCompanyCreate(id: string, changeCompanyRequest?: ChangeCompanyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ChangeCompanyResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.billingServicesChangeCompanyCreate(id, changeCompanyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BillingApi.billingServicesChangeCompanyCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -5487,12 +6272,12 @@ export const BillingApiFactory = function (configuration?: Configuration, basePa
     return {
         /**
          * Create a new funds deposit.
-         * @param {DepositCreate} depositCreate 
+         * @param {DepositCreateRequest} depositCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        billingDepositsCreate(depositCreate: DepositCreate, options?: RawAxiosRequestConfig): AxiosPromise<Deposit> {
-            return localVarFp.billingDepositsCreate(depositCreate, options).then((request) => request(axios, basePath));
+        billingDepositsCreate(depositCreateRequest: DepositCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<Deposit> {
+            return localVarFp.billingDepositsCreate(depositCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List, create, and retrieve fund deposits.
@@ -5531,12 +6316,12 @@ export const BillingApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * Update low-balance notification settings.
-         * @param {LowBalanceSettings} lowBalanceSettings 
+         * @param {LowBalanceSettingsRequest} lowBalanceSettingsRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        billingFundsNotificationSettingsCreate(lowBalanceSettings: LowBalanceSettings, options?: RawAxiosRequestConfig): AxiosPromise<NotificationSettingsResponse> {
-            return localVarFp.billingFundsNotificationSettingsCreate(lowBalanceSettings, options).then((request) => request(axios, basePath));
+        billingFundsNotificationSettingsCreate(lowBalanceSettingsRequest: LowBalanceSettingsRequest, options?: RawAxiosRequestConfig): AxiosPromise<NotificationSettingsResponse> {
+            return localVarFp.billingFundsNotificationSettingsCreate(lowBalanceSettingsRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List and retrieve invoices. Pay with funds or download PDF.
@@ -5586,22 +6371,22 @@ export const BillingApiFactory = function (configuration?: Configuration, basePa
         /**
          * Change the billing cycle of a service.
          * @param {string} id 
-         * @param {ChangeBillingCycle} changeBillingCycle 
+         * @param {ChangeBillingCycleRequest} changeBillingCycleRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        billingServicesChangeBillingCycleCreate(id: string, changeBillingCycle: ChangeBillingCycle, options?: RawAxiosRequestConfig): AxiosPromise<ChangeBillingCycleResponse> {
-            return localVarFp.billingServicesChangeBillingCycleCreate(id, changeBillingCycle, options).then((request) => request(axios, basePath));
+        billingServicesChangeBillingCycleCreate(id: string, changeBillingCycleRequest: ChangeBillingCycleRequest, options?: RawAxiosRequestConfig): AxiosPromise<ChangeBillingCycleResponse> {
+            return localVarFp.billingServicesChangeBillingCycleCreate(id, changeBillingCycleRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Change the company associated with a service.
          * @param {string} id 
-         * @param {ChangeCompany} [changeCompany] 
+         * @param {ChangeCompanyRequest} [changeCompanyRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        billingServicesChangeCompanyCreate(id: string, changeCompany?: ChangeCompany, options?: RawAxiosRequestConfig): AxiosPromise<ChangeCompanyResponse> {
-            return localVarFp.billingServicesChangeCompanyCreate(id, changeCompany, options).then((request) => request(axios, basePath));
+        billingServicesChangeCompanyCreate(id: string, changeCompanyRequest?: ChangeCompanyRequest, options?: RawAxiosRequestConfig): AxiosPromise<ChangeCompanyResponse> {
+            return localVarFp.billingServicesChangeCompanyCreate(id, changeCompanyRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List and manage billing services.
@@ -5657,12 +6442,12 @@ export const BillingApiFactory = function (configuration?: Configuration, basePa
 export class BillingApi extends BaseAPI {
     /**
      * Create a new funds deposit.
-     * @param {DepositCreate} depositCreate 
+     * @param {DepositCreateRequest} depositCreateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public billingDepositsCreate(depositCreate: DepositCreate, options?: RawAxiosRequestConfig) {
-        return BillingApiFp(this.configuration).billingDepositsCreate(depositCreate, options).then((request) => request(this.axios, this.basePath));
+    public billingDepositsCreate(depositCreateRequest: DepositCreateRequest, options?: RawAxiosRequestConfig) {
+        return BillingApiFp(this.configuration).billingDepositsCreate(depositCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -5706,12 +6491,12 @@ export class BillingApi extends BaseAPI {
 
     /**
      * Update low-balance notification settings.
-     * @param {LowBalanceSettings} lowBalanceSettings 
+     * @param {LowBalanceSettingsRequest} lowBalanceSettingsRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public billingFundsNotificationSettingsCreate(lowBalanceSettings: LowBalanceSettings, options?: RawAxiosRequestConfig) {
-        return BillingApiFp(this.configuration).billingFundsNotificationSettingsCreate(lowBalanceSettings, options).then((request) => request(this.axios, this.basePath));
+    public billingFundsNotificationSettingsCreate(lowBalanceSettingsRequest: LowBalanceSettingsRequest, options?: RawAxiosRequestConfig) {
+        return BillingApiFp(this.configuration).billingFundsNotificationSettingsCreate(lowBalanceSettingsRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -5767,23 +6552,23 @@ export class BillingApi extends BaseAPI {
     /**
      * Change the billing cycle of a service.
      * @param {string} id 
-     * @param {ChangeBillingCycle} changeBillingCycle 
+     * @param {ChangeBillingCycleRequest} changeBillingCycleRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public billingServicesChangeBillingCycleCreate(id: string, changeBillingCycle: ChangeBillingCycle, options?: RawAxiosRequestConfig) {
-        return BillingApiFp(this.configuration).billingServicesChangeBillingCycleCreate(id, changeBillingCycle, options).then((request) => request(this.axios, this.basePath));
+    public billingServicesChangeBillingCycleCreate(id: string, changeBillingCycleRequest: ChangeBillingCycleRequest, options?: RawAxiosRequestConfig) {
+        return BillingApiFp(this.configuration).billingServicesChangeBillingCycleCreate(id, changeBillingCycleRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Change the company associated with a service.
      * @param {string} id 
-     * @param {ChangeCompany} [changeCompany] 
+     * @param {ChangeCompanyRequest} [changeCompanyRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public billingServicesChangeCompanyCreate(id: string, changeCompany?: ChangeCompany, options?: RawAxiosRequestConfig) {
-        return BillingApiFp(this.configuration).billingServicesChangeCompanyCreate(id, changeCompany, options).then((request) => request(this.axios, this.basePath));
+    public billingServicesChangeCompanyCreate(id: string, changeCompanyRequest?: ChangeCompanyRequest, options?: RawAxiosRequestConfig) {
+        return BillingApiFp(this.configuration).billingServicesChangeCompanyCreate(id, changeCompanyRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -5846,13 +6631,13 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
     return {
         /**
          * Create a bucket
-         * @param {BucketCreate} bucketCreate 
+         * @param {BucketCreateRequest} bucketCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudBucketsCreate: async (bucketCreate: BucketCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'bucketCreate' is not null or undefined
-            assertParamExists('cloudBucketsCreate', 'bucketCreate', bucketCreate)
+        cloudBucketsCreate: async (bucketCreateRequest: BucketCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bucketCreateRequest' is not null or undefined
+            assertParamExists('cloudBucketsCreate', 'bucketCreateRequest', bucketCreateRequest)
             const localVarPath = `/api/cloud/buckets/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -5876,7 +6661,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(bucketCreate, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(bucketCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6034,15 +6819,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Resize a bucket
          * @param {number} id A unique integer value identifying this S3 bucket.
-         * @param {BucketResize} bucketResize 
+         * @param {BucketResizeRequest} bucketResizeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudBucketsResizeCreate: async (id: number, bucketResize: BucketResize, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudBucketsResizeCreate: async (id: number, bucketResizeRequest: BucketResizeRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudBucketsResizeCreate', 'id', id)
-            // verify required parameter 'bucketResize' is not null or undefined
-            assertParamExists('cloudBucketsResizeCreate', 'bucketResize', bucketResize)
+            // verify required parameter 'bucketResizeRequest' is not null or undefined
+            assertParamExists('cloudBucketsResizeCreate', 'bucketResizeRequest', bucketResizeRequest)
             const localVarPath = `/api/cloud/buckets/{id}/resize/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -6067,7 +6852,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(bucketResize, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(bucketResizeRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6115,15 +6900,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Set bucket visibility
          * @param {number} id A unique integer value identifying this S3 bucket.
-         * @param {BucketVisibility} bucketVisibility 
+         * @param {BucketVisibilityRequest} bucketVisibilityRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudBucketsVisibilityCreate: async (id: number, bucketVisibility: BucketVisibility, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudBucketsVisibilityCreate: async (id: number, bucketVisibilityRequest: BucketVisibilityRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudBucketsVisibilityCreate', 'id', id)
-            // verify required parameter 'bucketVisibility' is not null or undefined
-            assertParamExists('cloudBucketsVisibilityCreate', 'bucketVisibility', bucketVisibility)
+            // verify required parameter 'bucketVisibilityRequest' is not null or undefined
+            assertParamExists('cloudBucketsVisibilityCreate', 'bucketVisibilityRequest', bucketVisibilityRequest)
             const localVarPath = `/api/cloud/buckets/{id}/visibility/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -6148,7 +6933,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(bucketVisibility, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(bucketVisibilityRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6157,13 +6942,13 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-         * @param {FirewallRulesSet} firewallRulesSet 
+         * @param {FirewallRulesSetRequest} firewallRulesSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetCreate: async (firewallRulesSet: FirewallRulesSet, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'firewallRulesSet' is not null or undefined
-            assertParamExists('cloudFirewallRulesSetCreate', 'firewallRulesSet', firewallRulesSet)
+        cloudFirewallRulesSetCreate: async (firewallRulesSetRequest: FirewallRulesSetRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'firewallRulesSetRequest' is not null or undefined
+            assertParamExists('cloudFirewallRulesSetCreate', 'firewallRulesSetRequest', firewallRulesSetRequest)
             const localVarPath = `/api/cloud/firewall-rules-set/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -6187,7 +6972,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(firewallRulesSet, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(firewallRulesSetRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6268,11 +7053,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this firewall rules set.
-         * @param {PatchedFirewallRulesSet} [patchedFirewallRulesSet] 
+         * @param {PatchedFirewallRulesSetRequest} [patchedFirewallRulesSetRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetPartialUpdate: async (id: number, patchedFirewallRulesSet?: PatchedFirewallRulesSet, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudFirewallRulesSetPartialUpdate: async (id: number, patchedFirewallRulesSetRequest?: PatchedFirewallRulesSetRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudFirewallRulesSetPartialUpdate', 'id', id)
             const localVarPath = `/api/cloud/firewall-rules-set/{id}/`
@@ -6299,7 +7084,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedFirewallRulesSet, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedFirewallRulesSetRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6347,15 +7132,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} rulesSetId 
-         * @param {FirewallRule} firewallRule 
+         * @param {FirewallRuleRequest} firewallRuleRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetRulesCreate: async (rulesSetId: string, firewallRule: FirewallRule, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudFirewallRulesSetRulesCreate: async (rulesSetId: string, firewallRuleRequest: FirewallRuleRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'rulesSetId' is not null or undefined
             assertParamExists('cloudFirewallRulesSetRulesCreate', 'rulesSetId', rulesSetId)
-            // verify required parameter 'firewallRule' is not null or undefined
-            assertParamExists('cloudFirewallRulesSetRulesCreate', 'firewallRule', firewallRule)
+            // verify required parameter 'firewallRuleRequest' is not null or undefined
+            assertParamExists('cloudFirewallRulesSetRulesCreate', 'firewallRuleRequest', firewallRuleRequest)
             const localVarPath = `/api/cloud/firewall-rules-set/{rules_set_id}/rules/`
                 .replace('{rules_set_id}', encodeURIComponent(String(rulesSetId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -6380,7 +7165,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(firewallRule, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(firewallRuleRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6470,11 +7255,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} ruleId 
          * @param {string} rulesSetId 
-         * @param {PatchedFirewallRule} [patchedFirewallRule] 
+         * @param {PatchedFirewallRuleRequest} [patchedFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetRulesPartialUpdate: async (ruleId: string, rulesSetId: string, patchedFirewallRule?: PatchedFirewallRule, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudFirewallRulesSetRulesPartialUpdate: async (ruleId: string, rulesSetId: string, patchedFirewallRuleRequest?: PatchedFirewallRuleRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'ruleId' is not null or undefined
             assertParamExists('cloudFirewallRulesSetRulesPartialUpdate', 'ruleId', ruleId)
             // verify required parameter 'rulesSetId' is not null or undefined
@@ -6504,7 +7289,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedFirewallRule, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedFirewallRuleRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6557,17 +7342,17 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} ruleId 
          * @param {string} rulesSetId 
-         * @param {FirewallRule} firewallRule 
+         * @param {FirewallRuleRequest} firewallRuleRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetRulesUpdate: async (ruleId: string, rulesSetId: string, firewallRule: FirewallRule, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudFirewallRulesSetRulesUpdate: async (ruleId: string, rulesSetId: string, firewallRuleRequest: FirewallRuleRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'ruleId' is not null or undefined
             assertParamExists('cloudFirewallRulesSetRulesUpdate', 'ruleId', ruleId)
             // verify required parameter 'rulesSetId' is not null or undefined
             assertParamExists('cloudFirewallRulesSetRulesUpdate', 'rulesSetId', rulesSetId)
-            // verify required parameter 'firewallRule' is not null or undefined
-            assertParamExists('cloudFirewallRulesSetRulesUpdate', 'firewallRule', firewallRule)
+            // verify required parameter 'firewallRuleRequest' is not null or undefined
+            assertParamExists('cloudFirewallRulesSetRulesUpdate', 'firewallRuleRequest', firewallRuleRequest)
             const localVarPath = `/api/cloud/firewall-rules-set/{rules_set_id}/rules/{rule_id}/`
                 .replace('{rule_id}', encodeURIComponent(String(ruleId)))
                 .replace('{rules_set_id}', encodeURIComponent(String(rulesSetId)));
@@ -6593,7 +7378,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(firewallRule, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(firewallRuleRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6603,15 +7388,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this firewall rules set.
-         * @param {FirewallRulesSet} firewallRulesSet 
+         * @param {FirewallRulesSetRequest} firewallRulesSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetUpdate: async (id: number, firewallRulesSet: FirewallRulesSet, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudFirewallRulesSetUpdate: async (id: number, firewallRulesSetRequest: FirewallRulesSetRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudFirewallRulesSetUpdate', 'id', id)
-            // verify required parameter 'firewallRulesSet' is not null or undefined
-            assertParamExists('cloudFirewallRulesSetUpdate', 'firewallRulesSet', firewallRulesSet)
+            // verify required parameter 'firewallRulesSetRequest' is not null or undefined
+            assertParamExists('cloudFirewallRulesSetUpdate', 'firewallRulesSetRequest', firewallRulesSetRequest)
             const localVarPath = `/api/cloud/firewall-rules-set/{id}/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -6636,7 +7421,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(firewallRulesSet, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(firewallRulesSetRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6731,11 +7516,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Manage floating IPv4 addresses. A floating IP can be authorized on multiple VMs simultaneously; the customer asserts ownership inside the guest via keepalived/VRRP.
-         * @param {FloatingIPv4Create} [floatingIPv4Create] 
+         * @param {FloatingIPv4CreateRequest} [floatingIPv4CreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFloatingIpv4Create: async (floatingIPv4Create?: FloatingIPv4Create, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudFloatingIpv4Create: async (floatingIPv4CreateRequest?: FloatingIPv4CreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/cloud/floating-ipv4/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -6759,7 +7544,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(floatingIPv4Create, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(floatingIPv4CreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -6845,15 +7630,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Get or update reverse DNS (PTR) for the IPv4 address wrapped by this floating IP.
          * @param {number} id A unique integer value identifying this floating IPv4.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFloatingIpv4RdnsCreate: async (id: number, reverseDNS: ReverseDNS, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudFloatingIpv4RdnsCreate: async (id: number, reverseDNSRequest: ReverseDNSRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudFloatingIpv4RdnsCreate', 'id', id)
-            // verify required parameter 'reverseDNS' is not null or undefined
-            assertParamExists('cloudFloatingIpv4RdnsCreate', 'reverseDNS', reverseDNS)
+            // verify required parameter 'reverseDNSRequest' is not null or undefined
+            assertParamExists('cloudFloatingIpv4RdnsCreate', 'reverseDNSRequest', reverseDNSRequest)
             const localVarPath = `/api/cloud/floating-ipv4/{id}/rdns/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -6878,7 +7663,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(reverseDNS, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(reverseDNSRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7092,11 +7877,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Manage floating IPv6 addresses.
-         * @param {FloatingIPv6Create} [floatingIPv6Create] 
+         * @param {FloatingIPv6CreateRequest} [floatingIPv6CreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFloatingIpv6Create: async (floatingIPv6Create?: FloatingIPv6Create, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudFloatingIpv6Create: async (floatingIPv6CreateRequest?: FloatingIPv6CreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/cloud/floating-ipv6/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -7120,7 +7905,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(floatingIPv6Create, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(floatingIPv6CreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7206,15 +7991,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Get or update reverse DNS (PTR) for the IPv6 address wrapped by this floating IP.
          * @param {number} id A unique integer value identifying this floating IPv6.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFloatingIpv6RdnsCreate: async (id: number, reverseDNS: ReverseDNS, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudFloatingIpv6RdnsCreate: async (id: number, reverseDNSRequest: ReverseDNSRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudFloatingIpv6RdnsCreate', 'id', id)
-            // verify required parameter 'reverseDNS' is not null or undefined
-            assertParamExists('cloudFloatingIpv6RdnsCreate', 'reverseDNS', reverseDNS)
+            // verify required parameter 'reverseDNSRequest' is not null or undefined
+            assertParamExists('cloudFloatingIpv6RdnsCreate', 'reverseDNSRequest', reverseDNSRequest)
             const localVarPath = `/api/cloud/floating-ipv6/{id}/rdns/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -7239,7 +8024,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(reverseDNS, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(reverseDNSRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7517,11 +8302,10 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-         * @param {PublicIPv4} [publicIPv4] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv4Create: async (publicIPv4?: PublicIPv4, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudIpv4Create: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/cloud/ipv4/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -7539,13 +8323,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
-            localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(publicIPv4, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7592,11 +8374,10 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this Public IPv4.
-         * @param {PublicIPv4} [publicIPv4] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv4DetachCreate: async (id: number, publicIPv4?: PublicIPv4, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudIpv4DetachCreate: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudIpv4DetachCreate', 'id', id)
             const localVarPath = `/api/cloud/ipv4/{id}/detach/`
@@ -7617,13 +8398,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
-            localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(publicIPv4, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7672,15 +8451,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Get or update reverse DNS (PTR) for this IPv4 address.
          * @param {number} id A unique integer value identifying this Public IPv4.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv4RdnsCreate: async (id: number, reverseDNS: ReverseDNS, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudIpv4RdnsCreate: async (id: number, reverseDNSRequest: ReverseDNSRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudIpv4RdnsCreate', 'id', id)
-            // verify required parameter 'reverseDNS' is not null or undefined
-            assertParamExists('cloudIpv4RdnsCreate', 'reverseDNS', reverseDNS)
+            // verify required parameter 'reverseDNSRequest' is not null or undefined
+            assertParamExists('cloudIpv4RdnsCreate', 'reverseDNSRequest', reverseDNSRequest)
             const localVarPath = `/api/cloud/ipv4/{id}/rdns/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -7705,7 +8484,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(reverseDNS, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(reverseDNSRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7790,11 +8569,10 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-         * @param {PublicIPv6} [publicIPv6] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv6Create: async (publicIPv6?: PublicIPv6, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudIpv6Create: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/cloud/ipv6/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -7812,13 +8590,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
-            localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(publicIPv6, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7865,11 +8641,10 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this Public IPv6.
-         * @param {PublicIPv6} [publicIPv6] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv6DetachCreate: async (id: number, publicIPv6?: PublicIPv6, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudIpv6DetachCreate: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudIpv6DetachCreate', 'id', id)
             const localVarPath = `/api/cloud/ipv6/{id}/detach/`
@@ -7890,13 +8665,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
-            localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(publicIPv6, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -7945,15 +8718,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Get or update reverse DNS (PTR) for this IPv6 address.
          * @param {number} id A unique integer value identifying this Public IPv6.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv6RdnsCreate: async (id: number, reverseDNS: ReverseDNS, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudIpv6RdnsCreate: async (id: number, reverseDNSRequest: ReverseDNSRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudIpv6RdnsCreate', 'id', id)
-            // verify required parameter 'reverseDNS' is not null or undefined
-            assertParamExists('cloudIpv6RdnsCreate', 'reverseDNS', reverseDNS)
+            // verify required parameter 'reverseDNSRequest' is not null or undefined
+            assertParamExists('cloudIpv6RdnsCreate', 'reverseDNSRequest', reverseDNSRequest)
             const localVarPath = `/api/cloud/ipv6/{id}/rdns/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -7978,7 +8751,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(reverseDNS, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(reverseDNSRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -8064,15 +8837,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PrivateNetworkAddHost} privateNetworkAddHost 
+         * @param {PrivateNetworkAddHostRequest} privateNetworkAddHostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudPrivateNetworksAddServerCreate: async (id: number, privateNetworkAddHost: PrivateNetworkAddHost, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudPrivateNetworksAddServerCreate: async (id: number, privateNetworkAddHostRequest: PrivateNetworkAddHostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudPrivateNetworksAddServerCreate', 'id', id)
-            // verify required parameter 'privateNetworkAddHost' is not null or undefined
-            assertParamExists('cloudPrivateNetworksAddServerCreate', 'privateNetworkAddHost', privateNetworkAddHost)
+            // verify required parameter 'privateNetworkAddHostRequest' is not null or undefined
+            assertParamExists('cloudPrivateNetworksAddServerCreate', 'privateNetworkAddHostRequest', privateNetworkAddHostRequest)
             const localVarPath = `/api/cloud/private-networks/{id}/add-server/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -8097,7 +8870,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(privateNetworkAddHost, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(privateNetworkAddHostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -8106,13 +8879,13 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Manage private networks
-         * @param {PrivateNetwork} privateNetwork 
+         * @param {PrivateNetworkRequest} privateNetworkRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudPrivateNetworksCreate: async (privateNetwork: PrivateNetwork, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'privateNetwork' is not null or undefined
-            assertParamExists('cloudPrivateNetworksCreate', 'privateNetwork', privateNetwork)
+        cloudPrivateNetworksCreate: async (privateNetworkRequest: PrivateNetworkRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'privateNetworkRequest' is not null or undefined
+            assertParamExists('cloudPrivateNetworksCreate', 'privateNetworkRequest', privateNetworkRequest)
             const localVarPath = `/api/cloud/private-networks/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -8136,7 +8909,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(privateNetwork, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(privateNetworkRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -8222,11 +8995,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PatchedPrivateNetwork} [patchedPrivateNetwork] 
+         * @param {PatchedPrivateNetworkUpdateRequest} [patchedPrivateNetworkUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudPrivateNetworksPartialUpdate: async (id: number, patchedPrivateNetwork?: PatchedPrivateNetwork, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudPrivateNetworksPartialUpdate: async (id: number, patchedPrivateNetworkUpdateRequest?: PatchedPrivateNetworkUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudPrivateNetworksPartialUpdate', 'id', id)
             const localVarPath = `/api/cloud/private-networks/{id}/`
@@ -8253,7 +9026,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedPrivateNetwork, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedPrivateNetworkUpdateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -8263,15 +9036,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PrivateNetworkRemoveHost} privateNetworkRemoveHost 
+         * @param {PrivateNetworkRemoveHostRequest} privateNetworkRemoveHostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudPrivateNetworksRemoveServerCreate: async (id: number, privateNetworkRemoveHost: PrivateNetworkRemoveHost, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudPrivateNetworksRemoveServerCreate: async (id: number, privateNetworkRemoveHostRequest: PrivateNetworkRemoveHostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudPrivateNetworksRemoveServerCreate', 'id', id)
-            // verify required parameter 'privateNetworkRemoveHost' is not null or undefined
-            assertParamExists('cloudPrivateNetworksRemoveServerCreate', 'privateNetworkRemoveHost', privateNetworkRemoveHost)
+            // verify required parameter 'privateNetworkRemoveHostRequest' is not null or undefined
+            assertParamExists('cloudPrivateNetworksRemoveServerCreate', 'privateNetworkRemoveHostRequest', privateNetworkRemoveHostRequest)
             const localVarPath = `/api/cloud/private-networks/{id}/remove-server/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -8296,7 +9069,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(privateNetworkRemoveHost, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(privateNetworkRemoveHostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -8344,15 +9117,13 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PrivateNetwork} privateNetwork 
+         * @param {PrivateNetworkUpdateRequest} [privateNetworkUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudPrivateNetworksUpdate: async (id: number, privateNetwork: PrivateNetwork, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudPrivateNetworksUpdate: async (id: number, privateNetworkUpdateRequest?: PrivateNetworkUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudPrivateNetworksUpdate', 'id', id)
-            // verify required parameter 'privateNetwork' is not null or undefined
-            assertParamExists('cloudPrivateNetworksUpdate', 'privateNetwork', privateNetwork)
             const localVarPath = `/api/cloud/private-networks/{id}/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -8377,7 +9148,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(privateNetwork, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(privateNetworkUpdateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -8627,11 +9398,10 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * List the ISO catalog entries visible to this user and their package compatibility.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersBootIsosList: async (id: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudServersBootIsosList: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudServersBootIsosList', 'id', id)
             const localVarPath = `/api/cloud/servers/{id}/boot-isos/`
@@ -8651,10 +9421,6 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
 
             // authentication cookieAuth required
-
-            if (page !== undefined) {
-                localVarQueryParameter['page'] = page;
-            }
 
             localVarHeaderParameter['Accept'] = 'application/json';
 
@@ -8707,13 +9473,13 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Create new server
-         * @param {ServerAdd} serverAdd 
+         * @param {ServerAddRequest} serverAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersCreate: async (serverAdd: ServerAdd, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'serverAdd' is not null or undefined
-            assertParamExists('cloudServersCreate', 'serverAdd', serverAdd)
+        cloudServersCreate: async (serverAddRequest: ServerAddRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'serverAddRequest' is not null or undefined
+            assertParamExists('cloudServersCreate', 'serverAddRequest', serverAddRequest)
             const localVarPath = `/api/cloud/servers/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -8737,7 +9503,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(serverAdd, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(serverAddRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -8784,15 +9550,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Enable or disable destroy protection.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {DestroyProtection} destroyProtection 
+         * @param {DestroyProtectionRequest} destroyProtectionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersDestroyProtectionCreate: async (id: number, destroyProtection: DestroyProtection, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudServersDestroyProtectionCreate: async (id: number, destroyProtectionRequest: DestroyProtectionRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudServersDestroyProtectionCreate', 'id', id)
-            // verify required parameter 'destroyProtection' is not null or undefined
-            assertParamExists('cloudServersDestroyProtectionCreate', 'destroyProtection', destroyProtection)
+            // verify required parameter 'destroyProtectionRequest' is not null or undefined
+            assertParamExists('cloudServersDestroyProtectionCreate', 'destroyProtectionRequest', destroyProtectionRequest)
             const localVarPath = `/api/cloud/servers/{id}/destroy-protection/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -8817,7 +9583,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(destroyProtection, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(destroyProtectionRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -8947,15 +9713,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Modify server package: downgrade available only for packages with the same disk size.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {ServerProductUpgrade} serverProductUpgrade 
+         * @param {ServerProductUpgradeRequest} serverProductUpgradeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersModifyPackageCreate: async (id: number, serverProductUpgrade: ServerProductUpgrade, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudServersModifyPackageCreate: async (id: number, serverProductUpgradeRequest: ServerProductUpgradeRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudServersModifyPackageCreate', 'id', id)
-            // verify required parameter 'serverProductUpgrade' is not null or undefined
-            assertParamExists('cloudServersModifyPackageCreate', 'serverProductUpgrade', serverProductUpgrade)
+            // verify required parameter 'serverProductUpgradeRequest' is not null or undefined
+            assertParamExists('cloudServersModifyPackageCreate', 'serverProductUpgradeRequest', serverProductUpgradeRequest)
             const localVarPath = `/api/cloud/servers/{id}/modify-package/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -8980,7 +9746,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(serverProductUpgrade, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(serverProductUpgradeRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -8990,11 +9756,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Cloud servers
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {PatchedServerDetail} [patchedServerDetail] 
+         * @param {PatchedServerDetailRequest} [patchedServerDetailRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersPartialUpdate: async (id: number, patchedServerDetail?: PatchedServerDetail, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudServersPartialUpdate: async (id: number, patchedServerDetailRequest?: PatchedServerDetailRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudServersPartialUpdate', 'id', id)
             const localVarPath = `/api/cloud/servers/{id}/`
@@ -9021,7 +9787,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedServerDetail, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedServerDetailRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -9112,11 +9878,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Public interface
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {PublicInterface} [publicInterface] 
+         * @param {PublicInterfaceRequest} [publicInterfaceRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersPublicInterfaceCreate: async (id: number, publicInterface?: PublicInterface, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudServersPublicInterfaceCreate: async (id: number, publicInterfaceRequest?: PublicInterfaceRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudServersPublicInterfaceCreate', 'id', id)
             const localVarPath = `/api/cloud/servers/{id}/public-interface/`
@@ -9143,7 +9909,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(publicInterface, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(publicInterfaceRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -9381,18 +10147,17 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
-         * List snapshots for this server or queue a new snapshot.
+         * Cloud servers
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {SnapshotCreate} snapshotCreate 
-         * @param {number} [page] A page number within the paginated result set.
+         * @param {SnapshotCreateRequest} snapshotCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersSnapshotsCreate: async (id: number, snapshotCreate: SnapshotCreate, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudServersSnapshotsCreate: async (id: number, snapshotCreateRequest: SnapshotCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudServersSnapshotsCreate', 'id', id)
-            // verify required parameter 'snapshotCreate' is not null or undefined
-            assertParamExists('cloudServersSnapshotsCreate', 'snapshotCreate', snapshotCreate)
+            // verify required parameter 'snapshotCreateRequest' is not null or undefined
+            assertParamExists('cloudServersSnapshotsCreate', 'snapshotCreateRequest', snapshotCreateRequest)
             const localVarPath = `/api/cloud/servers/{id}/snapshots/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -9411,17 +10176,13 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
-            if (page !== undefined) {
-                localVarQueryParameter['page'] = page;
-            }
-
             localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(snapshotCreate, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(snapshotCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -9473,11 +10234,10 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * List snapshots for this server or queue a new snapshot.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersSnapshotsList: async (id: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudServersSnapshotsList: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudServersSnapshotsList', 'id', id)
             const localVarPath = `/api/cloud/servers/{id}/snapshots/`
@@ -9497,10 +10257,6 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
 
             // authentication cookieAuth required
-
-            if (page !== undefined) {
-                localVarQueryParameter['page'] = page;
-            }
 
             localVarHeaderParameter['Accept'] = 'application/json';
 
@@ -9556,13 +10312,51 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
-         * Cloud servers
+         * Get this month\'s traffic usage for a server.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {ServerDetail} [serverDetail] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersUpdate: async (id: number, serverDetail?: ServerDetail, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudServersTrafficRetrieve: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudServersTrafficRetrieve', 'id', id)
+            const localVarPath = `/api/cloud/servers/{id}/traffic/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Cloud servers
+         * @param {number} id A unique integer value identifying this virtual machine.
+         * @param {ServerDetailRequest} [serverDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudServersUpdate: async (id: number, serverDetailRequest?: ServerDetailRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudServersUpdate', 'id', id)
             const localVarPath = `/api/cloud/servers/{id}/`
@@ -9589,7 +10383,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(serverDetail, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(serverDetailRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -9637,15 +10431,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} serverId 
-         * @param {Volume} volume 
+         * @param {VolumeRequest} volumeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersVolumesCreate: async (serverId: string, volume: Volume, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudServersVolumesCreate: async (serverId: string, volumeRequest: VolumeRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'serverId' is not null or undefined
             assertParamExists('cloudServersVolumesCreate', 'serverId', serverId)
-            // verify required parameter 'volume' is not null or undefined
-            assertParamExists('cloudServersVolumesCreate', 'volume', volume)
+            // verify required parameter 'volumeRequest' is not null or undefined
+            assertParamExists('cloudServersVolumesCreate', 'volumeRequest', volumeRequest)
             const localVarPath = `/api/cloud/servers/{server_id}/volumes/`
                 .replace('{server_id}', encodeURIComponent(String(serverId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -9670,7 +10464,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(volume, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(volumeRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -9760,11 +10554,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} serverId 
          * @param {string} volumeId 
-         * @param {PatchedVolume} [patchedVolume] 
+         * @param {PatchedVolumeUpdateRequest} [patchedVolumeUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersVolumesPartialUpdate: async (serverId: string, volumeId: string, patchedVolume?: PatchedVolume, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudServersVolumesPartialUpdate: async (serverId: string, volumeId: string, patchedVolumeUpdateRequest?: PatchedVolumeUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'serverId' is not null or undefined
             assertParamExists('cloudServersVolumesPartialUpdate', 'serverId', serverId)
             // verify required parameter 'volumeId' is not null or undefined
@@ -9794,7 +10588,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedVolume, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedVolumeUpdateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -9847,17 +10641,17 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} serverId 
          * @param {string} volumeId 
-         * @param {Volume} volume 
+         * @param {VolumeUpdateRequest} volumeUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersVolumesUpdate: async (serverId: string, volumeId: string, volume: Volume, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudServersVolumesUpdate: async (serverId: string, volumeId: string, volumeUpdateRequest: VolumeUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'serverId' is not null or undefined
             assertParamExists('cloudServersVolumesUpdate', 'serverId', serverId)
             // verify required parameter 'volumeId' is not null or undefined
             assertParamExists('cloudServersVolumesUpdate', 'volumeId', volumeId)
-            // verify required parameter 'volume' is not null or undefined
-            assertParamExists('cloudServersVolumesUpdate', 'volume', volume)
+            // verify required parameter 'volumeUpdateRequest' is not null or undefined
+            assertParamExists('cloudServersVolumesUpdate', 'volumeUpdateRequest', volumeUpdateRequest)
             const localVarPath = `/api/cloud/servers/{server_id}/volumes/{volume_id}/`
                 .replace('{server_id}', encodeURIComponent(String(serverId)))
                 .replace('{volume_id}', encodeURIComponent(String(volumeId)));
@@ -9883,7 +10677,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(volume, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(volumeUpdateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -9970,15 +10764,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Attach existing volume to a server
          * @param {number} id A unique integer value identifying this storage.
-         * @param {AttachVolume} attachVolume 
+         * @param {AttachVolumeRequest} attachVolumeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudVolumesAttachCreate: async (id: number, attachVolume: AttachVolume, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudVolumesAttachCreate: async (id: number, attachVolumeRequest: AttachVolumeRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudVolumesAttachCreate', 'id', id)
-            // verify required parameter 'attachVolume' is not null or undefined
-            assertParamExists('cloudVolumesAttachCreate', 'attachVolume', attachVolume)
+            // verify required parameter 'attachVolumeRequest' is not null or undefined
+            assertParamExists('cloudVolumesAttachCreate', 'attachVolumeRequest', attachVolumeRequest)
             const localVarPath = `/api/cloud/volumes/{id}/attach/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -10003,7 +10797,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(attachVolume, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(attachVolumeRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -10050,15 +10844,12 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Detach volume from server
          * @param {number} id A unique integer value identifying this storage.
-         * @param {Volume} volume 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudVolumesDetachCreate: async (id: number, volume: Volume, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudVolumesDetachCreate: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudVolumesDetachCreate', 'id', id)
-            // verify required parameter 'volume' is not null or undefined
-            assertParamExists('cloudVolumesDetachCreate', 'volume', volume)
             const localVarPath = `/api/cloud/volumes/{id}/detach/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -10077,13 +10868,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
-            localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(volume, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -10127,11 +10916,11 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Volumes management
          * @param {number} id A unique integer value identifying this storage.
-         * @param {PatchedVolume} [patchedVolume] 
+         * @param {PatchedVolumeUpdateRequest} [patchedVolumeUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudVolumesPartialUpdate: async (id: number, patchedVolume?: PatchedVolume, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudVolumesPartialUpdate: async (id: number, patchedVolumeUpdateRequest?: PatchedVolumeUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudVolumesPartialUpdate', 'id', id)
             const localVarPath = `/api/cloud/volumes/{id}/`
@@ -10158,7 +10947,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedVolume, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedVolumeUpdateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -10206,15 +10995,15 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Volumes management
          * @param {number} id A unique integer value identifying this storage.
-         * @param {Volume} volume 
+         * @param {VolumeUpdateRequest} volumeUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudVolumesUpdate: async (id: number, volume: Volume, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        cloudVolumesUpdate: async (id: number, volumeUpdateRequest: VolumeUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudVolumesUpdate', 'id', id)
-            // verify required parameter 'volume' is not null or undefined
-            assertParamExists('cloudVolumesUpdate', 'volume', volume)
+            // verify required parameter 'volumeUpdateRequest' is not null or undefined
+            assertParamExists('cloudVolumesUpdate', 'volumeUpdateRequest', volumeUpdateRequest)
             const localVarPath = `/api/cloud/volumes/{id}/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -10239,7 +11028,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(volume, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(volumeUpdateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -10257,12 +11046,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
     return {
         /**
          * Create a bucket
-         * @param {BucketCreate} bucketCreate 
+         * @param {BucketCreateRequest} bucketCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudBucketsCreate(bucketCreate: BucketCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Bucket>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudBucketsCreate(bucketCreate, options);
+        async cloudBucketsCreate(bucketCreateRequest: BucketCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Bucket>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudBucketsCreate(bucketCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudBucketsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10317,12 +11106,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Resize a bucket
          * @param {number} id A unique integer value identifying this S3 bucket.
-         * @param {BucketResize} bucketResize 
+         * @param {BucketResizeRequest} bucketResizeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudBucketsResizeCreate(id: number, bucketResize: BucketResize, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Bucket>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudBucketsResizeCreate(id, bucketResize, options);
+        async cloudBucketsResizeCreate(id: number, bucketResizeRequest: BucketResizeRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Bucket>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudBucketsResizeCreate(id, bucketResizeRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudBucketsResizeCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10342,24 +11131,24 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Set bucket visibility
          * @param {number} id A unique integer value identifying this S3 bucket.
-         * @param {BucketVisibility} bucketVisibility 
+         * @param {BucketVisibilityRequest} bucketVisibilityRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudBucketsVisibilityCreate(id: number, bucketVisibility: BucketVisibility, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Bucket>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudBucketsVisibilityCreate(id, bucketVisibility, options);
+        async cloudBucketsVisibilityCreate(id: number, bucketVisibilityRequest: BucketVisibilityRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Bucket>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudBucketsVisibilityCreate(id, bucketVisibilityRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudBucketsVisibilityCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-         * @param {FirewallRulesSet} firewallRulesSet 
+         * @param {FirewallRulesSetRequest} firewallRulesSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudFirewallRulesSetCreate(firewallRulesSet: FirewallRulesSet, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRulesSet>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetCreate(firewallRulesSet, options);
+        async cloudFirewallRulesSetCreate(firewallRulesSetRequest: FirewallRulesSetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRulesSet>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetCreate(firewallRulesSetRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudFirewallRulesSetCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10390,12 +11179,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this firewall rules set.
-         * @param {PatchedFirewallRulesSet} [patchedFirewallRulesSet] 
+         * @param {PatchedFirewallRulesSetRequest} [patchedFirewallRulesSetRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudFirewallRulesSetPartialUpdate(id: number, patchedFirewallRulesSet?: PatchedFirewallRulesSet, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRulesSet>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetPartialUpdate(id, patchedFirewallRulesSet, options);
+        async cloudFirewallRulesSetPartialUpdate(id: number, patchedFirewallRulesSetRequest?: PatchedFirewallRulesSetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRulesSet>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetPartialUpdate(id, patchedFirewallRulesSetRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudFirewallRulesSetPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10415,12 +11204,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} rulesSetId 
-         * @param {FirewallRule} firewallRule 
+         * @param {FirewallRuleRequest} firewallRuleRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudFirewallRulesSetRulesCreate(rulesSetId: string, firewallRule: FirewallRule, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRule>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetRulesCreate(rulesSetId, firewallRule, options);
+        async cloudFirewallRulesSetRulesCreate(rulesSetId: string, firewallRuleRequest: FirewallRuleRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRule>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetRulesCreate(rulesSetId, firewallRuleRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudFirewallRulesSetRulesCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10454,12 +11243,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} ruleId 
          * @param {string} rulesSetId 
-         * @param {PatchedFirewallRule} [patchedFirewallRule] 
+         * @param {PatchedFirewallRuleRequest} [patchedFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudFirewallRulesSetRulesPartialUpdate(ruleId: string, rulesSetId: string, patchedFirewallRule?: PatchedFirewallRule, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRule>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetRulesPartialUpdate(ruleId, rulesSetId, patchedFirewallRule, options);
+        async cloudFirewallRulesSetRulesPartialUpdate(ruleId: string, rulesSetId: string, patchedFirewallRuleRequest?: PatchedFirewallRuleRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRule>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetRulesPartialUpdate(ruleId, rulesSetId, patchedFirewallRuleRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudFirewallRulesSetRulesPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10481,12 +11270,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} ruleId 
          * @param {string} rulesSetId 
-         * @param {FirewallRule} firewallRule 
+         * @param {FirewallRuleRequest} firewallRuleRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudFirewallRulesSetRulesUpdate(ruleId: string, rulesSetId: string, firewallRule: FirewallRule, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRule>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetRulesUpdate(ruleId, rulesSetId, firewallRule, options);
+        async cloudFirewallRulesSetRulesUpdate(ruleId: string, rulesSetId: string, firewallRuleRequest: FirewallRuleRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRule>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetRulesUpdate(ruleId, rulesSetId, firewallRuleRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudFirewallRulesSetRulesUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10494,12 +11283,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this firewall rules set.
-         * @param {FirewallRulesSet} firewallRulesSet 
+         * @param {FirewallRulesSetRequest} firewallRulesSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudFirewallRulesSetUpdate(id: number, firewallRulesSet: FirewallRulesSet, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRulesSet>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetUpdate(id, firewallRulesSet, options);
+        async cloudFirewallRulesSetUpdate(id: number, firewallRulesSetRequest: FirewallRulesSetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FirewallRulesSet>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFirewallRulesSetUpdate(id, firewallRulesSetRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudFirewallRulesSetUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10532,12 +11321,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         },
         /**
          * Manage floating IPv4 addresses. A floating IP can be authorized on multiple VMs simultaneously; the customer asserts ownership inside the guest via keepalived/VRRP.
-         * @param {FloatingIPv4Create} [floatingIPv4Create] 
+         * @param {FloatingIPv4CreateRequest} [floatingIPv4CreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudFloatingIpv4Create(floatingIPv4Create?: FloatingIPv4Create, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FloatingIPv4>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFloatingIpv4Create(floatingIPv4Create, options);
+        async cloudFloatingIpv4Create(floatingIPv4CreateRequest?: FloatingIPv4CreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FloatingIPv4>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFloatingIpv4Create(floatingIPv4CreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudFloatingIpv4Create']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10569,12 +11358,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Get or update reverse DNS (PTR) for the IPv4 address wrapped by this floating IP.
          * @param {number} id A unique integer value identifying this floating IPv4.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudFloatingIpv4RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReverseDNS>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFloatingIpv4RdnsCreate(id, reverseDNS, options);
+        async cloudFloatingIpv4RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReverseDNS>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFloatingIpv4RdnsCreate(id, reverseDNSRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudFloatingIpv4RdnsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10644,12 +11433,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         },
         /**
          * Manage floating IPv6 addresses.
-         * @param {FloatingIPv6Create} [floatingIPv6Create] 
+         * @param {FloatingIPv6CreateRequest} [floatingIPv6CreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudFloatingIpv6Create(floatingIPv6Create?: FloatingIPv6Create, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FloatingIPv6>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFloatingIpv6Create(floatingIPv6Create, options);
+        async cloudFloatingIpv6Create(floatingIPv6CreateRequest?: FloatingIPv6CreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FloatingIPv6>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFloatingIpv6Create(floatingIPv6CreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudFloatingIpv6Create']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10681,12 +11470,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Get or update reverse DNS (PTR) for the IPv6 address wrapped by this floating IP.
          * @param {number} id A unique integer value identifying this floating IPv6.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudFloatingIpv6RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReverseDNS>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFloatingIpv6RdnsCreate(id, reverseDNS, options);
+        async cloudFloatingIpv6RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReverseDNS>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudFloatingIpv6RdnsCreate(id, reverseDNSRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudFloatingIpv6RdnsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10778,12 +11567,11 @@ export const CloudApiFp = function(configuration?: Configuration) {
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-         * @param {PublicIPv4} [publicIPv4] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudIpv4Create(publicIPv4?: PublicIPv4, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PublicIPv4>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv4Create(publicIPv4, options);
+        async cloudIpv4Create(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PublicIPv4>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv4Create(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudIpv4Create']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10803,12 +11591,11 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this Public IPv4.
-         * @param {PublicIPv4} [publicIPv4] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudIpv4DetachCreate(id: number, publicIPv4?: PublicIPv4, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DetachIPv4Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv4DetachCreate(id, publicIPv4, options);
+        async cloudIpv4DetachCreate(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DetachIPv4Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv4DetachCreate(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudIpv4DetachCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10828,12 +11615,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Get or update reverse DNS (PTR) for this IPv4 address.
          * @param {number} id A unique integer value identifying this Public IPv4.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudIpv4RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReverseDNS>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv4RdnsCreate(id, reverseDNS, options);
+        async cloudIpv4RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReverseDNS>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv4RdnsCreate(id, reverseDNSRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudIpv4RdnsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10864,12 +11651,11 @@ export const CloudApiFp = function(configuration?: Configuration) {
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-         * @param {PublicIPv6} [publicIPv6] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudIpv6Create(publicIPv6?: PublicIPv6, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PublicIPv6>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv6Create(publicIPv6, options);
+        async cloudIpv6Create(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PublicIPv6>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv6Create(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudIpv6Create']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10889,12 +11675,11 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this Public IPv6.
-         * @param {PublicIPv6} [publicIPv6] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudIpv6DetachCreate(id: number, publicIPv6?: PublicIPv6, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DetachIPv6Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv6DetachCreate(id, publicIPv6, options);
+        async cloudIpv6DetachCreate(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DetachIPv6Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv6DetachCreate(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudIpv6DetachCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10914,12 +11699,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Get or update reverse DNS (PTR) for this IPv6 address.
          * @param {number} id A unique integer value identifying this Public IPv6.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudIpv6RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReverseDNS>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv6RdnsCreate(id, reverseDNS, options);
+        async cloudIpv6RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReverseDNS>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudIpv6RdnsCreate(id, reverseDNSRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudIpv6RdnsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -10951,24 +11736,24 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PrivateNetworkAddHost} privateNetworkAddHost 
+         * @param {PrivateNetworkAddHostRequest} privateNetworkAddHostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudPrivateNetworksAddServerCreate(id: number, privateNetworkAddHost: PrivateNetworkAddHost, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AddServerResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksAddServerCreate(id, privateNetworkAddHost, options);
+        async cloudPrivateNetworksAddServerCreate(id: number, privateNetworkAddHostRequest: PrivateNetworkAddHostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AddServerResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksAddServerCreate(id, privateNetworkAddHostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudPrivateNetworksAddServerCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * Manage private networks
-         * @param {PrivateNetwork} privateNetwork 
+         * @param {PrivateNetworkRequest} privateNetworkRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudPrivateNetworksCreate(privateNetwork: PrivateNetwork, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PrivateNetwork>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksCreate(privateNetwork, options);
+        async cloudPrivateNetworksCreate(privateNetworkRequest: PrivateNetworkRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PrivateNetwork>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksCreate(privateNetworkRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudPrivateNetworksCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11000,12 +11785,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PatchedPrivateNetwork} [patchedPrivateNetwork] 
+         * @param {PatchedPrivateNetworkUpdateRequest} [patchedPrivateNetworkUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudPrivateNetworksPartialUpdate(id: number, patchedPrivateNetwork?: PatchedPrivateNetwork, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PrivateNetwork>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksPartialUpdate(id, patchedPrivateNetwork, options);
+        async cloudPrivateNetworksPartialUpdate(id: number, patchedPrivateNetworkUpdateRequest?: PatchedPrivateNetworkUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PrivateNetwork>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksPartialUpdate(id, patchedPrivateNetworkUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudPrivateNetworksPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11013,12 +11798,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PrivateNetworkRemoveHost} privateNetworkRemoveHost 
+         * @param {PrivateNetworkRemoveHostRequest} privateNetworkRemoveHostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudPrivateNetworksRemoveServerCreate(id: number, privateNetworkRemoveHost: PrivateNetworkRemoveHost, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<RemoveServerResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksRemoveServerCreate(id, privateNetworkRemoveHost, options);
+        async cloudPrivateNetworksRemoveServerCreate(id: number, privateNetworkRemoveHostRequest: PrivateNetworkRemoveHostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<RemoveServerResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksRemoveServerCreate(id, privateNetworkRemoveHostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudPrivateNetworksRemoveServerCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11038,12 +11823,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PrivateNetwork} privateNetwork 
+         * @param {PrivateNetworkUpdateRequest} [privateNetworkUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudPrivateNetworksUpdate(id: number, privateNetwork: PrivateNetwork, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PrivateNetwork>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksUpdate(id, privateNetwork, options);
+        async cloudPrivateNetworksUpdate(id: number, privateNetworkUpdateRequest?: PrivateNetworkUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PrivateNetwork>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksUpdate(id, privateNetworkUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudPrivateNetworksUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11125,12 +11910,11 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * List the ISO catalog entries visible to this user and their package compatibility.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersBootIsosList(id: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedBootISOList>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersBootIsosList(id, page, options);
+        async cloudServersBootIsosList(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<BootISO>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersBootIsosList(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersBootIsosList']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11149,12 +11933,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         },
         /**
          * Create new server
-         * @param {ServerAdd} serverAdd 
+         * @param {ServerAddRequest} serverAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersCreate(serverAdd: ServerAdd, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServerAddResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersCreate(serverAdd, options);
+        async cloudServersCreate(serverAddRequest: ServerAddRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServerAddResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersCreate(serverAddRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11174,12 +11958,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Enable or disable destroy protection.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {DestroyProtection} destroyProtection 
+         * @param {DestroyProtectionRequest} destroyProtectionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersDestroyProtectionCreate(id: number, destroyProtection: DestroyProtection, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DestroyProtectionResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersDestroyProtectionCreate(id, destroyProtection, options);
+        async cloudServersDestroyProtectionCreate(id: number, destroyProtectionRequest: DestroyProtectionRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DestroyProtectionResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersDestroyProtectionCreate(id, destroyProtectionRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersDestroyProtectionCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11224,12 +12008,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Modify server package: downgrade available only for packages with the same disk size.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {ServerProductUpgrade} serverProductUpgrade 
+         * @param {ServerProductUpgradeRequest} serverProductUpgradeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersModifyPackageCreate(id: number, serverProductUpgrade: ServerProductUpgrade, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServerUpgradeResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersModifyPackageCreate(id, serverProductUpgrade, options);
+        async cloudServersModifyPackageCreate(id: number, serverProductUpgradeRequest: ServerProductUpgradeRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServerUpgradeResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersModifyPackageCreate(id, serverProductUpgradeRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersModifyPackageCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11237,12 +12021,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Cloud servers
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {PatchedServerDetail} [patchedServerDetail] 
+         * @param {PatchedServerDetailRequest} [patchedServerDetailRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersPartialUpdate(id: number, patchedServerDetail?: PatchedServerDetail, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServerDetail>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersPartialUpdate(id, patchedServerDetail, options);
+        async cloudServersPartialUpdate(id: number, patchedServerDetailRequest?: PatchedServerDetailRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServerDetail>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersPartialUpdate(id, patchedServerDetailRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11275,12 +12059,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Public interface
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {PublicInterface} [publicInterface] 
+         * @param {PublicInterfaceRequest} [publicInterfaceRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersPublicInterfaceCreate(id: number, publicInterface?: PublicInterface, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PublicInterface>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersPublicInterfaceCreate(id, publicInterface, options);
+        async cloudServersPublicInterfaceCreate(id: number, publicInterfaceRequest?: PublicInterfaceRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PublicInterface>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersPublicInterfaceCreate(id, publicInterfaceRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersPublicInterfaceCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11359,15 +12143,14 @@ export const CloudApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * List snapshots for this server or queue a new snapshot.
+         * Cloud servers
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {SnapshotCreate} snapshotCreate 
-         * @param {number} [page] A page number within the paginated result set.
+         * @param {SnapshotCreateRequest} snapshotCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersSnapshotsCreate(id: number, snapshotCreate: SnapshotCreate, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedSnapshotList>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersSnapshotsCreate(id, snapshotCreate, page, options);
+        async cloudServersSnapshotsCreate(id: number, snapshotCreateRequest: SnapshotCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SnapshotCreateQueued>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersSnapshotsCreate(id, snapshotCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersSnapshotsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11388,12 +12171,11 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * List snapshots for this server or queue a new snapshot.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersSnapshotsList(id: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedSnapshotList>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersSnapshotsList(id, page, options);
+        async cloudServersSnapshotsList(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Snapshot>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersSnapshotsList(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersSnapshotsList']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11412,14 +12194,26 @@ export const CloudApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Cloud servers
+         * Get this month\'s traffic usage for a server.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {ServerDetail} [serverDetail] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersUpdate(id: number, serverDetail?: ServerDetail, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServerDetail>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersUpdate(id, serverDetail, options);
+        async cloudServersTrafficRetrieve(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServerTrafficResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersTrafficRetrieve(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersTrafficRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Cloud servers
+         * @param {number} id A unique integer value identifying this virtual machine.
+         * @param {ServerDetailRequest} [serverDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudServersUpdate(id: number, serverDetailRequest?: ServerDetailRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServerDetail>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersUpdate(id, serverDetailRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11439,12 +12233,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} serverId 
-         * @param {Volume} volume 
+         * @param {VolumeRequest} volumeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersVolumesCreate(serverId: string, volume: Volume, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Volume>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersVolumesCreate(serverId, volume, options);
+        async cloudServersVolumesCreate(serverId: string, volumeRequest: VolumeRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Volume>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersVolumesCreate(serverId, volumeRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersVolumesCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11478,12 +12272,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} serverId 
          * @param {string} volumeId 
-         * @param {PatchedVolume} [patchedVolume] 
+         * @param {PatchedVolumeUpdateRequest} [patchedVolumeUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersVolumesPartialUpdate(serverId: string, volumeId: string, patchedVolume?: PatchedVolume, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Volume>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersVolumesPartialUpdate(serverId, volumeId, patchedVolume, options);
+        async cloudServersVolumesPartialUpdate(serverId: string, volumeId: string, patchedVolumeUpdateRequest?: PatchedVolumeUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Volume>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersVolumesPartialUpdate(serverId, volumeId, patchedVolumeUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersVolumesPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11505,12 +12299,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} serverId 
          * @param {string} volumeId 
-         * @param {Volume} volume 
+         * @param {VolumeUpdateRequest} volumeUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudServersVolumesUpdate(serverId: string, volumeId: string, volume: Volume, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Volume>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersVolumesUpdate(serverId, volumeId, volume, options);
+        async cloudServersVolumesUpdate(serverId: string, volumeId: string, volumeUpdateRequest: VolumeUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Volume>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersVolumesUpdate(serverId, volumeId, volumeUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersVolumesUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11542,12 +12336,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Attach existing volume to a server
          * @param {number} id A unique integer value identifying this storage.
-         * @param {AttachVolume} attachVolume 
+         * @param {AttachVolumeRequest} attachVolumeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudVolumesAttachCreate(id: number, attachVolume: AttachVolume, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AttachVolume>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudVolumesAttachCreate(id, attachVolume, options);
+        async cloudVolumesAttachCreate(id: number, attachVolumeRequest: AttachVolumeRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AttachVolume>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudVolumesAttachCreate(id, attachVolumeRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudVolumesAttachCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11567,12 +12361,11 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Detach volume from server
          * @param {number} id A unique integer value identifying this storage.
-         * @param {Volume} volume 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudVolumesDetachCreate(id: number, volume: Volume, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DetachVolume>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudVolumesDetachCreate(id, volume, options);
+        async cloudVolumesDetachCreate(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DetachVolume>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudVolumesDetachCreate(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudVolumesDetachCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11591,12 +12384,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Volumes management
          * @param {number} id A unique integer value identifying this storage.
-         * @param {PatchedVolume} [patchedVolume] 
+         * @param {PatchedVolumeUpdateRequest} [patchedVolumeUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudVolumesPartialUpdate(id: number, patchedVolume?: PatchedVolume, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Volume>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudVolumesPartialUpdate(id, patchedVolume, options);
+        async cloudVolumesPartialUpdate(id: number, patchedVolumeUpdateRequest?: PatchedVolumeUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Volume>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudVolumesPartialUpdate(id, patchedVolumeUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudVolumesPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11616,12 +12409,12 @@ export const CloudApiFp = function(configuration?: Configuration) {
         /**
          * Volumes management
          * @param {number} id A unique integer value identifying this storage.
-         * @param {Volume} volume 
+         * @param {VolumeUpdateRequest} volumeUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cloudVolumesUpdate(id: number, volume: Volume, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Volume>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudVolumesUpdate(id, volume, options);
+        async cloudVolumesUpdate(id: number, volumeUpdateRequest: VolumeUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Volume>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudVolumesUpdate(id, volumeUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudVolumesUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -11637,12 +12430,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
     return {
         /**
          * Create a bucket
-         * @param {BucketCreate} bucketCreate 
+         * @param {BucketCreateRequest} bucketCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudBucketsCreate(bucketCreate: BucketCreate, options?: RawAxiosRequestConfig): AxiosPromise<Bucket> {
-            return localVarFp.cloudBucketsCreate(bucketCreate, options).then((request) => request(axios, basePath));
+        cloudBucketsCreate(bucketCreateRequest: BucketCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<Bucket> {
+            return localVarFp.cloudBucketsCreate(bucketCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Reveal bucket credentials
@@ -11682,12 +12475,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Resize a bucket
          * @param {number} id A unique integer value identifying this S3 bucket.
-         * @param {BucketResize} bucketResize 
+         * @param {BucketResizeRequest} bucketResizeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudBucketsResizeCreate(id: number, bucketResize: BucketResize, options?: RawAxiosRequestConfig): AxiosPromise<Bucket> {
-            return localVarFp.cloudBucketsResizeCreate(id, bucketResize, options).then((request) => request(axios, basePath));
+        cloudBucketsResizeCreate(id: number, bucketResizeRequest: BucketResizeRequest, options?: RawAxiosRequestConfig): AxiosPromise<Bucket> {
+            return localVarFp.cloudBucketsResizeCreate(id, bucketResizeRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -11701,21 +12494,21 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Set bucket visibility
          * @param {number} id A unique integer value identifying this S3 bucket.
-         * @param {BucketVisibility} bucketVisibility 
+         * @param {BucketVisibilityRequest} bucketVisibilityRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudBucketsVisibilityCreate(id: number, bucketVisibility: BucketVisibility, options?: RawAxiosRequestConfig): AxiosPromise<Bucket> {
-            return localVarFp.cloudBucketsVisibilityCreate(id, bucketVisibility, options).then((request) => request(axios, basePath));
+        cloudBucketsVisibilityCreate(id: number, bucketVisibilityRequest: BucketVisibilityRequest, options?: RawAxiosRequestConfig): AxiosPromise<Bucket> {
+            return localVarFp.cloudBucketsVisibilityCreate(id, bucketVisibilityRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-         * @param {FirewallRulesSet} firewallRulesSet 
+         * @param {FirewallRulesSetRequest} firewallRulesSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetCreate(firewallRulesSet: FirewallRulesSet, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRulesSet> {
-            return localVarFp.cloudFirewallRulesSetCreate(firewallRulesSet, options).then((request) => request(axios, basePath));
+        cloudFirewallRulesSetCreate(firewallRulesSetRequest: FirewallRulesSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRulesSet> {
+            return localVarFp.cloudFirewallRulesSetCreate(firewallRulesSetRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -11737,12 +12530,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this firewall rules set.
-         * @param {PatchedFirewallRulesSet} [patchedFirewallRulesSet] 
+         * @param {PatchedFirewallRulesSetRequest} [patchedFirewallRulesSetRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetPartialUpdate(id: number, patchedFirewallRulesSet?: PatchedFirewallRulesSet, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRulesSet> {
-            return localVarFp.cloudFirewallRulesSetPartialUpdate(id, patchedFirewallRulesSet, options).then((request) => request(axios, basePath));
+        cloudFirewallRulesSetPartialUpdate(id: number, patchedFirewallRulesSetRequest?: PatchedFirewallRulesSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRulesSet> {
+            return localVarFp.cloudFirewallRulesSetPartialUpdate(id, patchedFirewallRulesSetRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -11756,12 +12549,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} rulesSetId 
-         * @param {FirewallRule} firewallRule 
+         * @param {FirewallRuleRequest} firewallRuleRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetRulesCreate(rulesSetId: string, firewallRule: FirewallRule, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRule> {
-            return localVarFp.cloudFirewallRulesSetRulesCreate(rulesSetId, firewallRule, options).then((request) => request(axios, basePath));
+        cloudFirewallRulesSetRulesCreate(rulesSetId: string, firewallRuleRequest: FirewallRuleRequest, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRule> {
+            return localVarFp.cloudFirewallRulesSetRulesCreate(rulesSetId, firewallRuleRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -11786,12 +12579,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} ruleId 
          * @param {string} rulesSetId 
-         * @param {PatchedFirewallRule} [patchedFirewallRule] 
+         * @param {PatchedFirewallRuleRequest} [patchedFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetRulesPartialUpdate(ruleId: string, rulesSetId: string, patchedFirewallRule?: PatchedFirewallRule, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRule> {
-            return localVarFp.cloudFirewallRulesSetRulesPartialUpdate(ruleId, rulesSetId, patchedFirewallRule, options).then((request) => request(axios, basePath));
+        cloudFirewallRulesSetRulesPartialUpdate(ruleId: string, rulesSetId: string, patchedFirewallRuleRequest?: PatchedFirewallRuleRequest, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRule> {
+            return localVarFp.cloudFirewallRulesSetRulesPartialUpdate(ruleId, rulesSetId, patchedFirewallRuleRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -11807,22 +12600,22 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} ruleId 
          * @param {string} rulesSetId 
-         * @param {FirewallRule} firewallRule 
+         * @param {FirewallRuleRequest} firewallRuleRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetRulesUpdate(ruleId: string, rulesSetId: string, firewallRule: FirewallRule, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRule> {
-            return localVarFp.cloudFirewallRulesSetRulesUpdate(ruleId, rulesSetId, firewallRule, options).then((request) => request(axios, basePath));
+        cloudFirewallRulesSetRulesUpdate(ruleId: string, rulesSetId: string, firewallRuleRequest: FirewallRuleRequest, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRule> {
+            return localVarFp.cloudFirewallRulesSetRulesUpdate(ruleId, rulesSetId, firewallRuleRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this firewall rules set.
-         * @param {FirewallRulesSet} firewallRulesSet 
+         * @param {FirewallRulesSetRequest} firewallRulesSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFirewallRulesSetUpdate(id: number, firewallRulesSet: FirewallRulesSet, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRulesSet> {
-            return localVarFp.cloudFirewallRulesSetUpdate(id, firewallRulesSet, options).then((request) => request(axios, basePath));
+        cloudFirewallRulesSetUpdate(id: number, firewallRulesSetRequest: FirewallRulesSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<FirewallRulesSet> {
+            return localVarFp.cloudFirewallRulesSetUpdate(id, firewallRulesSetRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage floating IPv4 addresses. A floating IP can be authorized on multiple VMs simultaneously; the customer asserts ownership inside the guest via keepalived/VRRP.
@@ -11846,12 +12639,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * Manage floating IPv4 addresses. A floating IP can be authorized on multiple VMs simultaneously; the customer asserts ownership inside the guest via keepalived/VRRP.
-         * @param {FloatingIPv4Create} [floatingIPv4Create] 
+         * @param {FloatingIPv4CreateRequest} [floatingIPv4CreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFloatingIpv4Create(floatingIPv4Create?: FloatingIPv4Create, options?: RawAxiosRequestConfig): AxiosPromise<FloatingIPv4> {
-            return localVarFp.cloudFloatingIpv4Create(floatingIPv4Create, options).then((request) => request(axios, basePath));
+        cloudFloatingIpv4Create(floatingIPv4CreateRequest?: FloatingIPv4CreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<FloatingIPv4> {
+            return localVarFp.cloudFloatingIpv4Create(floatingIPv4CreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage floating IPv4 addresses. A floating IP can be authorized on multiple VMs simultaneously; the customer asserts ownership inside the guest via keepalived/VRRP.
@@ -11874,12 +12667,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Get or update reverse DNS (PTR) for the IPv4 address wrapped by this floating IP.
          * @param {number} id A unique integer value identifying this floating IPv4.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFloatingIpv4RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig): AxiosPromise<ReverseDNS> {
-            return localVarFp.cloudFloatingIpv4RdnsCreate(id, reverseDNS, options).then((request) => request(axios, basePath));
+        cloudFloatingIpv4RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig): AxiosPromise<ReverseDNS> {
+            return localVarFp.cloudFloatingIpv4RdnsCreate(id, reverseDNSRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Get or update reverse DNS (PTR) for the IPv4 address wrapped by this floating IP.
@@ -11931,12 +12724,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * Manage floating IPv6 addresses.
-         * @param {FloatingIPv6Create} [floatingIPv6Create] 
+         * @param {FloatingIPv6CreateRequest} [floatingIPv6CreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFloatingIpv6Create(floatingIPv6Create?: FloatingIPv6Create, options?: RawAxiosRequestConfig): AxiosPromise<FloatingIPv6> {
-            return localVarFp.cloudFloatingIpv6Create(floatingIPv6Create, options).then((request) => request(axios, basePath));
+        cloudFloatingIpv6Create(floatingIPv6CreateRequest?: FloatingIPv6CreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<FloatingIPv6> {
+            return localVarFp.cloudFloatingIpv6Create(floatingIPv6CreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage floating IPv6 addresses.
@@ -11959,12 +12752,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Get or update reverse DNS (PTR) for the IPv6 address wrapped by this floating IP.
          * @param {number} id A unique integer value identifying this floating IPv6.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudFloatingIpv6RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig): AxiosPromise<ReverseDNS> {
-            return localVarFp.cloudFloatingIpv6RdnsCreate(id, reverseDNS, options).then((request) => request(axios, basePath));
+        cloudFloatingIpv6RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig): AxiosPromise<ReverseDNS> {
+            return localVarFp.cloudFloatingIpv6RdnsCreate(id, reverseDNSRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Get or update reverse DNS (PTR) for the IPv6 address wrapped by this floating IP.
@@ -12032,12 +12825,11 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-         * @param {PublicIPv4} [publicIPv4] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv4Create(publicIPv4?: PublicIPv4, options?: RawAxiosRequestConfig): AxiosPromise<PublicIPv4> {
-            return localVarFp.cloudIpv4Create(publicIPv4, options).then((request) => request(axios, basePath));
+        cloudIpv4Create(options?: RawAxiosRequestConfig): AxiosPromise<PublicIPv4> {
+            return localVarFp.cloudIpv4Create(options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -12051,12 +12843,11 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this Public IPv4.
-         * @param {PublicIPv4} [publicIPv4] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv4DetachCreate(id: number, publicIPv4?: PublicIPv4, options?: RawAxiosRequestConfig): AxiosPromise<DetachIPv4Response> {
-            return localVarFp.cloudIpv4DetachCreate(id, publicIPv4, options).then((request) => request(axios, basePath));
+        cloudIpv4DetachCreate(id: number, options?: RawAxiosRequestConfig): AxiosPromise<DetachIPv4Response> {
+            return localVarFp.cloudIpv4DetachCreate(id, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -12070,12 +12861,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Get or update reverse DNS (PTR) for this IPv4 address.
          * @param {number} id A unique integer value identifying this Public IPv4.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv4RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig): AxiosPromise<ReverseDNS> {
-            return localVarFp.cloudIpv4RdnsCreate(id, reverseDNS, options).then((request) => request(axios, basePath));
+        cloudIpv4RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig): AxiosPromise<ReverseDNS> {
+            return localVarFp.cloudIpv4RdnsCreate(id, reverseDNSRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Get or update reverse DNS (PTR) for this IPv4 address.
@@ -12097,12 +12888,11 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-         * @param {PublicIPv6} [publicIPv6] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv6Create(publicIPv6?: PublicIPv6, options?: RawAxiosRequestConfig): AxiosPromise<PublicIPv6> {
-            return localVarFp.cloudIpv6Create(publicIPv6, options).then((request) => request(axios, basePath));
+        cloudIpv6Create(options?: RawAxiosRequestConfig): AxiosPromise<PublicIPv6> {
+            return localVarFp.cloudIpv6Create(options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -12116,12 +12906,11 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} id A unique integer value identifying this Public IPv6.
-         * @param {PublicIPv6} [publicIPv6] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv6DetachCreate(id: number, publicIPv6?: PublicIPv6, options?: RawAxiosRequestConfig): AxiosPromise<DetachIPv6Response> {
-            return localVarFp.cloudIpv6DetachCreate(id, publicIPv6, options).then((request) => request(axios, basePath));
+        cloudIpv6DetachCreate(id: number, options?: RawAxiosRequestConfig): AxiosPromise<DetachIPv6Response> {
+            return localVarFp.cloudIpv6DetachCreate(id, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -12135,12 +12924,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Get or update reverse DNS (PTR) for this IPv6 address.
          * @param {number} id A unique integer value identifying this Public IPv6.
-         * @param {ReverseDNS} reverseDNS 
+         * @param {ReverseDNSRequest} reverseDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudIpv6RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig): AxiosPromise<ReverseDNS> {
-            return localVarFp.cloudIpv6RdnsCreate(id, reverseDNS, options).then((request) => request(axios, basePath));
+        cloudIpv6RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig): AxiosPromise<ReverseDNS> {
+            return localVarFp.cloudIpv6RdnsCreate(id, reverseDNSRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Get or update reverse DNS (PTR) for this IPv6 address.
@@ -12163,21 +12952,21 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PrivateNetworkAddHost} privateNetworkAddHost 
+         * @param {PrivateNetworkAddHostRequest} privateNetworkAddHostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudPrivateNetworksAddServerCreate(id: number, privateNetworkAddHost: PrivateNetworkAddHost, options?: RawAxiosRequestConfig): AxiosPromise<AddServerResponse> {
-            return localVarFp.cloudPrivateNetworksAddServerCreate(id, privateNetworkAddHost, options).then((request) => request(axios, basePath));
+        cloudPrivateNetworksAddServerCreate(id: number, privateNetworkAddHostRequest: PrivateNetworkAddHostRequest, options?: RawAxiosRequestConfig): AxiosPromise<AddServerResponse> {
+            return localVarFp.cloudPrivateNetworksAddServerCreate(id, privateNetworkAddHostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage private networks
-         * @param {PrivateNetwork} privateNetwork 
+         * @param {PrivateNetworkRequest} privateNetworkRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudPrivateNetworksCreate(privateNetwork: PrivateNetwork, options?: RawAxiosRequestConfig): AxiosPromise<PrivateNetwork> {
-            return localVarFp.cloudPrivateNetworksCreate(privateNetwork, options).then((request) => request(axios, basePath));
+        cloudPrivateNetworksCreate(privateNetworkRequest: PrivateNetworkRequest, options?: RawAxiosRequestConfig): AxiosPromise<PrivateNetwork> {
+            return localVarFp.cloudPrivateNetworksCreate(privateNetworkRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage private networks
@@ -12200,22 +12989,22 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PatchedPrivateNetwork} [patchedPrivateNetwork] 
+         * @param {PatchedPrivateNetworkUpdateRequest} [patchedPrivateNetworkUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudPrivateNetworksPartialUpdate(id: number, patchedPrivateNetwork?: PatchedPrivateNetwork, options?: RawAxiosRequestConfig): AxiosPromise<PrivateNetwork> {
-            return localVarFp.cloudPrivateNetworksPartialUpdate(id, patchedPrivateNetwork, options).then((request) => request(axios, basePath));
+        cloudPrivateNetworksPartialUpdate(id: number, patchedPrivateNetworkUpdateRequest?: PatchedPrivateNetworkUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<PrivateNetwork> {
+            return localVarFp.cloudPrivateNetworksPartialUpdate(id, patchedPrivateNetworkUpdateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PrivateNetworkRemoveHost} privateNetworkRemoveHost 
+         * @param {PrivateNetworkRemoveHostRequest} privateNetworkRemoveHostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudPrivateNetworksRemoveServerCreate(id: number, privateNetworkRemoveHost: PrivateNetworkRemoveHost, options?: RawAxiosRequestConfig): AxiosPromise<RemoveServerResponse> {
-            return localVarFp.cloudPrivateNetworksRemoveServerCreate(id, privateNetworkRemoveHost, options).then((request) => request(axios, basePath));
+        cloudPrivateNetworksRemoveServerCreate(id: number, privateNetworkRemoveHostRequest: PrivateNetworkRemoveHostRequest, options?: RawAxiosRequestConfig): AxiosPromise<RemoveServerResponse> {
+            return localVarFp.cloudPrivateNetworksRemoveServerCreate(id, privateNetworkRemoveHostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage private networks
@@ -12229,12 +13018,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Manage private networks
          * @param {number} id A unique integer value identifying this private network.
-         * @param {PrivateNetwork} privateNetwork 
+         * @param {PrivateNetworkUpdateRequest} [privateNetworkUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudPrivateNetworksUpdate(id: number, privateNetwork: PrivateNetwork, options?: RawAxiosRequestConfig): AxiosPromise<PrivateNetwork> {
-            return localVarFp.cloudPrivateNetworksUpdate(id, privateNetwork, options).then((request) => request(axios, basePath));
+        cloudPrivateNetworksUpdate(id: number, privateNetworkUpdateRequest?: PrivateNetworkUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<PrivateNetwork> {
+            return localVarFp.cloudPrivateNetworksUpdate(id, privateNetworkUpdateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List of available server products
@@ -12295,12 +13084,11 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * List the ISO catalog entries visible to this user and their package compatibility.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersBootIsosList(id: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedBootISOList> {
-            return localVarFp.cloudServersBootIsosList(id, page, options).then((request) => request(axios, basePath));
+        cloudServersBootIsosList(id: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<BootISO>> {
+            return localVarFp.cloudServersBootIsosList(id, options).then((request) => request(axios, basePath));
         },
         /**
          * Get a VNC console token for browser-based access.
@@ -12313,12 +13101,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * Create new server
-         * @param {ServerAdd} serverAdd 
+         * @param {ServerAddRequest} serverAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersCreate(serverAdd: ServerAdd, options?: RawAxiosRequestConfig): AxiosPromise<ServerAddResponse> {
-            return localVarFp.cloudServersCreate(serverAdd, options).then((request) => request(axios, basePath));
+        cloudServersCreate(serverAddRequest: ServerAddRequest, options?: RawAxiosRequestConfig): AxiosPromise<ServerAddResponse> {
+            return localVarFp.cloudServersCreate(serverAddRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Cloud servers
@@ -12332,12 +13120,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Enable or disable destroy protection.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {DestroyProtection} destroyProtection 
+         * @param {DestroyProtectionRequest} destroyProtectionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersDestroyProtectionCreate(id: number, destroyProtection: DestroyProtection, options?: RawAxiosRequestConfig): AxiosPromise<DestroyProtectionResponse> {
-            return localVarFp.cloudServersDestroyProtectionCreate(id, destroyProtection, options).then((request) => request(axios, basePath));
+        cloudServersDestroyProtectionCreate(id: number, destroyProtectionRequest: DestroyProtectionRequest, options?: RawAxiosRequestConfig): AxiosPromise<DestroyProtectionResponse> {
+            return localVarFp.cloudServersDestroyProtectionCreate(id, destroyProtectionRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Detach IPv4 from server. Without `ipv4`, the primary NIC\'s IPv4 is detached. Pass `ipv4=<id|slug>` to target a specific attached address (required when the server has more than one IPv4).
@@ -12370,22 +13158,22 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Modify server package: downgrade available only for packages with the same disk size.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {ServerProductUpgrade} serverProductUpgrade 
+         * @param {ServerProductUpgradeRequest} serverProductUpgradeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersModifyPackageCreate(id: number, serverProductUpgrade: ServerProductUpgrade, options?: RawAxiosRequestConfig): AxiosPromise<ServerUpgradeResponse> {
-            return localVarFp.cloudServersModifyPackageCreate(id, serverProductUpgrade, options).then((request) => request(axios, basePath));
+        cloudServersModifyPackageCreate(id: number, serverProductUpgradeRequest: ServerProductUpgradeRequest, options?: RawAxiosRequestConfig): AxiosPromise<ServerUpgradeResponse> {
+            return localVarFp.cloudServersModifyPackageCreate(id, serverProductUpgradeRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Cloud servers
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {PatchedServerDetail} [patchedServerDetail] 
+         * @param {PatchedServerDetailRequest} [patchedServerDetailRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersPartialUpdate(id: number, patchedServerDetail?: PatchedServerDetail, options?: RawAxiosRequestConfig): AxiosPromise<ServerDetail> {
-            return localVarFp.cloudServersPartialUpdate(id, patchedServerDetail, options).then((request) => request(axios, basePath));
+        cloudServersPartialUpdate(id: number, patchedServerDetailRequest?: PatchedServerDetailRequest, options?: RawAxiosRequestConfig): AxiosPromise<ServerDetail> {
+            return localVarFp.cloudServersPartialUpdate(id, patchedServerDetailRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Server power management
@@ -12409,12 +13197,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Public interface
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {PublicInterface} [publicInterface] 
+         * @param {PublicInterfaceRequest} [publicInterfaceRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersPublicInterfaceCreate(id: number, publicInterface?: PublicInterface, options?: RawAxiosRequestConfig): AxiosPromise<PublicInterface> {
-            return localVarFp.cloudServersPublicInterfaceCreate(id, publicInterface, options).then((request) => request(axios, basePath));
+        cloudServersPublicInterfaceCreate(id: number, publicInterfaceRequest?: PublicInterfaceRequest, options?: RawAxiosRequestConfig): AxiosPromise<PublicInterface> {
+            return localVarFp.cloudServersPublicInterfaceCreate(id, publicInterfaceRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Public interface
@@ -12472,15 +13260,14 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.cloudServersRetryProvisionCreate(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * List snapshots for this server or queue a new snapshot.
+         * Cloud servers
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {SnapshotCreate} snapshotCreate 
-         * @param {number} [page] A page number within the paginated result set.
+         * @param {SnapshotCreateRequest} snapshotCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersSnapshotsCreate(id: number, snapshotCreate: SnapshotCreate, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedSnapshotList> {
-            return localVarFp.cloudServersSnapshotsCreate(id, snapshotCreate, page, options).then((request) => request(axios, basePath));
+        cloudServersSnapshotsCreate(id: number, snapshotCreateRequest: SnapshotCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<SnapshotCreateQueued> {
+            return localVarFp.cloudServersSnapshotsCreate(id, snapshotCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Delete a snapshot.
@@ -12495,12 +13282,11 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * List snapshots for this server or queue a new snapshot.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersSnapshotsList(id: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedSnapshotList> {
-            return localVarFp.cloudServersSnapshotsList(id, page, options).then((request) => request(axios, basePath));
+        cloudServersSnapshotsList(id: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<Snapshot>> {
+            return localVarFp.cloudServersSnapshotsList(id, options).then((request) => request(axios, basePath));
         },
         /**
          * Rollback the server to a specific snapshot.
@@ -12513,14 +13299,23 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.cloudServersSnapshotsRollbackCreate(id, snapshotName, options).then((request) => request(axios, basePath));
         },
         /**
-         * Cloud servers
+         * Get this month\'s traffic usage for a server.
          * @param {number} id A unique integer value identifying this virtual machine.
-         * @param {ServerDetail} [serverDetail] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersUpdate(id: number, serverDetail?: ServerDetail, options?: RawAxiosRequestConfig): AxiosPromise<ServerDetail> {
-            return localVarFp.cloudServersUpdate(id, serverDetail, options).then((request) => request(axios, basePath));
+        cloudServersTrafficRetrieve(id: number, options?: RawAxiosRequestConfig): AxiosPromise<ServerTrafficResponse> {
+            return localVarFp.cloudServersTrafficRetrieve(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Cloud servers
+         * @param {number} id A unique integer value identifying this virtual machine.
+         * @param {ServerDetailRequest} [serverDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudServersUpdate(id: number, serverDetailRequest?: ServerDetailRequest, options?: RawAxiosRequestConfig): AxiosPromise<ServerDetail> {
+            return localVarFp.cloudServersUpdate(id, serverDetailRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Get current resource usage for a server.
@@ -12534,12 +13329,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} serverId 
-         * @param {Volume} volume 
+         * @param {VolumeRequest} volumeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersVolumesCreate(serverId: string, volume: Volume, options?: RawAxiosRequestConfig): AxiosPromise<Volume> {
-            return localVarFp.cloudServersVolumesCreate(serverId, volume, options).then((request) => request(axios, basePath));
+        cloudServersVolumesCreate(serverId: string, volumeRequest: VolumeRequest, options?: RawAxiosRequestConfig): AxiosPromise<Volume> {
+            return localVarFp.cloudServersVolumesCreate(serverId, volumeRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -12564,12 +13359,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} serverId 
          * @param {string} volumeId 
-         * @param {PatchedVolume} [patchedVolume] 
+         * @param {PatchedVolumeUpdateRequest} [patchedVolumeUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersVolumesPartialUpdate(serverId: string, volumeId: string, patchedVolume?: PatchedVolume, options?: RawAxiosRequestConfig): AxiosPromise<Volume> {
-            return localVarFp.cloudServersVolumesPartialUpdate(serverId, volumeId, patchedVolume, options).then((request) => request(axios, basePath));
+        cloudServersVolumesPartialUpdate(serverId: string, volumeId: string, patchedVolumeUpdateRequest?: PatchedVolumeUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<Volume> {
+            return localVarFp.cloudServersVolumesPartialUpdate(serverId, volumeId, patchedVolumeUpdateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -12585,12 +13380,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} serverId 
          * @param {string} volumeId 
-         * @param {Volume} volume 
+         * @param {VolumeUpdateRequest} volumeUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudServersVolumesUpdate(serverId: string, volumeId: string, volume: Volume, options?: RawAxiosRequestConfig): AxiosPromise<Volume> {
-            return localVarFp.cloudServersVolumesUpdate(serverId, volumeId, volume, options).then((request) => request(axios, basePath));
+        cloudServersVolumesUpdate(serverId: string, volumeId: string, volumeUpdateRequest: VolumeUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<Volume> {
+            return localVarFp.cloudServersVolumesUpdate(serverId, volumeId, volumeUpdateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List of available storage products
@@ -12613,12 +13408,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Attach existing volume to a server
          * @param {number} id A unique integer value identifying this storage.
-         * @param {AttachVolume} attachVolume 
+         * @param {AttachVolumeRequest} attachVolumeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudVolumesAttachCreate(id: number, attachVolume: AttachVolume, options?: RawAxiosRequestConfig): AxiosPromise<AttachVolume> {
-            return localVarFp.cloudVolumesAttachCreate(id, attachVolume, options).then((request) => request(axios, basePath));
+        cloudVolumesAttachCreate(id: number, attachVolumeRequest: AttachVolumeRequest, options?: RawAxiosRequestConfig): AxiosPromise<AttachVolume> {
+            return localVarFp.cloudVolumesAttachCreate(id, attachVolumeRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Volumes management
@@ -12632,12 +13427,11 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Detach volume from server
          * @param {number} id A unique integer value identifying this storage.
-         * @param {Volume} volume 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudVolumesDetachCreate(id: number, volume: Volume, options?: RawAxiosRequestConfig): AxiosPromise<DetachVolume> {
-            return localVarFp.cloudVolumesDetachCreate(id, volume, options).then((request) => request(axios, basePath));
+        cloudVolumesDetachCreate(id: number, options?: RawAxiosRequestConfig): AxiosPromise<DetachVolume> {
+            return localVarFp.cloudVolumesDetachCreate(id, options).then((request) => request(axios, basePath));
         },
         /**
          * Volumes management
@@ -12650,12 +13444,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Volumes management
          * @param {number} id A unique integer value identifying this storage.
-         * @param {PatchedVolume} [patchedVolume] 
+         * @param {PatchedVolumeUpdateRequest} [patchedVolumeUpdateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudVolumesPartialUpdate(id: number, patchedVolume?: PatchedVolume, options?: RawAxiosRequestConfig): AxiosPromise<Volume> {
-            return localVarFp.cloudVolumesPartialUpdate(id, patchedVolume, options).then((request) => request(axios, basePath));
+        cloudVolumesPartialUpdate(id: number, patchedVolumeUpdateRequest?: PatchedVolumeUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<Volume> {
+            return localVarFp.cloudVolumesPartialUpdate(id, patchedVolumeUpdateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Volumes management
@@ -12669,12 +13463,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
         /**
          * Volumes management
          * @param {number} id A unique integer value identifying this storage.
-         * @param {Volume} volume 
+         * @param {VolumeUpdateRequest} volumeUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cloudVolumesUpdate(id: number, volume: Volume, options?: RawAxiosRequestConfig): AxiosPromise<Volume> {
-            return localVarFp.cloudVolumesUpdate(id, volume, options).then((request) => request(axios, basePath));
+        cloudVolumesUpdate(id: number, volumeUpdateRequest: VolumeUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<Volume> {
+            return localVarFp.cloudVolumesUpdate(id, volumeUpdateRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -12685,12 +13479,12 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
 export class CloudApi extends BaseAPI {
     /**
      * Create a bucket
-     * @param {BucketCreate} bucketCreate 
+     * @param {BucketCreateRequest} bucketCreateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudBucketsCreate(bucketCreate: BucketCreate, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudBucketsCreate(bucketCreate, options).then((request) => request(this.axios, this.basePath));
+    public cloudBucketsCreate(bucketCreateRequest: BucketCreateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudBucketsCreate(bucketCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -12735,12 +13529,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Resize a bucket
      * @param {number} id A unique integer value identifying this S3 bucket.
-     * @param {BucketResize} bucketResize 
+     * @param {BucketResizeRequest} bucketResizeRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudBucketsResizeCreate(id: number, bucketResize: BucketResize, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudBucketsResizeCreate(id, bucketResize, options).then((request) => request(this.axios, this.basePath));
+    public cloudBucketsResizeCreate(id: number, bucketResizeRequest: BucketResizeRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudBucketsResizeCreate(id, bucketResizeRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -12756,22 +13550,22 @@ export class CloudApi extends BaseAPI {
     /**
      * Set bucket visibility
      * @param {number} id A unique integer value identifying this S3 bucket.
-     * @param {BucketVisibility} bucketVisibility 
+     * @param {BucketVisibilityRequest} bucketVisibilityRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudBucketsVisibilityCreate(id: number, bucketVisibility: BucketVisibility, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudBucketsVisibilityCreate(id, bucketVisibility, options).then((request) => request(this.axios, this.basePath));
+    public cloudBucketsVisibilityCreate(id: number, bucketVisibilityRequest: BucketVisibilityRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudBucketsVisibilityCreate(id, bucketVisibilityRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-     * @param {FirewallRulesSet} firewallRulesSet 
+     * @param {FirewallRulesSetRequest} firewallRulesSetRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudFirewallRulesSetCreate(firewallRulesSet: FirewallRulesSet, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudFirewallRulesSetCreate(firewallRulesSet, options).then((request) => request(this.axios, this.basePath));
+    public cloudFirewallRulesSetCreate(firewallRulesSetRequest: FirewallRulesSetRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudFirewallRulesSetCreate(firewallRulesSetRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -12796,12 +13590,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} id A unique integer value identifying this firewall rules set.
-     * @param {PatchedFirewallRulesSet} [patchedFirewallRulesSet] 
+     * @param {PatchedFirewallRulesSetRequest} [patchedFirewallRulesSetRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudFirewallRulesSetPartialUpdate(id: number, patchedFirewallRulesSet?: PatchedFirewallRulesSet, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudFirewallRulesSetPartialUpdate(id, patchedFirewallRulesSet, options).then((request) => request(this.axios, this.basePath));
+    public cloudFirewallRulesSetPartialUpdate(id: number, patchedFirewallRulesSetRequest?: PatchedFirewallRulesSetRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudFirewallRulesSetPartialUpdate(id, patchedFirewallRulesSetRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -12817,12 +13611,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {string} rulesSetId 
-     * @param {FirewallRule} firewallRule 
+     * @param {FirewallRuleRequest} firewallRuleRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudFirewallRulesSetRulesCreate(rulesSetId: string, firewallRule: FirewallRule, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudFirewallRulesSetRulesCreate(rulesSetId, firewallRule, options).then((request) => request(this.axios, this.basePath));
+    public cloudFirewallRulesSetRulesCreate(rulesSetId: string, firewallRuleRequest: FirewallRuleRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudFirewallRulesSetRulesCreate(rulesSetId, firewallRuleRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -12850,12 +13644,12 @@ export class CloudApi extends BaseAPI {
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {string} ruleId 
      * @param {string} rulesSetId 
-     * @param {PatchedFirewallRule} [patchedFirewallRule] 
+     * @param {PatchedFirewallRuleRequest} [patchedFirewallRuleRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudFirewallRulesSetRulesPartialUpdate(ruleId: string, rulesSetId: string, patchedFirewallRule?: PatchedFirewallRule, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudFirewallRulesSetRulesPartialUpdate(ruleId, rulesSetId, patchedFirewallRule, options).then((request) => request(this.axios, this.basePath));
+    public cloudFirewallRulesSetRulesPartialUpdate(ruleId: string, rulesSetId: string, patchedFirewallRuleRequest?: PatchedFirewallRuleRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudFirewallRulesSetRulesPartialUpdate(ruleId, rulesSetId, patchedFirewallRuleRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -12873,23 +13667,23 @@ export class CloudApi extends BaseAPI {
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {string} ruleId 
      * @param {string} rulesSetId 
-     * @param {FirewallRule} firewallRule 
+     * @param {FirewallRuleRequest} firewallRuleRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudFirewallRulesSetRulesUpdate(ruleId: string, rulesSetId: string, firewallRule: FirewallRule, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudFirewallRulesSetRulesUpdate(ruleId, rulesSetId, firewallRule, options).then((request) => request(this.axios, this.basePath));
+    public cloudFirewallRulesSetRulesUpdate(ruleId: string, rulesSetId: string, firewallRuleRequest: FirewallRuleRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudFirewallRulesSetRulesUpdate(ruleId, rulesSetId, firewallRuleRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} id A unique integer value identifying this firewall rules set.
-     * @param {FirewallRulesSet} firewallRulesSet 
+     * @param {FirewallRulesSetRequest} firewallRulesSetRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudFirewallRulesSetUpdate(id: number, firewallRulesSet: FirewallRulesSet, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudFirewallRulesSetUpdate(id, firewallRulesSet, options).then((request) => request(this.axios, this.basePath));
+    public cloudFirewallRulesSetUpdate(id: number, firewallRulesSetRequest: FirewallRulesSetRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudFirewallRulesSetUpdate(id, firewallRulesSetRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -12916,12 +13710,12 @@ export class CloudApi extends BaseAPI {
 
     /**
      * Manage floating IPv4 addresses. A floating IP can be authorized on multiple VMs simultaneously; the customer asserts ownership inside the guest via keepalived/VRRP.
-     * @param {FloatingIPv4Create} [floatingIPv4Create] 
+     * @param {FloatingIPv4CreateRequest} [floatingIPv4CreateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudFloatingIpv4Create(floatingIPv4Create?: FloatingIPv4Create, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudFloatingIpv4Create(floatingIPv4Create, options).then((request) => request(this.axios, this.basePath));
+    public cloudFloatingIpv4Create(floatingIPv4CreateRequest?: FloatingIPv4CreateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudFloatingIpv4Create(floatingIPv4CreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -12947,12 +13741,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Get or update reverse DNS (PTR) for the IPv4 address wrapped by this floating IP.
      * @param {number} id A unique integer value identifying this floating IPv4.
-     * @param {ReverseDNS} reverseDNS 
+     * @param {ReverseDNSRequest} reverseDNSRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudFloatingIpv4RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudFloatingIpv4RdnsCreate(id, reverseDNS, options).then((request) => request(this.axios, this.basePath));
+    public cloudFloatingIpv4RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudFloatingIpv4RdnsCreate(id, reverseDNSRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13010,12 +13804,12 @@ export class CloudApi extends BaseAPI {
 
     /**
      * Manage floating IPv6 addresses.
-     * @param {FloatingIPv6Create} [floatingIPv6Create] 
+     * @param {FloatingIPv6CreateRequest} [floatingIPv6CreateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudFloatingIpv6Create(floatingIPv6Create?: FloatingIPv6Create, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudFloatingIpv6Create(floatingIPv6Create, options).then((request) => request(this.axios, this.basePath));
+    public cloudFloatingIpv6Create(floatingIPv6CreateRequest?: FloatingIPv6CreateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudFloatingIpv6Create(floatingIPv6CreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13041,12 +13835,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Get or update reverse DNS (PTR) for the IPv6 address wrapped by this floating IP.
      * @param {number} id A unique integer value identifying this floating IPv6.
-     * @param {ReverseDNS} reverseDNS 
+     * @param {ReverseDNSRequest} reverseDNSRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudFloatingIpv6RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudFloatingIpv6RdnsCreate(id, reverseDNS, options).then((request) => request(this.axios, this.basePath));
+    public cloudFloatingIpv6RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudFloatingIpv6RdnsCreate(id, reverseDNSRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13122,12 +13916,11 @@ export class CloudApi extends BaseAPI {
 
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-     * @param {PublicIPv4} [publicIPv4] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudIpv4Create(publicIPv4?: PublicIPv4, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudIpv4Create(publicIPv4, options).then((request) => request(this.axios, this.basePath));
+    public cloudIpv4Create(options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudIpv4Create(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13143,12 +13936,11 @@ export class CloudApi extends BaseAPI {
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} id A unique integer value identifying this Public IPv4.
-     * @param {PublicIPv4} [publicIPv4] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudIpv4DetachCreate(id: number, publicIPv4?: PublicIPv4, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudIpv4DetachCreate(id, publicIPv4, options).then((request) => request(this.axios, this.basePath));
+    public cloudIpv4DetachCreate(id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudIpv4DetachCreate(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13164,12 +13956,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Get or update reverse DNS (PTR) for this IPv4 address.
      * @param {number} id A unique integer value identifying this Public IPv4.
-     * @param {ReverseDNS} reverseDNS 
+     * @param {ReverseDNSRequest} reverseDNSRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudIpv4RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudIpv4RdnsCreate(id, reverseDNS, options).then((request) => request(this.axios, this.basePath));
+    public cloudIpv4RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudIpv4RdnsCreate(id, reverseDNSRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13194,12 +13986,11 @@ export class CloudApi extends BaseAPI {
 
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
-     * @param {PublicIPv6} [publicIPv6] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudIpv6Create(publicIPv6?: PublicIPv6, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudIpv6Create(publicIPv6, options).then((request) => request(this.axios, this.basePath));
+    public cloudIpv6Create(options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudIpv6Create(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13215,12 +14006,11 @@ export class CloudApi extends BaseAPI {
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} id A unique integer value identifying this Public IPv6.
-     * @param {PublicIPv6} [publicIPv6] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudIpv6DetachCreate(id: number, publicIPv6?: PublicIPv6, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudIpv6DetachCreate(id, publicIPv6, options).then((request) => request(this.axios, this.basePath));
+    public cloudIpv6DetachCreate(id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudIpv6DetachCreate(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13236,12 +14026,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Get or update reverse DNS (PTR) for this IPv6 address.
      * @param {number} id A unique integer value identifying this Public IPv6.
-     * @param {ReverseDNS} reverseDNS 
+     * @param {ReverseDNSRequest} reverseDNSRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudIpv6RdnsCreate(id: number, reverseDNS: ReverseDNS, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudIpv6RdnsCreate(id, reverseDNS, options).then((request) => request(this.axios, this.basePath));
+    public cloudIpv6RdnsCreate(id: number, reverseDNSRequest: ReverseDNSRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudIpv6RdnsCreate(id, reverseDNSRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13267,22 +14057,22 @@ export class CloudApi extends BaseAPI {
     /**
      * Manage private networks
      * @param {number} id A unique integer value identifying this private network.
-     * @param {PrivateNetworkAddHost} privateNetworkAddHost 
+     * @param {PrivateNetworkAddHostRequest} privateNetworkAddHostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudPrivateNetworksAddServerCreate(id: number, privateNetworkAddHost: PrivateNetworkAddHost, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudPrivateNetworksAddServerCreate(id, privateNetworkAddHost, options).then((request) => request(this.axios, this.basePath));
+    public cloudPrivateNetworksAddServerCreate(id: number, privateNetworkAddHostRequest: PrivateNetworkAddHostRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudPrivateNetworksAddServerCreate(id, privateNetworkAddHostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Manage private networks
-     * @param {PrivateNetwork} privateNetwork 
+     * @param {PrivateNetworkRequest} privateNetworkRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudPrivateNetworksCreate(privateNetwork: PrivateNetwork, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudPrivateNetworksCreate(privateNetwork, options).then((request) => request(this.axios, this.basePath));
+    public cloudPrivateNetworksCreate(privateNetworkRequest: PrivateNetworkRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudPrivateNetworksCreate(privateNetworkRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13308,23 +14098,23 @@ export class CloudApi extends BaseAPI {
     /**
      * Manage private networks
      * @param {number} id A unique integer value identifying this private network.
-     * @param {PatchedPrivateNetwork} [patchedPrivateNetwork] 
+     * @param {PatchedPrivateNetworkUpdateRequest} [patchedPrivateNetworkUpdateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudPrivateNetworksPartialUpdate(id: number, patchedPrivateNetwork?: PatchedPrivateNetwork, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudPrivateNetworksPartialUpdate(id, patchedPrivateNetwork, options).then((request) => request(this.axios, this.basePath));
+    public cloudPrivateNetworksPartialUpdate(id: number, patchedPrivateNetworkUpdateRequest?: PatchedPrivateNetworkUpdateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudPrivateNetworksPartialUpdate(id, patchedPrivateNetworkUpdateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Manage private networks
      * @param {number} id A unique integer value identifying this private network.
-     * @param {PrivateNetworkRemoveHost} privateNetworkRemoveHost 
+     * @param {PrivateNetworkRemoveHostRequest} privateNetworkRemoveHostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudPrivateNetworksRemoveServerCreate(id: number, privateNetworkRemoveHost: PrivateNetworkRemoveHost, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudPrivateNetworksRemoveServerCreate(id, privateNetworkRemoveHost, options).then((request) => request(this.axios, this.basePath));
+    public cloudPrivateNetworksRemoveServerCreate(id: number, privateNetworkRemoveHostRequest: PrivateNetworkRemoveHostRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudPrivateNetworksRemoveServerCreate(id, privateNetworkRemoveHostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13340,12 +14130,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Manage private networks
      * @param {number} id A unique integer value identifying this private network.
-     * @param {PrivateNetwork} privateNetwork 
+     * @param {PrivateNetworkUpdateRequest} [privateNetworkUpdateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudPrivateNetworksUpdate(id: number, privateNetwork: PrivateNetwork, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudPrivateNetworksUpdate(id, privateNetwork, options).then((request) => request(this.axios, this.basePath));
+    public cloudPrivateNetworksUpdate(id: number, privateNetworkUpdateRequest?: PrivateNetworkUpdateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudPrivateNetworksUpdate(id, privateNetworkUpdateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13413,12 +14203,11 @@ export class CloudApi extends BaseAPI {
     /**
      * List the ISO catalog entries visible to this user and their package compatibility.
      * @param {number} id A unique integer value identifying this virtual machine.
-     * @param {number} [page] A page number within the paginated result set.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersBootIsosList(id: number, page?: number, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersBootIsosList(id, page, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersBootIsosList(id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersBootIsosList(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13433,12 +14222,12 @@ export class CloudApi extends BaseAPI {
 
     /**
      * Create new server
-     * @param {ServerAdd} serverAdd 
+     * @param {ServerAddRequest} serverAddRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersCreate(serverAdd: ServerAdd, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersCreate(serverAdd, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersCreate(serverAddRequest: ServerAddRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersCreate(serverAddRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13454,12 +14243,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Enable or disable destroy protection.
      * @param {number} id A unique integer value identifying this virtual machine.
-     * @param {DestroyProtection} destroyProtection 
+     * @param {DestroyProtectionRequest} destroyProtectionRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersDestroyProtectionCreate(id: number, destroyProtection: DestroyProtection, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersDestroyProtectionCreate(id, destroyProtection, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersDestroyProtectionCreate(id: number, destroyProtectionRequest: DestroyProtectionRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersDestroyProtectionCreate(id, destroyProtectionRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13496,23 +14285,23 @@ export class CloudApi extends BaseAPI {
     /**
      * Modify server package: downgrade available only for packages with the same disk size.
      * @param {number} id A unique integer value identifying this virtual machine.
-     * @param {ServerProductUpgrade} serverProductUpgrade 
+     * @param {ServerProductUpgradeRequest} serverProductUpgradeRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersModifyPackageCreate(id: number, serverProductUpgrade: ServerProductUpgrade, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersModifyPackageCreate(id, serverProductUpgrade, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersModifyPackageCreate(id: number, serverProductUpgradeRequest: ServerProductUpgradeRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersModifyPackageCreate(id, serverProductUpgradeRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Cloud servers
      * @param {number} id A unique integer value identifying this virtual machine.
-     * @param {PatchedServerDetail} [patchedServerDetail] 
+     * @param {PatchedServerDetailRequest} [patchedServerDetailRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersPartialUpdate(id: number, patchedServerDetail?: PatchedServerDetail, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersPartialUpdate(id, patchedServerDetail, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersPartialUpdate(id: number, patchedServerDetailRequest?: PatchedServerDetailRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersPartialUpdate(id, patchedServerDetailRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13539,12 +14328,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Public interface
      * @param {number} id A unique integer value identifying this virtual machine.
-     * @param {PublicInterface} [publicInterface] 
+     * @param {PublicInterfaceRequest} [publicInterfaceRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersPublicInterfaceCreate(id: number, publicInterface?: PublicInterface, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersPublicInterfaceCreate(id, publicInterface, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersPublicInterfaceCreate(id: number, publicInterfaceRequest?: PublicInterfaceRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersPublicInterfaceCreate(id, publicInterfaceRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13609,15 +14398,14 @@ export class CloudApi extends BaseAPI {
     }
 
     /**
-     * List snapshots for this server or queue a new snapshot.
+     * Cloud servers
      * @param {number} id A unique integer value identifying this virtual machine.
-     * @param {SnapshotCreate} snapshotCreate 
-     * @param {number} [page] A page number within the paginated result set.
+     * @param {SnapshotCreateRequest} snapshotCreateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersSnapshotsCreate(id: number, snapshotCreate: SnapshotCreate, page?: number, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersSnapshotsCreate(id, snapshotCreate, page, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersSnapshotsCreate(id: number, snapshotCreateRequest: SnapshotCreateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersSnapshotsCreate(id, snapshotCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13634,12 +14422,11 @@ export class CloudApi extends BaseAPI {
     /**
      * List snapshots for this server or queue a new snapshot.
      * @param {number} id A unique integer value identifying this virtual machine.
-     * @param {number} [page] A page number within the paginated result set.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersSnapshotsList(id: number, page?: number, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersSnapshotsList(id, page, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersSnapshotsList(id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersSnapshotsList(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13654,14 +14441,24 @@ export class CloudApi extends BaseAPI {
     }
 
     /**
-     * Cloud servers
+     * Get this month\'s traffic usage for a server.
      * @param {number} id A unique integer value identifying this virtual machine.
-     * @param {ServerDetail} [serverDetail] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersUpdate(id: number, serverDetail?: ServerDetail, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersUpdate(id, serverDetail, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersTrafficRetrieve(id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersTrafficRetrieve(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Cloud servers
+     * @param {number} id A unique integer value identifying this virtual machine.
+     * @param {ServerDetailRequest} [serverDetailRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudServersUpdate(id: number, serverDetailRequest?: ServerDetailRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersUpdate(id, serverDetailRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13677,12 +14474,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {string} serverId 
-     * @param {Volume} volume 
+     * @param {VolumeRequest} volumeRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersVolumesCreate(serverId: string, volume: Volume, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersVolumesCreate(serverId, volume, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersVolumesCreate(serverId: string, volumeRequest: VolumeRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersVolumesCreate(serverId, volumeRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13710,12 +14507,12 @@ export class CloudApi extends BaseAPI {
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {string} serverId 
      * @param {string} volumeId 
-     * @param {PatchedVolume} [patchedVolume] 
+     * @param {PatchedVolumeUpdateRequest} [patchedVolumeUpdateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersVolumesPartialUpdate(serverId: string, volumeId: string, patchedVolume?: PatchedVolume, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersVolumesPartialUpdate(serverId, volumeId, patchedVolume, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersVolumesPartialUpdate(serverId: string, volumeId: string, patchedVolumeUpdateRequest?: PatchedVolumeUpdateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersVolumesPartialUpdate(serverId, volumeId, patchedVolumeUpdateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13733,12 +14530,12 @@ export class CloudApi extends BaseAPI {
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {string} serverId 
      * @param {string} volumeId 
-     * @param {Volume} volume 
+     * @param {VolumeUpdateRequest} volumeUpdateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudServersVolumesUpdate(serverId: string, volumeId: string, volume: Volume, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudServersVolumesUpdate(serverId, volumeId, volume, options).then((request) => request(this.axios, this.basePath));
+    public cloudServersVolumesUpdate(serverId: string, volumeId: string, volumeUpdateRequest: VolumeUpdateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersVolumesUpdate(serverId, volumeId, volumeUpdateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13764,12 +14561,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Attach existing volume to a server
      * @param {number} id A unique integer value identifying this storage.
-     * @param {AttachVolume} attachVolume 
+     * @param {AttachVolumeRequest} attachVolumeRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudVolumesAttachCreate(id: number, attachVolume: AttachVolume, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudVolumesAttachCreate(id, attachVolume, options).then((request) => request(this.axios, this.basePath));
+    public cloudVolumesAttachCreate(id: number, attachVolumeRequest: AttachVolumeRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudVolumesAttachCreate(id, attachVolumeRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13785,12 +14582,11 @@ export class CloudApi extends BaseAPI {
     /**
      * Detach volume from server
      * @param {number} id A unique integer value identifying this storage.
-     * @param {Volume} volume 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudVolumesDetachCreate(id: number, volume: Volume, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudVolumesDetachCreate(id, volume, options).then((request) => request(this.axios, this.basePath));
+    public cloudVolumesDetachCreate(id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudVolumesDetachCreate(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13805,12 +14601,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Volumes management
      * @param {number} id A unique integer value identifying this storage.
-     * @param {PatchedVolume} [patchedVolume] 
+     * @param {PatchedVolumeUpdateRequest} [patchedVolumeUpdateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudVolumesPartialUpdate(id: number, patchedVolume?: PatchedVolume, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudVolumesPartialUpdate(id, patchedVolume, options).then((request) => request(this.axios, this.basePath));
+    public cloudVolumesPartialUpdate(id: number, patchedVolumeUpdateRequest?: PatchedVolumeUpdateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudVolumesPartialUpdate(id, patchedVolumeUpdateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -13826,12 +14622,12 @@ export class CloudApi extends BaseAPI {
     /**
      * Volumes management
      * @param {number} id A unique integer value identifying this storage.
-     * @param {Volume} volume 
+     * @param {VolumeUpdateRequest} volumeUpdateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public cloudVolumesUpdate(id: number, volume: Volume, options?: RawAxiosRequestConfig) {
-        return CloudApiFp(this.configuration).cloudVolumesUpdate(id, volume, options).then((request) => request(this.axios, this.basePath));
+    public cloudVolumesUpdate(id: number, volumeUpdateRequest: VolumeUpdateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudVolumesUpdate(id, volumeUpdateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -13884,15 +14680,15 @@ export const DedicatedApiAxiosParamCreator = function (configuration?: Configura
         /**
          * Execute a power management action (start, stop, restart, shutdown).
          * @param {string} id 
-         * @param {PowerAction} powerAction 
+         * @param {PowerActionRequest} powerActionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dedicatedServersPowerCreate: async (id: string, powerAction: PowerAction, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        dedicatedServersPowerCreate: async (id: string, powerActionRequest: PowerActionRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('dedicatedServersPowerCreate', 'id', id)
-            // verify required parameter 'powerAction' is not null or undefined
-            assertParamExists('dedicatedServersPowerCreate', 'powerAction', powerAction)
+            // verify required parameter 'powerActionRequest' is not null or undefined
+            assertParamExists('dedicatedServersPowerCreate', 'powerActionRequest', powerActionRequest)
             const localVarPath = `/api/dedicated/servers/{id}/power/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -13917,7 +14713,7 @@ export const DedicatedApiAxiosParamCreator = function (configuration?: Configura
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(powerAction, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(powerActionRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -13927,15 +14723,15 @@ export const DedicatedApiAxiosParamCreator = function (configuration?: Configura
         /**
          * Update reverse DNS for a dedicated server IP.
          * @param {string} id 
-         * @param {DedicatedRDNS} dedicatedRDNS 
+         * @param {DedicatedRDNSRequest} dedicatedRDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dedicatedServersRdnsCreate: async (id: string, dedicatedRDNS: DedicatedRDNS, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        dedicatedServersRdnsCreate: async (id: string, dedicatedRDNSRequest: DedicatedRDNSRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('dedicatedServersRdnsCreate', 'id', id)
-            // verify required parameter 'dedicatedRDNS' is not null or undefined
-            assertParamExists('dedicatedServersRdnsCreate', 'dedicatedRDNS', dedicatedRDNS)
+            // verify required parameter 'dedicatedRDNSRequest' is not null or undefined
+            assertParamExists('dedicatedServersRdnsCreate', 'dedicatedRDNSRequest', dedicatedRDNSRequest)
             const localVarPath = `/api/dedicated/servers/{id}/rdns/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -13960,7 +14756,7 @@ export const DedicatedApiAxiosParamCreator = function (configuration?: Configura
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(dedicatedRDNS, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(dedicatedRDNSRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -13970,15 +14766,15 @@ export const DedicatedApiAxiosParamCreator = function (configuration?: Configura
         /**
          * Reinstall the dedicated server with a new operating system.
          * @param {string} id 
-         * @param {Reinstall} reinstall 
+         * @param {ReinstallRequest} reinstallRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dedicatedServersReinstallCreate: async (id: string, reinstall: Reinstall, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        dedicatedServersReinstallCreate: async (id: string, reinstallRequest: ReinstallRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('dedicatedServersReinstallCreate', 'id', id)
-            // verify required parameter 'reinstall' is not null or undefined
-            assertParamExists('dedicatedServersReinstallCreate', 'reinstall', reinstall)
+            // verify required parameter 'reinstallRequest' is not null or undefined
+            assertParamExists('dedicatedServersReinstallCreate', 'reinstallRequest', reinstallRequest)
             const localVarPath = `/api/dedicated/servers/{id}/reinstall/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -14003,7 +14799,7 @@ export const DedicatedApiAxiosParamCreator = function (configuration?: Configura
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(reinstall, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(reinstallRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -14072,12 +14868,12 @@ export const DedicatedApiFp = function(configuration?: Configuration) {
         /**
          * Execute a power management action (start, stop, restart, shutdown).
          * @param {string} id 
-         * @param {PowerAction} powerAction 
+         * @param {PowerActionRequest} powerActionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async dedicatedServersPowerCreate(id: string, powerAction: PowerAction, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PowerActionResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.dedicatedServersPowerCreate(id, powerAction, options);
+        async dedicatedServersPowerCreate(id: string, powerActionRequest: PowerActionRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PowerActionResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.dedicatedServersPowerCreate(id, powerActionRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DedicatedApi.dedicatedServersPowerCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -14085,12 +14881,12 @@ export const DedicatedApiFp = function(configuration?: Configuration) {
         /**
          * Update reverse DNS for a dedicated server IP.
          * @param {string} id 
-         * @param {DedicatedRDNS} dedicatedRDNS 
+         * @param {DedicatedRDNSRequest} dedicatedRDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async dedicatedServersRdnsCreate(id: string, dedicatedRDNS: DedicatedRDNS, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<RDNSUpdateResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.dedicatedServersRdnsCreate(id, dedicatedRDNS, options);
+        async dedicatedServersRdnsCreate(id: string, dedicatedRDNSRequest: DedicatedRDNSRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<RDNSUpdateResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.dedicatedServersRdnsCreate(id, dedicatedRDNSRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DedicatedApi.dedicatedServersRdnsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -14098,12 +14894,12 @@ export const DedicatedApiFp = function(configuration?: Configuration) {
         /**
          * Reinstall the dedicated server with a new operating system.
          * @param {string} id 
-         * @param {Reinstall} reinstall 
+         * @param {ReinstallRequest} reinstallRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async dedicatedServersReinstallCreate(id: string, reinstall: Reinstall, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReinstallResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.dedicatedServersReinstallCreate(id, reinstall, options);
+        async dedicatedServersReinstallCreate(id: string, reinstallRequest: ReinstallRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ReinstallResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.dedicatedServersReinstallCreate(id, reinstallRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DedicatedApi.dedicatedServersReinstallCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -14141,32 +14937,32 @@ export const DedicatedApiFactory = function (configuration?: Configuration, base
         /**
          * Execute a power management action (start, stop, restart, shutdown).
          * @param {string} id 
-         * @param {PowerAction} powerAction 
+         * @param {PowerActionRequest} powerActionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dedicatedServersPowerCreate(id: string, powerAction: PowerAction, options?: RawAxiosRequestConfig): AxiosPromise<PowerActionResponse> {
-            return localVarFp.dedicatedServersPowerCreate(id, powerAction, options).then((request) => request(axios, basePath));
+        dedicatedServersPowerCreate(id: string, powerActionRequest: PowerActionRequest, options?: RawAxiosRequestConfig): AxiosPromise<PowerActionResponse> {
+            return localVarFp.dedicatedServersPowerCreate(id, powerActionRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Update reverse DNS for a dedicated server IP.
          * @param {string} id 
-         * @param {DedicatedRDNS} dedicatedRDNS 
+         * @param {DedicatedRDNSRequest} dedicatedRDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dedicatedServersRdnsCreate(id: string, dedicatedRDNS: DedicatedRDNS, options?: RawAxiosRequestConfig): AxiosPromise<RDNSUpdateResponse> {
-            return localVarFp.dedicatedServersRdnsCreate(id, dedicatedRDNS, options).then((request) => request(axios, basePath));
+        dedicatedServersRdnsCreate(id: string, dedicatedRDNSRequest: DedicatedRDNSRequest, options?: RawAxiosRequestConfig): AxiosPromise<RDNSUpdateResponse> {
+            return localVarFp.dedicatedServersRdnsCreate(id, dedicatedRDNSRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Reinstall the dedicated server with a new operating system.
          * @param {string} id 
-         * @param {Reinstall} reinstall 
+         * @param {ReinstallRequest} reinstallRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dedicatedServersReinstallCreate(id: string, reinstall: Reinstall, options?: RawAxiosRequestConfig): AxiosPromise<ReinstallResponse> {
-            return localVarFp.dedicatedServersReinstallCreate(id, reinstall, options).then((request) => request(axios, basePath));
+        dedicatedServersReinstallCreate(id: string, reinstallRequest: ReinstallRequest, options?: RawAxiosRequestConfig): AxiosPromise<ReinstallResponse> {
+            return localVarFp.dedicatedServersReinstallCreate(id, reinstallRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List and manage dedicated server services.
@@ -14197,34 +14993,34 @@ export class DedicatedApi extends BaseAPI {
     /**
      * Execute a power management action (start, stop, restart, shutdown).
      * @param {string} id 
-     * @param {PowerAction} powerAction 
+     * @param {PowerActionRequest} powerActionRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public dedicatedServersPowerCreate(id: string, powerAction: PowerAction, options?: RawAxiosRequestConfig) {
-        return DedicatedApiFp(this.configuration).dedicatedServersPowerCreate(id, powerAction, options).then((request) => request(this.axios, this.basePath));
+    public dedicatedServersPowerCreate(id: string, powerActionRequest: PowerActionRequest, options?: RawAxiosRequestConfig) {
+        return DedicatedApiFp(this.configuration).dedicatedServersPowerCreate(id, powerActionRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Update reverse DNS for a dedicated server IP.
      * @param {string} id 
-     * @param {DedicatedRDNS} dedicatedRDNS 
+     * @param {DedicatedRDNSRequest} dedicatedRDNSRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public dedicatedServersRdnsCreate(id: string, dedicatedRDNS: DedicatedRDNS, options?: RawAxiosRequestConfig) {
-        return DedicatedApiFp(this.configuration).dedicatedServersRdnsCreate(id, dedicatedRDNS, options).then((request) => request(this.axios, this.basePath));
+    public dedicatedServersRdnsCreate(id: string, dedicatedRDNSRequest: DedicatedRDNSRequest, options?: RawAxiosRequestConfig) {
+        return DedicatedApiFp(this.configuration).dedicatedServersRdnsCreate(id, dedicatedRDNSRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Reinstall the dedicated server with a new operating system.
      * @param {string} id 
-     * @param {Reinstall} reinstall 
+     * @param {ReinstallRequest} reinstallRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public dedicatedServersReinstallCreate(id: string, reinstall: Reinstall, options?: RawAxiosRequestConfig) {
-        return DedicatedApiFp(this.configuration).dedicatedServersReinstallCreate(id, reinstall, options).then((request) => request(this.axios, this.basePath));
+    public dedicatedServersReinstallCreate(id: string, reinstallRequest: ReinstallRequest, options?: RawAxiosRequestConfig) {
+        return DedicatedApiFp(this.configuration).dedicatedServersReinstallCreate(id, reinstallRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -14285,13 +15081,13 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         },
         /**
          * Manage your domains
-         * @param {CheckAvailability} checkAvailability 
+         * @param {CheckAvailabilityRequest} checkAvailabilityRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainCheckAvailabilityCreate: async (checkAvailability: CheckAvailability, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'checkAvailability' is not null or undefined
-            assertParamExists('domainDomainCheckAvailabilityCreate', 'checkAvailability', checkAvailability)
+        domainDomainCheckAvailabilityCreate: async (checkAvailabilityRequest: CheckAvailabilityRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'checkAvailabilityRequest' is not null or undefined
+            assertParamExists('domainDomainCheckAvailabilityCreate', 'checkAvailabilityRequest', checkAvailabilityRequest)
             const localVarPath = `/api/domain/domain/check-availability/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -14315,7 +15111,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(checkAvailability, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(checkAvailabilityRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -14325,15 +15121,15 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * Update a contact on this domain using a saved DomainRegistrant.
          * @param {string} domain 
-         * @param {ContactsUpdate} contactsUpdate 
+         * @param {ContactsUpdateRequest} contactsUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainContactsCreate: async (domain: string, contactsUpdate: ContactsUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        domainDomainContactsCreate: async (domain: string, contactsUpdateRequest: ContactsUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'domain' is not null or undefined
             assertParamExists('domainDomainContactsCreate', 'domain', domain)
-            // verify required parameter 'contactsUpdate' is not null or undefined
-            assertParamExists('domainDomainContactsCreate', 'contactsUpdate', contactsUpdate)
+            // verify required parameter 'contactsUpdateRequest' is not null or undefined
+            assertParamExists('domainDomainContactsCreate', 'contactsUpdateRequest', contactsUpdateRequest)
             const localVarPath = `/api/domain/domain/{domain}/contacts/`
                 .replace('{domain}', encodeURIComponent(String(domain)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -14358,7 +15154,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(contactsUpdate, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(contactsUpdateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -14367,13 +15163,13 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         },
         /**
          * Manage your domains
-         * @param {DomainCreate} domainCreate 
+         * @param {DomainCreateRequest} domainCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainCreate: async (domainCreate: DomainCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'domainCreate' is not null or undefined
-            assertParamExists('domainDomainCreate', 'domainCreate', domainCreate)
+        domainDomainCreate: async (domainCreateRequest: DomainCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'domainCreateRequest' is not null or undefined
+            assertParamExists('domainDomainCreate', 'domainCreateRequest', domainCreateRequest)
             const localVarPath = `/api/domain/domain/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -14397,7 +15193,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(domainCreate, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(domainCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -14407,15 +15203,15 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * List or upsert glue / personal-DNS records (child nameserver hosts) for this domain. POST body: ``{\"name\": \"ns1\", \"ip\": \"1.2.3.4\", \"ip2\": \"\"}``.
          * @param {string} domain 
-         * @param {DNSGlue} dNSGlue 
+         * @param {DNSGlueRequest} dNSGlueRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainDnsCreate: async (domain: string, dNSGlue: DNSGlue, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        domainDomainDnsCreate: async (domain: string, dNSGlueRequest: DNSGlueRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'domain' is not null or undefined
             assertParamExists('domainDomainDnsCreate', 'domain', domain)
-            // verify required parameter 'dNSGlue' is not null or undefined
-            assertParamExists('domainDomainDnsCreate', 'dNSGlue', dNSGlue)
+            // verify required parameter 'dNSGlueRequest' is not null or undefined
+            assertParamExists('domainDomainDnsCreate', 'dNSGlueRequest', dNSGlueRequest)
             const localVarPath = `/api/domain/domain/{domain}/dns/`
                 .replace('{domain}', encodeURIComponent(String(domain)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -14440,7 +15236,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(dNSGlue, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(dNSGlueRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -14573,15 +15369,15 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * Update nameservers for this domain.
          * @param {string} domain 
-         * @param {NameserversUpdate} nameserversUpdate 
+         * @param {NameserversUpdateRequest} nameserversUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainNameserversCreate: async (domain: string, nameserversUpdate: NameserversUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        domainDomainNameserversCreate: async (domain: string, nameserversUpdateRequest: NameserversUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'domain' is not null or undefined
             assertParamExists('domainDomainNameserversCreate', 'domain', domain)
-            // verify required parameter 'nameserversUpdate' is not null or undefined
-            assertParamExists('domainDomainNameserversCreate', 'nameserversUpdate', nameserversUpdate)
+            // verify required parameter 'nameserversUpdateRequest' is not null or undefined
+            assertParamExists('domainDomainNameserversCreate', 'nameserversUpdateRequest', nameserversUpdateRequest)
             const localVarPath = `/api/domain/domain/{domain}/nameservers/`
                 .replace('{domain}', encodeURIComponent(String(domain)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -14606,7 +15402,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(nameserversUpdate, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(nameserversUpdateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -14616,11 +15412,11 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * Manage your domains
          * @param {string} domain 
-         * @param {PatchedDomain} [patchedDomain] 
+         * @param {PatchedDomainRequest} [patchedDomainRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainPartialUpdate: async (domain: string, patchedDomain?: PatchedDomain, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        domainDomainPartialUpdate: async (domain: string, patchedDomainRequest?: PatchedDomainRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'domain' is not null or undefined
             assertParamExists('domainDomainPartialUpdate', 'domain', domain)
             const localVarPath = `/api/domain/domain/{domain}/`
@@ -14647,7 +15443,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedDomain, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedDomainRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -14657,15 +15453,15 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * Manage your domains
          * @param {string} domain 
-         * @param {RenewDomain} renewDomain 
+         * @param {RenewDomainRequest} renewDomainRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainRenewCreate: async (domain: string, renewDomain: RenewDomain, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        domainDomainRenewCreate: async (domain: string, renewDomainRequest: RenewDomainRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'domain' is not null or undefined
             assertParamExists('domainDomainRenewCreate', 'domain', domain)
-            // verify required parameter 'renewDomain' is not null or undefined
-            assertParamExists('domainDomainRenewCreate', 'renewDomain', renewDomain)
+            // verify required parameter 'renewDomainRequest' is not null or undefined
+            assertParamExists('domainDomainRenewCreate', 'renewDomainRequest', renewDomainRequest)
             const localVarPath = `/api/domain/domain/{domain}/renew/`
                 .replace('{domain}', encodeURIComponent(String(domain)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -14690,7 +15486,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(renewDomain, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(renewDomainRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -14737,13 +15533,13 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         },
         /**
          * Manage your domains
-         * @param {TransferRoDomain} transferRoDomain 
+         * @param {TransferRoDomainRequest} transferRoDomainRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainTransferRoDomainCreate: async (transferRoDomain: TransferRoDomain, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'transferRoDomain' is not null or undefined
-            assertParamExists('domainDomainTransferRoDomainCreate', 'transferRoDomain', transferRoDomain)
+        domainDomainTransferRoDomainCreate: async (transferRoDomainRequest: TransferRoDomainRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'transferRoDomainRequest' is not null or undefined
+            assertParamExists('domainDomainTransferRoDomainCreate', 'transferRoDomainRequest', transferRoDomainRequest)
             const localVarPath = `/api/domain/domain/transfer-ro-domain/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -14767,7 +15563,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(transferRoDomain, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(transferRoDomainRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -14777,11 +15573,11 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * Manage your domains
          * @param {string} domain 
-         * @param {Domain} [domain2] 
+         * @param {DomainRequest} [domainRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainUpdate: async (domain: string, domain2?: Domain, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        domainDomainUpdate: async (domain: string, domainRequest?: DomainRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'domain' is not null or undefined
             assertParamExists('domainDomainUpdate', 'domain', domain)
             const localVarPath = `/api/domain/domain/{domain}/`
@@ -14808,7 +15604,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(domain2, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(domainRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -14817,13 +15613,13 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         },
         /**
          * Manage your domain registrant views
-         * @param {DomainRegistrant} domainRegistrant 
+         * @param {DomainRegistrantRequest} domainRegistrantRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainRegistrantsCreate: async (domainRegistrant: DomainRegistrant, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'domainRegistrant' is not null or undefined
-            assertParamExists('domainRegistrantsCreate', 'domainRegistrant', domainRegistrant)
+        domainRegistrantsCreate: async (domainRegistrantRequest: DomainRegistrantRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'domainRegistrantRequest' is not null or undefined
+            assertParamExists('domainRegistrantsCreate', 'domainRegistrantRequest', domainRegistrantRequest)
             const localVarPath = `/api/domain/registrants/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -14847,7 +15643,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(domainRegistrant, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(domainRegistrantRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -14933,11 +15729,11 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * Manage your domain registrant views
          * @param {string} id 
-         * @param {PatchedDomainRegistrant} [patchedDomainRegistrant] 
+         * @param {PatchedDomainRegistrantRequest} [patchedDomainRegistrantRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainRegistrantsPartialUpdate: async (id: string, patchedDomainRegistrant?: PatchedDomainRegistrant, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        domainRegistrantsPartialUpdate: async (id: string, patchedDomainRegistrantRequest?: PatchedDomainRegistrantRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('domainRegistrantsPartialUpdate', 'id', id)
             const localVarPath = `/api/domain/registrants/{id}/`
@@ -14964,7 +15760,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedDomainRegistrant, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedDomainRegistrantRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -15012,15 +15808,15 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * Manage your domain registrant views
          * @param {string} id 
-         * @param {DomainRegistrant} domainRegistrant 
+         * @param {DomainRegistrantRequest} domainRegistrantRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainRegistrantsUpdate: async (id: string, domainRegistrant: DomainRegistrant, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        domainRegistrantsUpdate: async (id: string, domainRegistrantRequest: DomainRegistrantRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('domainRegistrantsUpdate', 'id', id)
-            // verify required parameter 'domainRegistrant' is not null or undefined
-            assertParamExists('domainRegistrantsUpdate', 'domainRegistrant', domainRegistrant)
+            // verify required parameter 'domainRegistrantRequest' is not null or undefined
+            assertParamExists('domainRegistrantsUpdate', 'domainRegistrantRequest', domainRegistrantRequest)
             const localVarPath = `/api/domain/registrants/{id}/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -15045,7 +15841,7 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(domainRegistrant, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(domainRegistrantRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -15152,12 +15948,12 @@ export const DomainApiFp = function(configuration?: Configuration) {
         },
         /**
          * Manage your domains
-         * @param {CheckAvailability} checkAvailability 
+         * @param {CheckAvailabilityRequest} checkAvailabilityRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainDomainCheckAvailabilityCreate(checkAvailability: CheckAvailability, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CheckAvailability>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainCheckAvailabilityCreate(checkAvailability, options);
+        async domainDomainCheckAvailabilityCreate(checkAvailabilityRequest: CheckAvailabilityRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CheckAvailability>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainCheckAvailabilityCreate(checkAvailabilityRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainCheckAvailabilityCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -15165,24 +15961,24 @@ export const DomainApiFp = function(configuration?: Configuration) {
         /**
          * Update a contact on this domain using a saved DomainRegistrant.
          * @param {string} domain 
-         * @param {ContactsUpdate} contactsUpdate 
+         * @param {ContactsUpdateRequest} contactsUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainDomainContactsCreate(domain: string, contactsUpdate: ContactsUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ContactsUpdateResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainContactsCreate(domain, contactsUpdate, options);
+        async domainDomainContactsCreate(domain: string, contactsUpdateRequest: ContactsUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ContactsUpdateResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainContactsCreate(domain, contactsUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainContactsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * Manage your domains
-         * @param {DomainCreate} domainCreate 
+         * @param {DomainCreateRequest} domainCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainDomainCreate(domainCreate: DomainCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainCreate>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainCreate(domainCreate, options);
+        async domainDomainCreate(domainCreateRequest: DomainCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainCreate>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainCreate(domainCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -15190,12 +15986,12 @@ export const DomainApiFp = function(configuration?: Configuration) {
         /**
          * List or upsert glue / personal-DNS records (child nameserver hosts) for this domain. POST body: ``{\"name\": \"ns1\", \"ip\": \"1.2.3.4\", \"ip2\": \"\"}``.
          * @param {string} domain 
-         * @param {DNSGlue} dNSGlue 
+         * @param {DNSGlueRequest} dNSGlueRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainDomainDnsCreate(domain: string, dNSGlue: DNSGlue, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DNSGlue>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainDnsCreate(domain, dNSGlue, options);
+        async domainDomainDnsCreate(domain: string, dNSGlueRequest: DNSGlueRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DNSGlue>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainDnsCreate(domain, dNSGlueRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainDnsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -15241,12 +16037,12 @@ export const DomainApiFp = function(configuration?: Configuration) {
         /**
          * Update nameservers for this domain.
          * @param {string} domain 
-         * @param {NameserversUpdate} nameserversUpdate 
+         * @param {NameserversUpdateRequest} nameserversUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainDomainNameserversCreate(domain: string, nameserversUpdate: NameserversUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NameserversUpdateResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainNameserversCreate(domain, nameserversUpdate, options);
+        async domainDomainNameserversCreate(domain: string, nameserversUpdateRequest: NameserversUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NameserversUpdateResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainNameserversCreate(domain, nameserversUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainNameserversCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -15254,12 +16050,12 @@ export const DomainApiFp = function(configuration?: Configuration) {
         /**
          * Manage your domains
          * @param {string} domain 
-         * @param {PatchedDomain} [patchedDomain] 
+         * @param {PatchedDomainRequest} [patchedDomainRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainDomainPartialUpdate(domain: string, patchedDomain?: PatchedDomain, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Domain>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainPartialUpdate(domain, patchedDomain, options);
+        async domainDomainPartialUpdate(domain: string, patchedDomainRequest?: PatchedDomainRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Domain>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainPartialUpdate(domain, patchedDomainRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -15267,12 +16063,12 @@ export const DomainApiFp = function(configuration?: Configuration) {
         /**
          * Manage your domains
          * @param {string} domain 
-         * @param {RenewDomain} renewDomain 
+         * @param {RenewDomainRequest} renewDomainRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainDomainRenewCreate(domain: string, renewDomain: RenewDomain, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<RenewDomain>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainRenewCreate(domain, renewDomain, options);
+        async domainDomainRenewCreate(domain: string, renewDomainRequest: RenewDomainRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<RenewDomain>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainRenewCreate(domain, renewDomainRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainRenewCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -15291,12 +16087,12 @@ export const DomainApiFp = function(configuration?: Configuration) {
         },
         /**
          * Manage your domains
-         * @param {TransferRoDomain} transferRoDomain 
+         * @param {TransferRoDomainRequest} transferRoDomainRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainDomainTransferRoDomainCreate(transferRoDomain: TransferRoDomain, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransferRoDomain>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainTransferRoDomainCreate(transferRoDomain, options);
+        async domainDomainTransferRoDomainCreate(transferRoDomainRequest: TransferRoDomainRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransferRoDomain>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainTransferRoDomainCreate(transferRoDomainRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainTransferRoDomainCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -15304,24 +16100,24 @@ export const DomainApiFp = function(configuration?: Configuration) {
         /**
          * Manage your domains
          * @param {string} domain 
-         * @param {Domain} [domain2] 
+         * @param {DomainRequest} [domainRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainDomainUpdate(domain: string, domain2?: Domain, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Domain>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainUpdate(domain, domain2, options);
+        async domainDomainUpdate(domain: string, domainRequest?: DomainRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Domain>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainUpdate(domain, domainRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * Manage your domain registrant views
-         * @param {DomainRegistrant} domainRegistrant 
+         * @param {DomainRegistrantRequest} domainRegistrantRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainRegistrantsCreate(domainRegistrant: DomainRegistrant, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainRegistrant>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainRegistrantsCreate(domainRegistrant, options);
+        async domainRegistrantsCreate(domainRegistrantRequest: DomainRegistrantRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainRegistrant>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainRegistrantsCreate(domainRegistrantRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainRegistrantsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -15353,12 +16149,12 @@ export const DomainApiFp = function(configuration?: Configuration) {
         /**
          * Manage your domain registrant views
          * @param {string} id 
-         * @param {PatchedDomainRegistrant} [patchedDomainRegistrant] 
+         * @param {PatchedDomainRegistrantRequest} [patchedDomainRegistrantRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainRegistrantsPartialUpdate(id: string, patchedDomainRegistrant?: PatchedDomainRegistrant, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainRegistrant>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainRegistrantsPartialUpdate(id, patchedDomainRegistrant, options);
+        async domainRegistrantsPartialUpdate(id: string, patchedDomainRegistrantRequest?: PatchedDomainRegistrantRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainRegistrant>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainRegistrantsPartialUpdate(id, patchedDomainRegistrantRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainRegistrantsPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -15378,12 +16174,12 @@ export const DomainApiFp = function(configuration?: Configuration) {
         /**
          * Manage your domain registrant views
          * @param {string} id 
-         * @param {DomainRegistrant} domainRegistrant 
+         * @param {DomainRegistrantRequest} domainRegistrantRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainRegistrantsUpdate(id: string, domainRegistrant: DomainRegistrant, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainRegistrant>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainRegistrantsUpdate(id, domainRegistrant, options);
+        async domainRegistrantsUpdate(id: string, domainRegistrantRequest: DomainRegistrantRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainRegistrant>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainRegistrantsUpdate(id, domainRegistrantRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainRegistrantsUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -15432,41 +16228,41 @@ export const DomainApiFactory = function (configuration?: Configuration, basePat
         },
         /**
          * Manage your domains
-         * @param {CheckAvailability} checkAvailability 
+         * @param {CheckAvailabilityRequest} checkAvailabilityRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainCheckAvailabilityCreate(checkAvailability: CheckAvailability, options?: RawAxiosRequestConfig): AxiosPromise<CheckAvailability> {
-            return localVarFp.domainDomainCheckAvailabilityCreate(checkAvailability, options).then((request) => request(axios, basePath));
+        domainDomainCheckAvailabilityCreate(checkAvailabilityRequest: CheckAvailabilityRequest, options?: RawAxiosRequestConfig): AxiosPromise<CheckAvailability> {
+            return localVarFp.domainDomainCheckAvailabilityCreate(checkAvailabilityRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Update a contact on this domain using a saved DomainRegistrant.
          * @param {string} domain 
-         * @param {ContactsUpdate} contactsUpdate 
+         * @param {ContactsUpdateRequest} contactsUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainContactsCreate(domain: string, contactsUpdate: ContactsUpdate, options?: RawAxiosRequestConfig): AxiosPromise<ContactsUpdateResponse> {
-            return localVarFp.domainDomainContactsCreate(domain, contactsUpdate, options).then((request) => request(axios, basePath));
+        domainDomainContactsCreate(domain: string, contactsUpdateRequest: ContactsUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<ContactsUpdateResponse> {
+            return localVarFp.domainDomainContactsCreate(domain, contactsUpdateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your domains
-         * @param {DomainCreate} domainCreate 
+         * @param {DomainCreateRequest} domainCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainCreate(domainCreate: DomainCreate, options?: RawAxiosRequestConfig): AxiosPromise<DomainCreate> {
-            return localVarFp.domainDomainCreate(domainCreate, options).then((request) => request(axios, basePath));
+        domainDomainCreate(domainCreateRequest: DomainCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<DomainCreate> {
+            return localVarFp.domainDomainCreate(domainCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List or upsert glue / personal-DNS records (child nameserver hosts) for this domain. POST body: ``{\"name\": \"ns1\", \"ip\": \"1.2.3.4\", \"ip2\": \"\"}``.
          * @param {string} domain 
-         * @param {DNSGlue} dNSGlue 
+         * @param {DNSGlueRequest} dNSGlueRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainDnsCreate(domain: string, dNSGlue: DNSGlue, options?: RawAxiosRequestConfig): AxiosPromise<DNSGlue> {
-            return localVarFp.domainDomainDnsCreate(domain, dNSGlue, options).then((request) => request(axios, basePath));
+        domainDomainDnsCreate(domain: string, dNSGlueRequest: DNSGlueRequest, options?: RawAxiosRequestConfig): AxiosPromise<DNSGlue> {
+            return localVarFp.domainDomainDnsCreate(domain, dNSGlueRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Delete a glue / personal-DNS record (and deregister the nameserver host at the registrar).
@@ -15500,32 +16296,32 @@ export const DomainApiFactory = function (configuration?: Configuration, basePat
         /**
          * Update nameservers for this domain.
          * @param {string} domain 
-         * @param {NameserversUpdate} nameserversUpdate 
+         * @param {NameserversUpdateRequest} nameserversUpdateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainNameserversCreate(domain: string, nameserversUpdate: NameserversUpdate, options?: RawAxiosRequestConfig): AxiosPromise<NameserversUpdateResponse> {
-            return localVarFp.domainDomainNameserversCreate(domain, nameserversUpdate, options).then((request) => request(axios, basePath));
+        domainDomainNameserversCreate(domain: string, nameserversUpdateRequest: NameserversUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<NameserversUpdateResponse> {
+            return localVarFp.domainDomainNameserversCreate(domain, nameserversUpdateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your domains
          * @param {string} domain 
-         * @param {PatchedDomain} [patchedDomain] 
+         * @param {PatchedDomainRequest} [patchedDomainRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainPartialUpdate(domain: string, patchedDomain?: PatchedDomain, options?: RawAxiosRequestConfig): AxiosPromise<Domain> {
-            return localVarFp.domainDomainPartialUpdate(domain, patchedDomain, options).then((request) => request(axios, basePath));
+        domainDomainPartialUpdate(domain: string, patchedDomainRequest?: PatchedDomainRequest, options?: RawAxiosRequestConfig): AxiosPromise<Domain> {
+            return localVarFp.domainDomainPartialUpdate(domain, patchedDomainRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your domains
          * @param {string} domain 
-         * @param {RenewDomain} renewDomain 
+         * @param {RenewDomainRequest} renewDomainRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainRenewCreate(domain: string, renewDomain: RenewDomain, options?: RawAxiosRequestConfig): AxiosPromise<RenewDomain> {
-            return localVarFp.domainDomainRenewCreate(domain, renewDomain, options).then((request) => request(axios, basePath));
+        domainDomainRenewCreate(domain: string, renewDomainRequest: RenewDomainRequest, options?: RawAxiosRequestConfig): AxiosPromise<RenewDomain> {
+            return localVarFp.domainDomainRenewCreate(domain, renewDomainRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your domains
@@ -15538,31 +16334,31 @@ export const DomainApiFactory = function (configuration?: Configuration, basePat
         },
         /**
          * Manage your domains
-         * @param {TransferRoDomain} transferRoDomain 
+         * @param {TransferRoDomainRequest} transferRoDomainRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainTransferRoDomainCreate(transferRoDomain: TransferRoDomain, options?: RawAxiosRequestConfig): AxiosPromise<TransferRoDomain> {
-            return localVarFp.domainDomainTransferRoDomainCreate(transferRoDomain, options).then((request) => request(axios, basePath));
+        domainDomainTransferRoDomainCreate(transferRoDomainRequest: TransferRoDomainRequest, options?: RawAxiosRequestConfig): AxiosPromise<TransferRoDomain> {
+            return localVarFp.domainDomainTransferRoDomainCreate(transferRoDomainRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your domains
          * @param {string} domain 
-         * @param {Domain} [domain2] 
+         * @param {DomainRequest} [domainRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainUpdate(domain: string, domain2?: Domain, options?: RawAxiosRequestConfig): AxiosPromise<Domain> {
-            return localVarFp.domainDomainUpdate(domain, domain2, options).then((request) => request(axios, basePath));
+        domainDomainUpdate(domain: string, domainRequest?: DomainRequest, options?: RawAxiosRequestConfig): AxiosPromise<Domain> {
+            return localVarFp.domainDomainUpdate(domain, domainRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your domain registrant views
-         * @param {DomainRegistrant} domainRegistrant 
+         * @param {DomainRegistrantRequest} domainRegistrantRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainRegistrantsCreate(domainRegistrant: DomainRegistrant, options?: RawAxiosRequestConfig): AxiosPromise<DomainRegistrant> {
-            return localVarFp.domainRegistrantsCreate(domainRegistrant, options).then((request) => request(axios, basePath));
+        domainRegistrantsCreate(domainRegistrantRequest: DomainRegistrantRequest, options?: RawAxiosRequestConfig): AxiosPromise<DomainRegistrant> {
+            return localVarFp.domainRegistrantsCreate(domainRegistrantRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your domain registrant views
@@ -15585,12 +16381,12 @@ export const DomainApiFactory = function (configuration?: Configuration, basePat
         /**
          * Manage your domain registrant views
          * @param {string} id 
-         * @param {PatchedDomainRegistrant} [patchedDomainRegistrant] 
+         * @param {PatchedDomainRegistrantRequest} [patchedDomainRegistrantRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainRegistrantsPartialUpdate(id: string, patchedDomainRegistrant?: PatchedDomainRegistrant, options?: RawAxiosRequestConfig): AxiosPromise<DomainRegistrant> {
-            return localVarFp.domainRegistrantsPartialUpdate(id, patchedDomainRegistrant, options).then((request) => request(axios, basePath));
+        domainRegistrantsPartialUpdate(id: string, patchedDomainRegistrantRequest?: PatchedDomainRegistrantRequest, options?: RawAxiosRequestConfig): AxiosPromise<DomainRegistrant> {
+            return localVarFp.domainRegistrantsPartialUpdate(id, patchedDomainRegistrantRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your domain registrant views
@@ -15604,12 +16400,12 @@ export const DomainApiFactory = function (configuration?: Configuration, basePat
         /**
          * Manage your domain registrant views
          * @param {string} id 
-         * @param {DomainRegistrant} domainRegistrant 
+         * @param {DomainRegistrantRequest} domainRegistrantRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainRegistrantsUpdate(id: string, domainRegistrant: DomainRegistrant, options?: RawAxiosRequestConfig): AxiosPromise<DomainRegistrant> {
-            return localVarFp.domainRegistrantsUpdate(id, domainRegistrant, options).then((request) => request(axios, basePath));
+        domainRegistrantsUpdate(id: string, domainRegistrantRequest: DomainRegistrantRequest, options?: RawAxiosRequestConfig): AxiosPromise<DomainRegistrant> {
+            return localVarFp.domainRegistrantsUpdate(id, domainRegistrantRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage your TLDs
@@ -15648,44 +16444,44 @@ export class DomainApi extends BaseAPI {
 
     /**
      * Manage your domains
-     * @param {CheckAvailability} checkAvailability 
+     * @param {CheckAvailabilityRequest} checkAvailabilityRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainDomainCheckAvailabilityCreate(checkAvailability: CheckAvailability, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainDomainCheckAvailabilityCreate(checkAvailability, options).then((request) => request(this.axios, this.basePath));
+    public domainDomainCheckAvailabilityCreate(checkAvailabilityRequest: CheckAvailabilityRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainDomainCheckAvailabilityCreate(checkAvailabilityRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Update a contact on this domain using a saved DomainRegistrant.
      * @param {string} domain 
-     * @param {ContactsUpdate} contactsUpdate 
+     * @param {ContactsUpdateRequest} contactsUpdateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainDomainContactsCreate(domain: string, contactsUpdate: ContactsUpdate, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainDomainContactsCreate(domain, contactsUpdate, options).then((request) => request(this.axios, this.basePath));
+    public domainDomainContactsCreate(domain: string, contactsUpdateRequest: ContactsUpdateRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainDomainContactsCreate(domain, contactsUpdateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Manage your domains
-     * @param {DomainCreate} domainCreate 
+     * @param {DomainCreateRequest} domainCreateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainDomainCreate(domainCreate: DomainCreate, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainDomainCreate(domainCreate, options).then((request) => request(this.axios, this.basePath));
+    public domainDomainCreate(domainCreateRequest: DomainCreateRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainDomainCreate(domainCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * List or upsert glue / personal-DNS records (child nameserver hosts) for this domain. POST body: ``{\"name\": \"ns1\", \"ip\": \"1.2.3.4\", \"ip2\": \"\"}``.
      * @param {string} domain 
-     * @param {DNSGlue} dNSGlue 
+     * @param {DNSGlueRequest} dNSGlueRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainDomainDnsCreate(domain: string, dNSGlue: DNSGlue, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainDomainDnsCreate(domain, dNSGlue, options).then((request) => request(this.axios, this.basePath));
+    public domainDomainDnsCreate(domain: string, dNSGlueRequest: DNSGlueRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainDomainDnsCreate(domain, dNSGlueRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -15723,34 +16519,34 @@ export class DomainApi extends BaseAPI {
     /**
      * Update nameservers for this domain.
      * @param {string} domain 
-     * @param {NameserversUpdate} nameserversUpdate 
+     * @param {NameserversUpdateRequest} nameserversUpdateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainDomainNameserversCreate(domain: string, nameserversUpdate: NameserversUpdate, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainDomainNameserversCreate(domain, nameserversUpdate, options).then((request) => request(this.axios, this.basePath));
+    public domainDomainNameserversCreate(domain: string, nameserversUpdateRequest: NameserversUpdateRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainDomainNameserversCreate(domain, nameserversUpdateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Manage your domains
      * @param {string} domain 
-     * @param {PatchedDomain} [patchedDomain] 
+     * @param {PatchedDomainRequest} [patchedDomainRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainDomainPartialUpdate(domain: string, patchedDomain?: PatchedDomain, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainDomainPartialUpdate(domain, patchedDomain, options).then((request) => request(this.axios, this.basePath));
+    public domainDomainPartialUpdate(domain: string, patchedDomainRequest?: PatchedDomainRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainDomainPartialUpdate(domain, patchedDomainRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Manage your domains
      * @param {string} domain 
-     * @param {RenewDomain} renewDomain 
+     * @param {RenewDomainRequest} renewDomainRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainDomainRenewCreate(domain: string, renewDomain: RenewDomain, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainDomainRenewCreate(domain, renewDomain, options).then((request) => request(this.axios, this.basePath));
+    public domainDomainRenewCreate(domain: string, renewDomainRequest: RenewDomainRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainDomainRenewCreate(domain, renewDomainRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -15765,33 +16561,33 @@ export class DomainApi extends BaseAPI {
 
     /**
      * Manage your domains
-     * @param {TransferRoDomain} transferRoDomain 
+     * @param {TransferRoDomainRequest} transferRoDomainRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainDomainTransferRoDomainCreate(transferRoDomain: TransferRoDomain, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainDomainTransferRoDomainCreate(transferRoDomain, options).then((request) => request(this.axios, this.basePath));
+    public domainDomainTransferRoDomainCreate(transferRoDomainRequest: TransferRoDomainRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainDomainTransferRoDomainCreate(transferRoDomainRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Manage your domains
      * @param {string} domain 
-     * @param {Domain} [domain2] 
+     * @param {DomainRequest} [domainRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainDomainUpdate(domain: string, domain2?: Domain, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainDomainUpdate(domain, domain2, options).then((request) => request(this.axios, this.basePath));
+    public domainDomainUpdate(domain: string, domainRequest?: DomainRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainDomainUpdate(domain, domainRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Manage your domain registrant views
-     * @param {DomainRegistrant} domainRegistrant 
+     * @param {DomainRegistrantRequest} domainRegistrantRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainRegistrantsCreate(domainRegistrant: DomainRegistrant, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainRegistrantsCreate(domainRegistrant, options).then((request) => request(this.axios, this.basePath));
+    public domainRegistrantsCreate(domainRegistrantRequest: DomainRegistrantRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainRegistrantsCreate(domainRegistrantRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -15817,12 +16613,12 @@ export class DomainApi extends BaseAPI {
     /**
      * Manage your domain registrant views
      * @param {string} id 
-     * @param {PatchedDomainRegistrant} [patchedDomainRegistrant] 
+     * @param {PatchedDomainRegistrantRequest} [patchedDomainRegistrantRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainRegistrantsPartialUpdate(id: string, patchedDomainRegistrant?: PatchedDomainRegistrant, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainRegistrantsPartialUpdate(id, patchedDomainRegistrant, options).then((request) => request(this.axios, this.basePath));
+    public domainRegistrantsPartialUpdate(id: string, patchedDomainRegistrantRequest?: PatchedDomainRegistrantRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainRegistrantsPartialUpdate(id, patchedDomainRegistrantRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -15838,12 +16634,12 @@ export class DomainApi extends BaseAPI {
     /**
      * Manage your domain registrant views
      * @param {string} id 
-     * @param {DomainRegistrant} domainRegistrant 
+     * @param {DomainRegistrantRequest} domainRegistrantRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainRegistrantsUpdate(id: string, domainRegistrant: DomainRegistrant, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainRegistrantsUpdate(id, domainRegistrant, options).then((request) => request(this.axios, this.basePath));
+    public domainRegistrantsUpdate(id: string, domainRegistrantRequest: DomainRegistrantRequest, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainRegistrantsUpdate(id, domainRegistrantRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -15876,11 +16672,11 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
     return {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {ApiCredential} [apiCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailApiCredentialsCreate: async (apiCredential?: ApiCredential, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailApiCredentialsCreate: async (credentialCreateRequest?: CredentialCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/email/api_credentials/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -15904,7 +16700,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiCredential, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(credentialCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16027,13 +16823,13 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {DomainAdd} domainAdd 
+         * @param {DomainAddRequest} domainAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailDomainsCreate: async (domainAdd: DomainAdd, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'domainAdd' is not null or undefined
-            assertParamExists('emailDomainsCreate', 'domainAdd', domainAdd)
+        emailDomainsCreate: async (domainAddRequest: DomainAddRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'domainAddRequest' is not null or undefined
+            assertParamExists('emailDomainsCreate', 'domainAddRequest', domainAddRequest)
             const localVarPath = `/api/email/domains/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -16057,7 +16853,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(domainAdd, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(domainAddRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16067,15 +16863,15 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} domainPk 
-         * @param {InboundRoute} inboundRoute 
+         * @param {InboundRouteCreateRequest} inboundRouteCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailDomainsInboundRoutesCreate: async (domainPk: number, inboundRoute: InboundRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailDomainsInboundRoutesCreate: async (domainPk: number, inboundRouteCreateRequest: InboundRouteCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'domainPk' is not null or undefined
             assertParamExists('emailDomainsInboundRoutesCreate', 'domainPk', domainPk)
-            // verify required parameter 'inboundRoute' is not null or undefined
-            assertParamExists('emailDomainsInboundRoutesCreate', 'inboundRoute', inboundRoute)
+            // verify required parameter 'inboundRouteCreateRequest' is not null or undefined
+            assertParamExists('emailDomainsInboundRoutesCreate', 'inboundRouteCreateRequest', inboundRouteCreateRequest)
             const localVarPath = `/api/email/domains/{domain_pk}/inbound_routes/`
                 .replace('{domain_pk}', encodeURIComponent(String(domainPk)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -16100,7 +16896,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(inboundRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(inboundRouteCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16230,11 +17026,10 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this sending domain.
-         * @param {SendingDomain} [sendingDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailDomainsRotateDkimCreate: async (id: number, sendingDomain?: SendingDomain, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailDomainsRotateDkimCreate: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('emailDomainsRotateDkimCreate', 'id', id)
             const localVarPath = `/api/email/domains/{id}/rotate_dkim/`
@@ -16255,13 +17050,11 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
-            localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(sendingDomain, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16271,11 +17064,11 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this sending domain.
-         * @param {SendingDomain} [sendingDomain] 
+         * @param {ToggleInboundRequest} [toggleInboundRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailDomainsToggleInboundCreate: async (id: number, sendingDomain?: SendingDomain, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailDomainsToggleInboundCreate: async (id: number, toggleInboundRequest?: ToggleInboundRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('emailDomainsToggleInboundCreate', 'id', id)
             const localVarPath = `/api/email/domains/{id}/toggle_inbound/`
@@ -16302,7 +17095,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(sendingDomain, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(toggleInboundRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16312,11 +17105,10 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this sending domain.
-         * @param {SendingDomain} [sendingDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailDomainsVerifyCreate: async (id: number, sendingDomain?: SendingDomain, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailDomainsVerifyCreate: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('emailDomainsVerifyCreate', 'id', id)
             const localVarPath = `/api/email/domains/{id}/verify/`
@@ -16337,13 +17129,11 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
-            localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(sendingDomain, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16352,13 +17142,13 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {InboundRoute} inboundRoute 
+         * @param {InboundRouteCreateRequest} inboundRouteCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailInboundRoutesCreate: async (inboundRoute: InboundRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'inboundRoute' is not null or undefined
-            assertParamExists('emailInboundRoutesCreate', 'inboundRoute', inboundRoute)
+        emailInboundRoutesCreate: async (inboundRouteCreateRequest: InboundRouteCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'inboundRouteCreateRequest' is not null or undefined
+            assertParamExists('emailInboundRoutesCreate', 'inboundRouteCreateRequest', inboundRouteCreateRequest)
             const localVarPath = `/api/email/inbound_routes/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -16382,7 +17172,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(inboundRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(inboundRouteCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16468,11 +17258,11 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this inbound route.
-         * @param {PatchedInboundRoute} [patchedInboundRoute] 
+         * @param {PatchedInboundRouteCreateRequest} [patchedInboundRouteCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailInboundRoutesPartialUpdate: async (id: number, patchedInboundRoute?: PatchedInboundRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailInboundRoutesPartialUpdate: async (id: number, patchedInboundRouteCreateRequest?: PatchedInboundRouteCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('emailInboundRoutesPartialUpdate', 'id', id)
             const localVarPath = `/api/email/inbound_routes/{id}/`
@@ -16499,7 +17289,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedInboundRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedInboundRouteCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16571,6 +17361,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
@@ -16583,13 +17374,13 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {SandboxAddress} sandboxAddress 
+         * @param {SandboxAddressRequest} sandboxAddressRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailSandboxAddressesCreate: async (sandboxAddress: SandboxAddress, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'sandboxAddress' is not null or undefined
-            assertParamExists('emailSandboxAddressesCreate', 'sandboxAddress', sandboxAddress)
+        emailSandboxAddressesCreate: async (sandboxAddressRequest: SandboxAddressRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'sandboxAddressRequest' is not null or undefined
+            assertParamExists('emailSandboxAddressesCreate', 'sandboxAddressRequest', sandboxAddressRequest)
             const localVarPath = `/api/email/sandbox_addresses/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -16613,7 +17404,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(sandboxAddress, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(sandboxAddressRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16736,10 +17527,13 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * 
+         * @param {SendRequest} sendRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailSendCreate: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailSendCreate: async (sendRequest: SendRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'sendRequest' is not null or undefined
+            assertParamExists('emailSendCreate', 'sendRequest', sendRequest)
             const localVarPath = `/api/email/send/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -16752,10 +17546,17 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication emailApiKey required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(sendRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16765,11 +17566,11 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {ApiCredential} [apiCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesApiCredentialsCreate: async (servicePk: number, apiCredential?: ApiCredential, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailServicesApiCredentialsCreate: async (servicePk: number, credentialCreateRequest?: CredentialCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'servicePk' is not null or undefined
             assertParamExists('emailServicesApiCredentialsCreate', 'servicePk', servicePk)
             const localVarPath = `/api/email/services/{service_pk}/api_credentials/`
@@ -16796,7 +17597,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiCredential, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(credentialCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16887,13 +17688,15 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this email service.
-         * @param {PatchedSubscribe} [patchedSubscribe] 
+         * @param {SubscribeRequest} subscribeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesChangeTierPartialUpdate: async (id: number, patchedSubscribe?: PatchedSubscribe, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailServicesChangeTierPartialUpdate: async (id: number, subscribeRequest: SubscribeRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('emailServicesChangeTierPartialUpdate', 'id', id)
+            // verify required parameter 'subscribeRequest' is not null or undefined
+            assertParamExists('emailServicesChangeTierPartialUpdate', 'subscribeRequest', subscribeRequest)
             const localVarPath = `/api/email/services/{id}/change_tier/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -16918,7 +17721,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedSubscribe, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(subscribeRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -16927,13 +17730,13 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {Subscribe} subscribe 
+         * @param {SubscribeRequest} subscribeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesCreate: async (subscribe: Subscribe, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'subscribe' is not null or undefined
-            assertParamExists('emailServicesCreate', 'subscribe', subscribe)
+        emailServicesCreate: async (subscribeRequest: SubscribeRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'subscribeRequest' is not null or undefined
+            assertParamExists('emailServicesCreate', 'subscribeRequest', subscribeRequest)
             const localVarPath = `/api/email/services/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -16957,7 +17760,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(subscribe, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(subscribeRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -17029,43 +17832,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {number} id A unique integer value identifying this email service.
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        emailServicesDestroy: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('emailServicesDestroy', 'id', id)
-            const localVarPath = `/api/email/services/{id}/`
-                .replace('{id}', encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication tokenAuth required
-            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
-
-            // authentication cookieAuth required
-
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
@@ -17079,15 +17846,15 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {DomainAdd} domainAdd 
+         * @param {DomainAddRequest} domainAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesDomainsCreate: async (servicePk: number, domainAdd: DomainAdd, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailServicesDomainsCreate: async (servicePk: number, domainAddRequest: DomainAddRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'servicePk' is not null or undefined
             assertParamExists('emailServicesDomainsCreate', 'servicePk', servicePk)
-            // verify required parameter 'domainAdd' is not null or undefined
-            assertParamExists('emailServicesDomainsCreate', 'domainAdd', domainAdd)
+            // verify required parameter 'domainAddRequest' is not null or undefined
+            assertParamExists('emailServicesDomainsCreate', 'domainAddRequest', domainAddRequest)
             const localVarPath = `/api/email/services/{service_pk}/domains/`
                 .replace('{service_pk}', encodeURIComponent(String(servicePk)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -17112,7 +17879,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(domainAdd, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(domainAddRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -17204,10 +17971,12 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * List recently observed messages for a customer\'s email service.  Postal v3 legacy API exposes per-message lookups only; phclient builds the list locally from webhook events. Each message_id is deduped, keeping the most recent event_type as the message status.
          * @param {number} servicePk 
+         * @param {number} [page] Page number, starting at 1.
+         * @param {number} [perPage] Page size, capped at 200; defaults to 50.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesMessagesRetrieve: async (servicePk: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailServicesMessagesRetrieve: async (servicePk: number, page?: number, perPage?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'servicePk' is not null or undefined
             assertParamExists('emailServicesMessagesRetrieve', 'servicePk', servicePk)
             const localVarPath = `/api/email/services/{service_pk}/messages/`
@@ -17228,6 +17997,15 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (perPage !== undefined) {
+                localVarQueryParameter['per_page'] = perPage;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
@@ -17241,11 +18019,10 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this email service.
-         * @param {PatchedEmailService} [patchedEmailService] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesPartialUpdate: async (id: number, patchedEmailService?: PatchedEmailService, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailServicesPartialUpdate: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('emailServicesPartialUpdate', 'id', id)
             const localVarPath = `/api/email/services/{id}/`
@@ -17266,13 +18043,11 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
-            localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedEmailService, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -17358,15 +18133,15 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {SandboxAddress} sandboxAddress 
+         * @param {SandboxAddressRequest} sandboxAddressRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesSandboxAddressesCreate: async (servicePk: number, sandboxAddress: SandboxAddress, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailServicesSandboxAddressesCreate: async (servicePk: number, sandboxAddressRequest: SandboxAddressRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'servicePk' is not null or undefined
             assertParamExists('emailServicesSandboxAddressesCreate', 'servicePk', servicePk)
-            // verify required parameter 'sandboxAddress' is not null or undefined
-            assertParamExists('emailServicesSandboxAddressesCreate', 'sandboxAddress', sandboxAddress)
+            // verify required parameter 'sandboxAddressRequest' is not null or undefined
+            assertParamExists('emailServicesSandboxAddressesCreate', 'sandboxAddressRequest', sandboxAddressRequest)
             const localVarPath = `/api/email/services/{service_pk}/sandbox_addresses/`
                 .replace('{service_pk}', encodeURIComponent(String(servicePk)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -17391,7 +18166,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(sandboxAddress, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(sandboxAddressRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -17444,11 +18219,11 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {SmtpCredential} [smtpCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesSmtpCredentialsCreate: async (servicePk: number, smtpCredential?: SmtpCredential, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailServicesSmtpCredentialsCreate: async (servicePk: number, credentialCreateRequest?: CredentialCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'servicePk' is not null or undefined
             assertParamExists('emailServicesSmtpCredentialsCreate', 'servicePk', servicePk)
             const localVarPath = `/api/email/services/{service_pk}/smtp_credentials/`
@@ -17475,7 +18250,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(smtpCredential, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(credentialCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -17528,10 +18303,12 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
+         * @param {string} [end] 
+         * @param {string} [start] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesStatsRetrieve: async (servicePk: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailServicesStatsRetrieve: async (servicePk: number, end?: string, start?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'servicePk' is not null or undefined
             assertParamExists('emailServicesStatsRetrieve', 'servicePk', servicePk)
             const localVarPath = `/api/email/services/{service_pk}/stats/`
@@ -17552,6 +18329,19 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
 
             // authentication cookieAuth required
 
+            if (end !== undefined) {
+                localVarQueryParameter['end'] = (end as any instanceof Date) ?
+                    (end as any).toISOString().substring(0,10) :
+                    end;
+            }
+
+            if (start !== undefined) {
+                localVarQueryParameter['start'] = (start as any instanceof Date) ?
+                    (start as any).toISOString().substring(0,10) :
+                    start;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
@@ -17565,13 +18355,15 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {SuppressionEntry} [suppressionEntry] 
+         * @param {SuppressionAddRequest} suppressionAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesSuppressionsCreate: async (servicePk: number, suppressionEntry?: SuppressionEntry, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailServicesSuppressionsCreate: async (servicePk: number, suppressionAddRequest: SuppressionAddRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'servicePk' is not null or undefined
             assertParamExists('emailServicesSuppressionsCreate', 'servicePk', servicePk)
+            // verify required parameter 'suppressionAddRequest' is not null or undefined
+            assertParamExists('emailServicesSuppressionsCreate', 'suppressionAddRequest', suppressionAddRequest)
             const localVarPath = `/api/email/services/{service_pk}/suppressions/`
                 .replace('{service_pk}', encodeURIComponent(String(servicePk)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -17596,7 +18388,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(suppressionEntry, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(suppressionAddRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -17648,11 +18440,11 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {SmtpCredential} [smtpCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailSmtpCredentialsCreate: async (smtpCredential?: SmtpCredential, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailSmtpCredentialsCreate: async (credentialCreateRequest?: CredentialCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/email/smtp_credentials/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -17676,7 +18468,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(smtpCredential, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(credentialCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -17799,11 +18591,13 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {SuppressionEntry} [suppressionEntry] 
+         * @param {SuppressionAddRequest} suppressionAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailSuppressionsCreate: async (suppressionEntry?: SuppressionEntry, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        emailSuppressionsCreate: async (suppressionAddRequest: SuppressionAddRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'suppressionAddRequest' is not null or undefined
+            assertParamExists('emailSuppressionsCreate', 'suppressionAddRequest', suppressionAddRequest)
             const localVarPath = `/api/email/suppressions/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -17827,7 +18621,7 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(suppressionEntry, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(suppressionAddRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -17959,12 +18753,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
     return {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {ApiCredential} [apiCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailApiCredentialsCreate(apiCredential?: ApiCredential, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiCredential>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailApiCredentialsCreate(apiCredential, options);
+        async emailApiCredentialsCreate(credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiCredentialCreated>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailApiCredentialsCreate(credentialCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailApiCredentialsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18007,12 +18801,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {DomainAdd} domainAdd 
+         * @param {DomainAddRequest} domainAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailDomainsCreate(domainAdd: DomainAdd, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SendingDomain>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailDomainsCreate(domainAdd, options);
+        async emailDomainsCreate(domainAddRequest: DomainAddRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SendingDomain>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailDomainsCreate(domainAddRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailDomainsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18020,12 +18814,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} domainPk 
-         * @param {InboundRoute} inboundRoute 
+         * @param {InboundRouteCreateRequest} inboundRouteCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailDomainsInboundRoutesCreate(domainPk: number, inboundRoute: InboundRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InboundRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailDomainsInboundRoutesCreate(domainPk, inboundRoute, options);
+        async emailDomainsInboundRoutesCreate(domainPk: number, inboundRouteCreateRequest: InboundRouteCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InboundRouteWriteResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailDomainsInboundRoutesCreate(domainPk, inboundRouteCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailDomainsInboundRoutesCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18070,12 +18864,11 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this sending domain.
-         * @param {SendingDomain} [sendingDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailDomainsRotateDkimCreate(id: number, sendingDomain?: SendingDomain, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SendingDomain>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailDomainsRotateDkimCreate(id, sendingDomain, options);
+        async emailDomainsRotateDkimCreate(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SendingDomain>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailDomainsRotateDkimCreate(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailDomainsRotateDkimCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18083,12 +18876,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this sending domain.
-         * @param {SendingDomain} [sendingDomain] 
+         * @param {ToggleInboundRequest} [toggleInboundRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailDomainsToggleInboundCreate(id: number, sendingDomain?: SendingDomain, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SendingDomain>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailDomainsToggleInboundCreate(id, sendingDomain, options);
+        async emailDomainsToggleInboundCreate(id: number, toggleInboundRequest?: ToggleInboundRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SendingDomain>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailDomainsToggleInboundCreate(id, toggleInboundRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailDomainsToggleInboundCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18096,24 +18889,23 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this sending domain.
-         * @param {SendingDomain} [sendingDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailDomainsVerifyCreate(id: number, sendingDomain?: SendingDomain, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SendingDomain>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailDomainsVerifyCreate(id, sendingDomain, options);
+        async emailDomainsVerifyCreate(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SendingDomain>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailDomainsVerifyCreate(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailDomainsVerifyCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {InboundRoute} inboundRoute 
+         * @param {InboundRouteCreateRequest} inboundRouteCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailInboundRoutesCreate(inboundRoute: InboundRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InboundRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailInboundRoutesCreate(inboundRoute, options);
+        async emailInboundRoutesCreate(inboundRouteCreateRequest: InboundRouteCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InboundRouteWriteResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailInboundRoutesCreate(inboundRouteCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailInboundRoutesCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18145,12 +18937,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this inbound route.
-         * @param {PatchedInboundRoute} [patchedInboundRoute] 
+         * @param {PatchedInboundRouteCreateRequest} [patchedInboundRouteCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailInboundRoutesPartialUpdate(id: number, patchedInboundRoute?: PatchedInboundRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InboundRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailInboundRoutesPartialUpdate(id, patchedInboundRoute, options);
+        async emailInboundRoutesPartialUpdate(id: number, patchedInboundRouteCreateRequest?: PatchedInboundRouteCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InboundRouteWriteResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailInboundRoutesPartialUpdate(id, patchedInboundRouteCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailInboundRoutesPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18173,7 +18965,7 @@ export const EmailApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailMessagesRetrieve(messageId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async emailMessagesRetrieve(messageId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: any; }>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.emailMessagesRetrieve(messageId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailMessagesRetrieve']?.[localVarOperationServerIndex]?.url;
@@ -18181,12 +18973,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {SandboxAddress} sandboxAddress 
+         * @param {SandboxAddressRequest} sandboxAddressRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailSandboxAddressesCreate(sandboxAddress: SandboxAddress, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SandboxAddress>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailSandboxAddressesCreate(sandboxAddress, options);
+        async emailSandboxAddressesCreate(sandboxAddressRequest: SandboxAddressRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SandboxAddress>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailSandboxAddressesCreate(sandboxAddressRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailSandboxAddressesCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18229,11 +19021,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {SendRequest} sendRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailSendCreate(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailSendCreate(options);
+        async emailSendCreate(sendRequest: SendRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailSendResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailSendCreate(sendRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailSendCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18241,12 +19034,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {ApiCredential} [apiCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesApiCredentialsCreate(servicePk: number, apiCredential?: ApiCredential, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiCredential>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesApiCredentialsCreate(servicePk, apiCredential, options);
+        async emailServicesApiCredentialsCreate(servicePk: number, credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiCredentialCreated>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesApiCredentialsCreate(servicePk, credentialCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesApiCredentialsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18279,24 +19072,24 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this email service.
-         * @param {PatchedSubscribe} [patchedSubscribe] 
+         * @param {SubscribeRequest} subscribeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesChangeTierPartialUpdate(id: number, patchedSubscribe?: PatchedSubscribe, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailService>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesChangeTierPartialUpdate(id, patchedSubscribe, options);
+        async emailServicesChangeTierPartialUpdate(id: number, subscribeRequest: SubscribeRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailService>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesChangeTierPartialUpdate(id, subscribeRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesChangeTierPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {Subscribe} subscribe 
+         * @param {SubscribeRequest} subscribeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesCreate(subscribe: Subscribe, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailService>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesCreate(subscribe, options);
+        async emailServicesCreate(subscribeRequest: SubscribeRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailService>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesCreate(subscribeRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18319,7 +19112,7 @@ export const EmailApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesDedicatedIpDestroy(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async emailServicesDedicatedIpDestroy(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailService>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesDedicatedIpDestroy(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesDedicatedIpDestroy']?.[localVarOperationServerIndex]?.url;
@@ -18327,25 +19120,13 @@ export const EmailApiFp = function(configuration?: Configuration) {
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {number} id A unique integer value identifying this email service.
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async emailServicesDestroy(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesDestroy(id, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesDestroy']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {DomainAdd} domainAdd 
+         * @param {DomainAddRequest} domainAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesDomainsCreate(servicePk: number, domainAdd: DomainAdd, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SendingDomain>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesDomainsCreate(servicePk, domainAdd, options);
+        async emailServicesDomainsCreate(servicePk: number, domainAddRequest: DomainAddRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SendingDomain>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesDomainsCreate(servicePk, domainAddRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesDomainsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18378,11 +19159,13 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * List recently observed messages for a customer\'s email service.  Postal v3 legacy API exposes per-message lookups only; phclient builds the list locally from webhook events. Each message_id is deduped, keeping the most recent event_type as the message status.
          * @param {number} servicePk 
+         * @param {number} [page] Page number, starting at 1.
+         * @param {number} [perPage] Page size, capped at 200; defaults to 50.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesMessagesRetrieve(servicePk: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesMessagesRetrieve(servicePk, options);
+        async emailServicesMessagesRetrieve(servicePk: number, page?: number, perPage?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailMessageList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesMessagesRetrieve(servicePk, page, perPage, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesMessagesRetrieve']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18390,12 +19173,11 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this email service.
-         * @param {PatchedEmailService} [patchedEmailService] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesPartialUpdate(id: number, patchedEmailService?: PatchedEmailService, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailService>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesPartialUpdate(id, patchedEmailService, options);
+        async emailServicesPartialUpdate(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailService>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesPartialUpdate(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18427,12 +19209,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {SandboxAddress} sandboxAddress 
+         * @param {SandboxAddressRequest} sandboxAddressRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesSandboxAddressesCreate(servicePk: number, sandboxAddress: SandboxAddress, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SandboxAddress>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesSandboxAddressesCreate(servicePk, sandboxAddress, options);
+        async emailServicesSandboxAddressesCreate(servicePk: number, sandboxAddressRequest: SandboxAddressRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SandboxAddress>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesSandboxAddressesCreate(servicePk, sandboxAddressRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesSandboxAddressesCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18453,12 +19235,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {SmtpCredential} [smtpCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesSmtpCredentialsCreate(servicePk: number, smtpCredential?: SmtpCredential, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SmtpCredential>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesSmtpCredentialsCreate(servicePk, smtpCredential, options);
+        async emailServicesSmtpCredentialsCreate(servicePk: number, credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SmtpCredentialCreated>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesSmtpCredentialsCreate(servicePk, credentialCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesSmtpCredentialsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18479,11 +19261,13 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
+         * @param {string} [end] 
+         * @param {string} [start] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesStatsRetrieve(servicePk: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesStatsRetrieve(servicePk, options);
+        async emailServicesStatsRetrieve(servicePk: number, end?: string, start?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailStats>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesStatsRetrieve(servicePk, end, start, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesStatsRetrieve']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18491,12 +19275,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {SuppressionEntry} [suppressionEntry] 
+         * @param {SuppressionAddRequest} suppressionAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesSuppressionsCreate(servicePk: number, suppressionEntry?: SuppressionEntry, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuppressionEntry>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesSuppressionsCreate(servicePk, suppressionEntry, options);
+        async emailServicesSuppressionsCreate(servicePk: number, suppressionAddRequest: SuppressionAddRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuppressionEntry>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesSuppressionsCreate(servicePk, suppressionAddRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesSuppressionsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18516,12 +19300,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {SmtpCredential} [smtpCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailSmtpCredentialsCreate(smtpCredential?: SmtpCredential, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SmtpCredential>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailSmtpCredentialsCreate(smtpCredential, options);
+        async emailSmtpCredentialsCreate(credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SmtpCredentialCreated>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailSmtpCredentialsCreate(credentialCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailSmtpCredentialsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18564,12 +19348,12 @@ export const EmailApiFp = function(configuration?: Configuration) {
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {SuppressionEntry} [suppressionEntry] 
+         * @param {SuppressionAddRequest} suppressionAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailSuppressionsCreate(suppressionEntry?: SuppressionEntry, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuppressionEntry>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailSuppressionsCreate(suppressionEntry, options);
+        async emailSuppressionsCreate(suppressionAddRequest: SuppressionAddRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuppressionEntry>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.emailSuppressionsCreate(suppressionAddRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmailApi.emailSuppressionsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -18621,12 +19405,12 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
     return {
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {ApiCredential} [apiCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailApiCredentialsCreate(apiCredential?: ApiCredential, options?: RawAxiosRequestConfig): AxiosPromise<ApiCredential> {
-            return localVarFp.emailApiCredentialsCreate(apiCredential, options).then((request) => request(axios, basePath));
+        emailApiCredentialsCreate(credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiCredentialCreated> {
+            return localVarFp.emailApiCredentialsCreate(credentialCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -18657,22 +19441,22 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {DomainAdd} domainAdd 
+         * @param {DomainAddRequest} domainAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailDomainsCreate(domainAdd: DomainAdd, options?: RawAxiosRequestConfig): AxiosPromise<SendingDomain> {
-            return localVarFp.emailDomainsCreate(domainAdd, options).then((request) => request(axios, basePath));
+        emailDomainsCreate(domainAddRequest: DomainAddRequest, options?: RawAxiosRequestConfig): AxiosPromise<SendingDomain> {
+            return localVarFp.emailDomainsCreate(domainAddRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} domainPk 
-         * @param {InboundRoute} inboundRoute 
+         * @param {InboundRouteCreateRequest} inboundRouteCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailDomainsInboundRoutesCreate(domainPk: number, inboundRoute: InboundRoute, options?: RawAxiosRequestConfig): AxiosPromise<InboundRoute> {
-            return localVarFp.emailDomainsInboundRoutesCreate(domainPk, inboundRoute, options).then((request) => request(axios, basePath));
+        emailDomainsInboundRoutesCreate(domainPk: number, inboundRouteCreateRequest: InboundRouteCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<InboundRouteWriteResponse> {
+            return localVarFp.emailDomainsInboundRoutesCreate(domainPk, inboundRouteCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -18705,41 +19489,39 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this sending domain.
-         * @param {SendingDomain} [sendingDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailDomainsRotateDkimCreate(id: number, sendingDomain?: SendingDomain, options?: RawAxiosRequestConfig): AxiosPromise<SendingDomain> {
-            return localVarFp.emailDomainsRotateDkimCreate(id, sendingDomain, options).then((request) => request(axios, basePath));
+        emailDomainsRotateDkimCreate(id: number, options?: RawAxiosRequestConfig): AxiosPromise<SendingDomain> {
+            return localVarFp.emailDomainsRotateDkimCreate(id, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this sending domain.
-         * @param {SendingDomain} [sendingDomain] 
+         * @param {ToggleInboundRequest} [toggleInboundRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailDomainsToggleInboundCreate(id: number, sendingDomain?: SendingDomain, options?: RawAxiosRequestConfig): AxiosPromise<SendingDomain> {
-            return localVarFp.emailDomainsToggleInboundCreate(id, sendingDomain, options).then((request) => request(axios, basePath));
+        emailDomainsToggleInboundCreate(id: number, toggleInboundRequest?: ToggleInboundRequest, options?: RawAxiosRequestConfig): AxiosPromise<SendingDomain> {
+            return localVarFp.emailDomainsToggleInboundCreate(id, toggleInboundRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this sending domain.
-         * @param {SendingDomain} [sendingDomain] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailDomainsVerifyCreate(id: number, sendingDomain?: SendingDomain, options?: RawAxiosRequestConfig): AxiosPromise<SendingDomain> {
-            return localVarFp.emailDomainsVerifyCreate(id, sendingDomain, options).then((request) => request(axios, basePath));
+        emailDomainsVerifyCreate(id: number, options?: RawAxiosRequestConfig): AxiosPromise<SendingDomain> {
+            return localVarFp.emailDomainsVerifyCreate(id, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {InboundRoute} inboundRoute 
+         * @param {InboundRouteCreateRequest} inboundRouteCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailInboundRoutesCreate(inboundRoute: InboundRoute, options?: RawAxiosRequestConfig): AxiosPromise<InboundRoute> {
-            return localVarFp.emailInboundRoutesCreate(inboundRoute, options).then((request) => request(axios, basePath));
+        emailInboundRoutesCreate(inboundRouteCreateRequest: InboundRouteCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<InboundRouteWriteResponse> {
+            return localVarFp.emailInboundRoutesCreate(inboundRouteCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -18762,12 +19544,12 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this inbound route.
-         * @param {PatchedInboundRoute} [patchedInboundRoute] 
+         * @param {PatchedInboundRouteCreateRequest} [patchedInboundRouteCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailInboundRoutesPartialUpdate(id: number, patchedInboundRoute?: PatchedInboundRoute, options?: RawAxiosRequestConfig): AxiosPromise<InboundRoute> {
-            return localVarFp.emailInboundRoutesPartialUpdate(id, patchedInboundRoute, options).then((request) => request(axios, basePath));
+        emailInboundRoutesPartialUpdate(id: number, patchedInboundRouteCreateRequest?: PatchedInboundRouteCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<InboundRouteWriteResponse> {
+            return localVarFp.emailInboundRoutesPartialUpdate(id, patchedInboundRouteCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -18784,17 +19566,17 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailMessagesRetrieve(messageId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        emailMessagesRetrieve(messageId: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }> {
             return localVarFp.emailMessagesRetrieve(messageId, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {SandboxAddress} sandboxAddress 
+         * @param {SandboxAddressRequest} sandboxAddressRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailSandboxAddressesCreate(sandboxAddress: SandboxAddress, options?: RawAxiosRequestConfig): AxiosPromise<SandboxAddress> {
-            return localVarFp.emailSandboxAddressesCreate(sandboxAddress, options).then((request) => request(axios, basePath));
+        emailSandboxAddressesCreate(sandboxAddressRequest: SandboxAddressRequest, options?: RawAxiosRequestConfig): AxiosPromise<SandboxAddress> {
+            return localVarFp.emailSandboxAddressesCreate(sandboxAddressRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -18825,21 +19607,22 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * 
+         * @param {SendRequest} sendRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailSendCreate(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.emailSendCreate(options).then((request) => request(axios, basePath));
+        emailSendCreate(sendRequest: SendRequest, options?: RawAxiosRequestConfig): AxiosPromise<EmailSendResponse> {
+            return localVarFp.emailSendCreate(sendRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {ApiCredential} [apiCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesApiCredentialsCreate(servicePk: number, apiCredential?: ApiCredential, options?: RawAxiosRequestConfig): AxiosPromise<ApiCredential> {
-            return localVarFp.emailServicesApiCredentialsCreate(servicePk, apiCredential, options).then((request) => request(axios, basePath));
+        emailServicesApiCredentialsCreate(servicePk: number, credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiCredentialCreated> {
+            return localVarFp.emailServicesApiCredentialsCreate(servicePk, credentialCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -18863,21 +19646,21 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this email service.
-         * @param {PatchedSubscribe} [patchedSubscribe] 
+         * @param {SubscribeRequest} subscribeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesChangeTierPartialUpdate(id: number, patchedSubscribe?: PatchedSubscribe, options?: RawAxiosRequestConfig): AxiosPromise<EmailService> {
-            return localVarFp.emailServicesChangeTierPartialUpdate(id, patchedSubscribe, options).then((request) => request(axios, basePath));
+        emailServicesChangeTierPartialUpdate(id: number, subscribeRequest: SubscribeRequest, options?: RawAxiosRequestConfig): AxiosPromise<EmailService> {
+            return localVarFp.emailServicesChangeTierPartialUpdate(id, subscribeRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {Subscribe} subscribe 
+         * @param {SubscribeRequest} subscribeRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesCreate(subscribe: Subscribe, options?: RawAxiosRequestConfig): AxiosPromise<EmailService> {
-            return localVarFp.emailServicesCreate(subscribe, options).then((request) => request(axios, basePath));
+        emailServicesCreate(subscribeRequest: SubscribeRequest, options?: RawAxiosRequestConfig): AxiosPromise<EmailService> {
+            return localVarFp.emailServicesCreate(subscribeRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -18894,27 +19677,18 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesDedicatedIpDestroy(id: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        emailServicesDedicatedIpDestroy(id: number, options?: RawAxiosRequestConfig): AxiosPromise<EmailService> {
             return localVarFp.emailServicesDedicatedIpDestroy(id, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {number} id A unique integer value identifying this email service.
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        emailServicesDestroy(id: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.emailServicesDestroy(id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {DomainAdd} domainAdd 
+         * @param {DomainAddRequest} domainAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesDomainsCreate(servicePk: number, domainAdd: DomainAdd, options?: RawAxiosRequestConfig): AxiosPromise<SendingDomain> {
-            return localVarFp.emailServicesDomainsCreate(servicePk, domainAdd, options).then((request) => request(axios, basePath));
+        emailServicesDomainsCreate(servicePk: number, domainAddRequest: DomainAddRequest, options?: RawAxiosRequestConfig): AxiosPromise<SendingDomain> {
+            return localVarFp.emailServicesDomainsCreate(servicePk, domainAddRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -18938,21 +19712,22 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
         /**
          * List recently observed messages for a customer\'s email service.  Postal v3 legacy API exposes per-message lookups only; phclient builds the list locally from webhook events. Each message_id is deduped, keeping the most recent event_type as the message status.
          * @param {number} servicePk 
+         * @param {number} [page] Page number, starting at 1.
+         * @param {number} [perPage] Page size, capped at 200; defaults to 50.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesMessagesRetrieve(servicePk: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.emailServicesMessagesRetrieve(servicePk, options).then((request) => request(axios, basePath));
+        emailServicesMessagesRetrieve(servicePk: number, page?: number, perPage?: number, options?: RawAxiosRequestConfig): AxiosPromise<EmailMessageList> {
+            return localVarFp.emailServicesMessagesRetrieve(servicePk, page, perPage, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} id A unique integer value identifying this email service.
-         * @param {PatchedEmailService} [patchedEmailService] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesPartialUpdate(id: number, patchedEmailService?: PatchedEmailService, options?: RawAxiosRequestConfig): AxiosPromise<EmailService> {
-            return localVarFp.emailServicesPartialUpdate(id, patchedEmailService, options).then((request) => request(axios, basePath));
+        emailServicesPartialUpdate(id: number, options?: RawAxiosRequestConfig): AxiosPromise<EmailService> {
+            return localVarFp.emailServicesPartialUpdate(id, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -18975,12 +19750,12 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {SandboxAddress} sandboxAddress 
+         * @param {SandboxAddressRequest} sandboxAddressRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesSandboxAddressesCreate(servicePk: number, sandboxAddress: SandboxAddress, options?: RawAxiosRequestConfig): AxiosPromise<SandboxAddress> {
-            return localVarFp.emailServicesSandboxAddressesCreate(servicePk, sandboxAddress, options).then((request) => request(axios, basePath));
+        emailServicesSandboxAddressesCreate(servicePk: number, sandboxAddressRequest: SandboxAddressRequest, options?: RawAxiosRequestConfig): AxiosPromise<SandboxAddress> {
+            return localVarFp.emailServicesSandboxAddressesCreate(servicePk, sandboxAddressRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -18995,12 +19770,12 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {SmtpCredential} [smtpCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesSmtpCredentialsCreate(servicePk: number, smtpCredential?: SmtpCredential, options?: RawAxiosRequestConfig): AxiosPromise<SmtpCredential> {
-            return localVarFp.emailServicesSmtpCredentialsCreate(servicePk, smtpCredential, options).then((request) => request(axios, basePath));
+        emailServicesSmtpCredentialsCreate(servicePk: number, credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<SmtpCredentialCreated> {
+            return localVarFp.emailServicesSmtpCredentialsCreate(servicePk, credentialCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -19015,21 +19790,23 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
+         * @param {string} [end] 
+         * @param {string} [start] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesStatsRetrieve(servicePk: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.emailServicesStatsRetrieve(servicePk, options).then((request) => request(axios, basePath));
+        emailServicesStatsRetrieve(servicePk: number, end?: string, start?: string, options?: RawAxiosRequestConfig): AxiosPromise<EmailStats> {
+            return localVarFp.emailServicesStatsRetrieve(servicePk, end, start, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
          * @param {number} servicePk 
-         * @param {SuppressionEntry} [suppressionEntry] 
+         * @param {SuppressionAddRequest} suppressionAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesSuppressionsCreate(servicePk: number, suppressionEntry?: SuppressionEntry, options?: RawAxiosRequestConfig): AxiosPromise<SuppressionEntry> {
-            return localVarFp.emailServicesSuppressionsCreate(servicePk, suppressionEntry, options).then((request) => request(axios, basePath));
+        emailServicesSuppressionsCreate(servicePk: number, suppressionAddRequest: SuppressionAddRequest, options?: RawAxiosRequestConfig): AxiosPromise<SuppressionEntry> {
+            return localVarFp.emailServicesSuppressionsCreate(servicePk, suppressionAddRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -19043,12 +19820,12 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {SmtpCredential} [smtpCredential] 
+         * @param {CredentialCreateRequest} [credentialCreateRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailSmtpCredentialsCreate(smtpCredential?: SmtpCredential, options?: RawAxiosRequestConfig): AxiosPromise<SmtpCredential> {
-            return localVarFp.emailSmtpCredentialsCreate(smtpCredential, options).then((request) => request(axios, basePath));
+        emailSmtpCredentialsCreate(credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<SmtpCredentialCreated> {
+            return localVarFp.emailSmtpCredentialsCreate(credentialCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -19079,12 +19856,12 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {SuppressionEntry} [suppressionEntry] 
+         * @param {SuppressionAddRequest} suppressionAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailSuppressionsCreate(suppressionEntry?: SuppressionEntry, options?: RawAxiosRequestConfig): AxiosPromise<SuppressionEntry> {
-            return localVarFp.emailSuppressionsCreate(suppressionEntry, options).then((request) => request(axios, basePath));
+        emailSuppressionsCreate(suppressionAddRequest: SuppressionAddRequest, options?: RawAxiosRequestConfig): AxiosPromise<SuppressionEntry> {
+            return localVarFp.emailSuppressionsCreate(suppressionAddRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
@@ -19122,12 +19899,12 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
 export class EmailApi extends BaseAPI {
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-     * @param {ApiCredential} [apiCredential] 
+     * @param {CredentialCreateRequest} [credentialCreateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailApiCredentialsCreate(apiCredential?: ApiCredential, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailApiCredentialsCreate(apiCredential, options).then((request) => request(this.axios, this.basePath));
+    public emailApiCredentialsCreate(credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailApiCredentialsCreate(credentialCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19162,23 +19939,23 @@ export class EmailApi extends BaseAPI {
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-     * @param {DomainAdd} domainAdd 
+     * @param {DomainAddRequest} domainAddRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailDomainsCreate(domainAdd: DomainAdd, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailDomainsCreate(domainAdd, options).then((request) => request(this.axios, this.basePath));
+    public emailDomainsCreate(domainAddRequest: DomainAddRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailDomainsCreate(domainAddRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} domainPk 
-     * @param {InboundRoute} inboundRoute 
+     * @param {InboundRouteCreateRequest} inboundRouteCreateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailDomainsInboundRoutesCreate(domainPk: number, inboundRoute: InboundRoute, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailDomainsInboundRoutesCreate(domainPk, inboundRoute, options).then((request) => request(this.axios, this.basePath));
+    public emailDomainsInboundRoutesCreate(domainPk: number, inboundRouteCreateRequest: InboundRouteCreateRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailDomainsInboundRoutesCreate(domainPk, inboundRouteCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19215,44 +19992,42 @@ export class EmailApi extends BaseAPI {
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} id A unique integer value identifying this sending domain.
-     * @param {SendingDomain} [sendingDomain] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailDomainsRotateDkimCreate(id: number, sendingDomain?: SendingDomain, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailDomainsRotateDkimCreate(id, sendingDomain, options).then((request) => request(this.axios, this.basePath));
+    public emailDomainsRotateDkimCreate(id: number, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailDomainsRotateDkimCreate(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} id A unique integer value identifying this sending domain.
-     * @param {SendingDomain} [sendingDomain] 
+     * @param {ToggleInboundRequest} [toggleInboundRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailDomainsToggleInboundCreate(id: number, sendingDomain?: SendingDomain, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailDomainsToggleInboundCreate(id, sendingDomain, options).then((request) => request(this.axios, this.basePath));
+    public emailDomainsToggleInboundCreate(id: number, toggleInboundRequest?: ToggleInboundRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailDomainsToggleInboundCreate(id, toggleInboundRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} id A unique integer value identifying this sending domain.
-     * @param {SendingDomain} [sendingDomain] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailDomainsVerifyCreate(id: number, sendingDomain?: SendingDomain, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailDomainsVerifyCreate(id, sendingDomain, options).then((request) => request(this.axios, this.basePath));
+    public emailDomainsVerifyCreate(id: number, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailDomainsVerifyCreate(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-     * @param {InboundRoute} inboundRoute 
+     * @param {InboundRouteCreateRequest} inboundRouteCreateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailInboundRoutesCreate(inboundRoute: InboundRoute, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailInboundRoutesCreate(inboundRoute, options).then((request) => request(this.axios, this.basePath));
+    public emailInboundRoutesCreate(inboundRouteCreateRequest: InboundRouteCreateRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailInboundRoutesCreate(inboundRouteCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19278,12 +20053,12 @@ export class EmailApi extends BaseAPI {
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} id A unique integer value identifying this inbound route.
-     * @param {PatchedInboundRoute} [patchedInboundRoute] 
+     * @param {PatchedInboundRouteCreateRequest} [patchedInboundRouteCreateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailInboundRoutesPartialUpdate(id: number, patchedInboundRoute?: PatchedInboundRoute, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailInboundRoutesPartialUpdate(id, patchedInboundRoute, options).then((request) => request(this.axios, this.basePath));
+    public emailInboundRoutesPartialUpdate(id: number, patchedInboundRouteCreateRequest?: PatchedInboundRouteCreateRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailInboundRoutesPartialUpdate(id, patchedInboundRouteCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19308,12 +20083,12 @@ export class EmailApi extends BaseAPI {
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-     * @param {SandboxAddress} sandboxAddress 
+     * @param {SandboxAddressRequest} sandboxAddressRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailSandboxAddressesCreate(sandboxAddress: SandboxAddress, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailSandboxAddressesCreate(sandboxAddress, options).then((request) => request(this.axios, this.basePath));
+    public emailSandboxAddressesCreate(sandboxAddressRequest: SandboxAddressRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailSandboxAddressesCreate(sandboxAddressRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19348,22 +20123,23 @@ export class EmailApi extends BaseAPI {
 
     /**
      * 
+     * @param {SendRequest} sendRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailSendCreate(options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailSendCreate(options).then((request) => request(this.axios, this.basePath));
+    public emailSendCreate(sendRequest: SendRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailSendCreate(sendRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} servicePk 
-     * @param {ApiCredential} [apiCredential] 
+     * @param {CredentialCreateRequest} [credentialCreateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailServicesApiCredentialsCreate(servicePk: number, apiCredential?: ApiCredential, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesApiCredentialsCreate(servicePk, apiCredential, options).then((request) => request(this.axios, this.basePath));
+    public emailServicesApiCredentialsCreate(servicePk: number, credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailServicesApiCredentialsCreate(servicePk, credentialCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19390,22 +20166,22 @@ export class EmailApi extends BaseAPI {
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} id A unique integer value identifying this email service.
-     * @param {PatchedSubscribe} [patchedSubscribe] 
+     * @param {SubscribeRequest} subscribeRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailServicesChangeTierPartialUpdate(id: number, patchedSubscribe?: PatchedSubscribe, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesChangeTierPartialUpdate(id, patchedSubscribe, options).then((request) => request(this.axios, this.basePath));
+    public emailServicesChangeTierPartialUpdate(id: number, subscribeRequest: SubscribeRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailServicesChangeTierPartialUpdate(id, subscribeRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-     * @param {Subscribe} subscribe 
+     * @param {SubscribeRequest} subscribeRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailServicesCreate(subscribe: Subscribe, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesCreate(subscribe, options).then((request) => request(this.axios, this.basePath));
+    public emailServicesCreate(subscribeRequest: SubscribeRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailServicesCreate(subscribeRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19430,23 +20206,13 @@ export class EmailApi extends BaseAPI {
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-     * @param {number} id A unique integer value identifying this email service.
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public emailServicesDestroy(id: number, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesDestroy(id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} servicePk 
-     * @param {DomainAdd} domainAdd 
+     * @param {DomainAddRequest} domainAddRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailServicesDomainsCreate(servicePk: number, domainAdd: DomainAdd, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesDomainsCreate(servicePk, domainAdd, options).then((request) => request(this.axios, this.basePath));
+    public emailServicesDomainsCreate(servicePk: number, domainAddRequest: DomainAddRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailServicesDomainsCreate(servicePk, domainAddRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19473,22 +20239,23 @@ export class EmailApi extends BaseAPI {
     /**
      * List recently observed messages for a customer\'s email service.  Postal v3 legacy API exposes per-message lookups only; phclient builds the list locally from webhook events. Each message_id is deduped, keeping the most recent event_type as the message status.
      * @param {number} servicePk 
+     * @param {number} [page] Page number, starting at 1.
+     * @param {number} [perPage] Page size, capped at 200; defaults to 50.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailServicesMessagesRetrieve(servicePk: number, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesMessagesRetrieve(servicePk, options).then((request) => request(this.axios, this.basePath));
+    public emailServicesMessagesRetrieve(servicePk: number, page?: number, perPage?: number, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailServicesMessagesRetrieve(servicePk, page, perPage, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} id A unique integer value identifying this email service.
-     * @param {PatchedEmailService} [patchedEmailService] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailServicesPartialUpdate(id: number, patchedEmailService?: PatchedEmailService, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesPartialUpdate(id, patchedEmailService, options).then((request) => request(this.axios, this.basePath));
+    public emailServicesPartialUpdate(id: number, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailServicesPartialUpdate(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19514,12 +20281,12 @@ export class EmailApi extends BaseAPI {
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} servicePk 
-     * @param {SandboxAddress} sandboxAddress 
+     * @param {SandboxAddressRequest} sandboxAddressRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailServicesSandboxAddressesCreate(servicePk: number, sandboxAddress: SandboxAddress, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesSandboxAddressesCreate(servicePk, sandboxAddress, options).then((request) => request(this.axios, this.basePath));
+    public emailServicesSandboxAddressesCreate(servicePk: number, sandboxAddressRequest: SandboxAddressRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailServicesSandboxAddressesCreate(servicePk, sandboxAddressRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19536,12 +20303,12 @@ export class EmailApi extends BaseAPI {
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} servicePk 
-     * @param {SmtpCredential} [smtpCredential] 
+     * @param {CredentialCreateRequest} [credentialCreateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailServicesSmtpCredentialsCreate(servicePk: number, smtpCredential?: SmtpCredential, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesSmtpCredentialsCreate(servicePk, smtpCredential, options).then((request) => request(this.axios, this.basePath));
+    public emailServicesSmtpCredentialsCreate(servicePk: number, credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailServicesSmtpCredentialsCreate(servicePk, credentialCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19558,22 +20325,24 @@ export class EmailApi extends BaseAPI {
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} servicePk 
+     * @param {string} [end] 
+     * @param {string} [start] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailServicesStatsRetrieve(servicePk: number, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesStatsRetrieve(servicePk, options).then((request) => request(this.axios, this.basePath));
+    public emailServicesStatsRetrieve(servicePk: number, end?: string, start?: string, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailServicesStatsRetrieve(servicePk, end, start, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
      * @param {number} servicePk 
-     * @param {SuppressionEntry} [suppressionEntry] 
+     * @param {SuppressionAddRequest} suppressionAddRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailServicesSuppressionsCreate(servicePk: number, suppressionEntry?: SuppressionEntry, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesSuppressionsCreate(servicePk, suppressionEntry, options).then((request) => request(this.axios, this.basePath));
+    public emailServicesSuppressionsCreate(servicePk: number, suppressionAddRequest: SuppressionAddRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailServicesSuppressionsCreate(servicePk, suppressionAddRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19589,12 +20358,12 @@ export class EmailApi extends BaseAPI {
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-     * @param {SmtpCredential} [smtpCredential] 
+     * @param {CredentialCreateRequest} [credentialCreateRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailSmtpCredentialsCreate(smtpCredential?: SmtpCredential, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailSmtpCredentialsCreate(smtpCredential, options).then((request) => request(this.axios, this.basePath));
+    public emailSmtpCredentialsCreate(credentialCreateRequest?: CredentialCreateRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailSmtpCredentialsCreate(credentialCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19629,12 +20398,12 @@ export class EmailApi extends BaseAPI {
 
     /**
      * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-     * @param {SuppressionEntry} [suppressionEntry] 
+     * @param {SuppressionAddRequest} suppressionAddRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public emailSuppressionsCreate(suppressionEntry?: SuppressionEntry, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailSuppressionsCreate(suppressionEntry, options).then((request) => request(this.axios, this.basePath));
+    public emailSuppressionsCreate(suppressionAddRequest: SuppressionAddRequest, options?: RawAxiosRequestConfig) {
+        return EmailApiFp(this.configuration).emailSuppressionsCreate(suppressionAddRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19677,13 +20446,13 @@ export const FreednsApiAxiosParamCreator = function (configuration?: Configurati
     return {
         /**
          * Activate FreeDNS for a domain. For internal domains the nameservers are changed to PidginHost NS. A default zone is created on the cPanel node.
-         * @param {ActivateFreeDNS} activateFreeDNS 
+         * @param {ActivateFreeDNSRequest} activateFreeDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        freednsDnsActivateCreate: async (activateFreeDNS: ActivateFreeDNS, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'activateFreeDNS' is not null or undefined
-            assertParamExists('freednsDnsActivateCreate', 'activateFreeDNS', activateFreeDNS)
+        freednsDnsActivateCreate: async (activateFreeDNSRequest: ActivateFreeDNSRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'activateFreeDNSRequest' is not null or undefined
+            assertParamExists('freednsDnsActivateCreate', 'activateFreeDNSRequest', activateFreeDNSRequest)
             const localVarPath = `/api/freedns/dns/activate/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -19707,7 +20476,7 @@ export const FreednsApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(activateFreeDNS, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(activateFreeDNSRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -19718,17 +20487,17 @@ export const FreednsApiAxiosParamCreator = function (configuration?: Configurati
          * Add or edit a DNS record. To edit an existing record, include the \'line\' field with its line number. Required type-specific fields depend on \'type\': A/AAAA → address; CNAME → cname; MX → preference, exchange; SRV → priority, weight, port, target; TXT → txtdata, unencoded; TYPE257 (CAA) → flag, tag, value.
          * @param {string} domain Domain name or PK.
          * @param {string} source \&#39;internal\&#39; or \&#39;external\&#39;.
-         * @param {DNSRecordCreate} dNSRecordCreate 
+         * @param {DNSRecordCreateRequest} dNSRecordCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        freednsDnsAddRecordCreate: async (domain: string, source: string, dNSRecordCreate: DNSRecordCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        freednsDnsAddRecordCreate: async (domain: string, source: string, dNSRecordCreateRequest: DNSRecordCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'domain' is not null or undefined
             assertParamExists('freednsDnsAddRecordCreate', 'domain', domain)
             // verify required parameter 'source' is not null or undefined
             assertParamExists('freednsDnsAddRecordCreate', 'source', source)
-            // verify required parameter 'dNSRecordCreate' is not null or undefined
-            assertParamExists('freednsDnsAddRecordCreate', 'dNSRecordCreate', dNSRecordCreate)
+            // verify required parameter 'dNSRecordCreateRequest' is not null or undefined
+            assertParamExists('freednsDnsAddRecordCreate', 'dNSRecordCreateRequest', dNSRecordCreateRequest)
             const localVarPath = `/api/freedns/dns/add-record/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -19760,7 +20529,7 @@ export const FreednsApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(dNSRecordCreate, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(dNSRecordCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -19769,13 +20538,13 @@ export const FreednsApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * Deactivate FreeDNS for a domain. The DNS zone is removed from the cPanel node and, for internal domains, the original nameservers are restored.
-         * @param {DeactivateFreeDNS} deactivateFreeDNS 
+         * @param {DeactivateFreeDNSRequest} deactivateFreeDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        freednsDnsDeactivateCreate: async (deactivateFreeDNS: DeactivateFreeDNS, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'deactivateFreeDNS' is not null or undefined
-            assertParamExists('freednsDnsDeactivateCreate', 'deactivateFreeDNS', deactivateFreeDNS)
+        freednsDnsDeactivateCreate: async (deactivateFreeDNSRequest: DeactivateFreeDNSRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'deactivateFreeDNSRequest' is not null or undefined
+            assertParamExists('freednsDnsDeactivateCreate', 'deactivateFreeDNSRequest', deactivateFreeDNSRequest)
             const localVarPath = `/api/freedns/dns/deactivate/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -19799,7 +20568,7 @@ export const FreednsApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(deactivateFreeDNS, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(deactivateFreeDNSRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -19810,17 +20579,17 @@ export const FreednsApiAxiosParamCreator = function (configuration?: Configurati
          * Delete a DNS record by its line number.
          * @param {string} domain Domain name or PK.
          * @param {string} source \&#39;internal\&#39; or \&#39;external\&#39;.
-         * @param {DeleteRecord} deleteRecord 
+         * @param {DeleteRecordRequest} deleteRecordRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        freednsDnsDeleteRecordCreate: async (domain: string, source: string, deleteRecord: DeleteRecord, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        freednsDnsDeleteRecordCreate: async (domain: string, source: string, deleteRecordRequest: DeleteRecordRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'domain' is not null or undefined
             assertParamExists('freednsDnsDeleteRecordCreate', 'domain', domain)
             // verify required parameter 'source' is not null or undefined
             assertParamExists('freednsDnsDeleteRecordCreate', 'source', source)
-            // verify required parameter 'deleteRecord' is not null or undefined
-            assertParamExists('freednsDnsDeleteRecordCreate', 'deleteRecord', deleteRecord)
+            // verify required parameter 'deleteRecordRequest' is not null or undefined
+            assertParamExists('freednsDnsDeleteRecordCreate', 'deleteRecordRequest', deleteRecordRequest)
             const localVarPath = `/api/freedns/dns/delete-record/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -19852,7 +20621,7 @@ export const FreednsApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(deleteRecord, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(deleteRecordRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -19952,12 +20721,12 @@ export const FreednsApiFp = function(configuration?: Configuration) {
     return {
         /**
          * Activate FreeDNS for a domain. For internal domains the nameservers are changed to PidginHost NS. A default zone is created on the cPanel node.
-         * @param {ActivateFreeDNS} activateFreeDNS 
+         * @param {ActivateFreeDNSRequest} activateFreeDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async freednsDnsActivateCreate(activateFreeDNS: ActivateFreeDNS, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ActivateFreeDNSResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.freednsDnsActivateCreate(activateFreeDNS, options);
+        async freednsDnsActivateCreate(activateFreeDNSRequest: ActivateFreeDNSRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ActivateFreeDNSResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.freednsDnsActivateCreate(activateFreeDNSRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['FreednsApi.freednsDnsActivateCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -19966,24 +20735,24 @@ export const FreednsApiFp = function(configuration?: Configuration) {
          * Add or edit a DNS record. To edit an existing record, include the \'line\' field with its line number. Required type-specific fields depend on \'type\': A/AAAA → address; CNAME → cname; MX → preference, exchange; SRV → priority, weight, port, target; TXT → txtdata, unencoded; TYPE257 (CAA) → flag, tag, value.
          * @param {string} domain Domain name or PK.
          * @param {string} source \&#39;internal\&#39; or \&#39;external\&#39;.
-         * @param {DNSRecordCreate} dNSRecordCreate 
+         * @param {DNSRecordCreateRequest} dNSRecordCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async freednsDnsAddRecordCreate(domain: string, source: string, dNSRecordCreate: DNSRecordCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DNSRecordMutateResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.freednsDnsAddRecordCreate(domain, source, dNSRecordCreate, options);
+        async freednsDnsAddRecordCreate(domain: string, source: string, dNSRecordCreateRequest: DNSRecordCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DNSRecordMutateResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.freednsDnsAddRecordCreate(domain, source, dNSRecordCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['FreednsApi.freednsDnsAddRecordCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * Deactivate FreeDNS for a domain. The DNS zone is removed from the cPanel node and, for internal domains, the original nameservers are restored.
-         * @param {DeactivateFreeDNS} deactivateFreeDNS 
+         * @param {DeactivateFreeDNSRequest} deactivateFreeDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async freednsDnsDeactivateCreate(deactivateFreeDNS: DeactivateFreeDNS, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DeactivateFreeDNSResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.freednsDnsDeactivateCreate(deactivateFreeDNS, options);
+        async freednsDnsDeactivateCreate(deactivateFreeDNSRequest: DeactivateFreeDNSRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DeactivateFreeDNSResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.freednsDnsDeactivateCreate(deactivateFreeDNSRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['FreednsApi.freednsDnsDeactivateCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -19992,12 +20761,12 @@ export const FreednsApiFp = function(configuration?: Configuration) {
          * Delete a DNS record by its line number.
          * @param {string} domain Domain name or PK.
          * @param {string} source \&#39;internal\&#39; or \&#39;external\&#39;.
-         * @param {DeleteRecord} deleteRecord 
+         * @param {DeleteRecordRequest} deleteRecordRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async freednsDnsDeleteRecordCreate(domain: string, source: string, deleteRecord: DeleteRecord, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DeleteRecordResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.freednsDnsDeleteRecordCreate(domain, source, deleteRecord, options);
+        async freednsDnsDeleteRecordCreate(domain: string, source: string, deleteRecordRequest: DeleteRecordRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DeleteRecordResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.freednsDnsDeleteRecordCreate(domain, source, deleteRecordRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['FreednsApi.freednsDnsDeleteRecordCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -20037,43 +20806,43 @@ export const FreednsApiFactory = function (configuration?: Configuration, basePa
     return {
         /**
          * Activate FreeDNS for a domain. For internal domains the nameservers are changed to PidginHost NS. A default zone is created on the cPanel node.
-         * @param {ActivateFreeDNS} activateFreeDNS 
+         * @param {ActivateFreeDNSRequest} activateFreeDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        freednsDnsActivateCreate(activateFreeDNS: ActivateFreeDNS, options?: RawAxiosRequestConfig): AxiosPromise<ActivateFreeDNSResponse> {
-            return localVarFp.freednsDnsActivateCreate(activateFreeDNS, options).then((request) => request(axios, basePath));
+        freednsDnsActivateCreate(activateFreeDNSRequest: ActivateFreeDNSRequest, options?: RawAxiosRequestConfig): AxiosPromise<ActivateFreeDNSResponse> {
+            return localVarFp.freednsDnsActivateCreate(activateFreeDNSRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Add or edit a DNS record. To edit an existing record, include the \'line\' field with its line number. Required type-specific fields depend on \'type\': A/AAAA → address; CNAME → cname; MX → preference, exchange; SRV → priority, weight, port, target; TXT → txtdata, unencoded; TYPE257 (CAA) → flag, tag, value.
          * @param {string} domain Domain name or PK.
          * @param {string} source \&#39;internal\&#39; or \&#39;external\&#39;.
-         * @param {DNSRecordCreate} dNSRecordCreate 
+         * @param {DNSRecordCreateRequest} dNSRecordCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        freednsDnsAddRecordCreate(domain: string, source: string, dNSRecordCreate: DNSRecordCreate, options?: RawAxiosRequestConfig): AxiosPromise<DNSRecordMutateResponse> {
-            return localVarFp.freednsDnsAddRecordCreate(domain, source, dNSRecordCreate, options).then((request) => request(axios, basePath));
+        freednsDnsAddRecordCreate(domain: string, source: string, dNSRecordCreateRequest: DNSRecordCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<DNSRecordMutateResponse> {
+            return localVarFp.freednsDnsAddRecordCreate(domain, source, dNSRecordCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Deactivate FreeDNS for a domain. The DNS zone is removed from the cPanel node and, for internal domains, the original nameservers are restored.
-         * @param {DeactivateFreeDNS} deactivateFreeDNS 
+         * @param {DeactivateFreeDNSRequest} deactivateFreeDNSRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        freednsDnsDeactivateCreate(deactivateFreeDNS: DeactivateFreeDNS, options?: RawAxiosRequestConfig): AxiosPromise<DeactivateFreeDNSResponse> {
-            return localVarFp.freednsDnsDeactivateCreate(deactivateFreeDNS, options).then((request) => request(axios, basePath));
+        freednsDnsDeactivateCreate(deactivateFreeDNSRequest: DeactivateFreeDNSRequest, options?: RawAxiosRequestConfig): AxiosPromise<DeactivateFreeDNSResponse> {
+            return localVarFp.freednsDnsDeactivateCreate(deactivateFreeDNSRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Delete a DNS record by its line number.
          * @param {string} domain Domain name or PK.
          * @param {string} source \&#39;internal\&#39; or \&#39;external\&#39;.
-         * @param {DeleteRecord} deleteRecord 
+         * @param {DeleteRecordRequest} deleteRecordRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        freednsDnsDeleteRecordCreate(domain: string, source: string, deleteRecord: DeleteRecord, options?: RawAxiosRequestConfig): AxiosPromise<DeleteRecordResponse> {
-            return localVarFp.freednsDnsDeleteRecordCreate(domain, source, deleteRecord, options).then((request) => request(axios, basePath));
+        freednsDnsDeleteRecordCreate(domain: string, source: string, deleteRecordRequest: DeleteRecordRequest, options?: RawAxiosRequestConfig): AxiosPromise<DeleteRecordResponse> {
+            return localVarFp.freednsDnsDeleteRecordCreate(domain, source, deleteRecordRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List all domains with active FreeDNS for the authenticated user.
@@ -20102,46 +20871,46 @@ export const FreednsApiFactory = function (configuration?: Configuration, basePa
 export class FreednsApi extends BaseAPI {
     /**
      * Activate FreeDNS for a domain. For internal domains the nameservers are changed to PidginHost NS. A default zone is created on the cPanel node.
-     * @param {ActivateFreeDNS} activateFreeDNS 
+     * @param {ActivateFreeDNSRequest} activateFreeDNSRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public freednsDnsActivateCreate(activateFreeDNS: ActivateFreeDNS, options?: RawAxiosRequestConfig) {
-        return FreednsApiFp(this.configuration).freednsDnsActivateCreate(activateFreeDNS, options).then((request) => request(this.axios, this.basePath));
+    public freednsDnsActivateCreate(activateFreeDNSRequest: ActivateFreeDNSRequest, options?: RawAxiosRequestConfig) {
+        return FreednsApiFp(this.configuration).freednsDnsActivateCreate(activateFreeDNSRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Add or edit a DNS record. To edit an existing record, include the \'line\' field with its line number. Required type-specific fields depend on \'type\': A/AAAA → address; CNAME → cname; MX → preference, exchange; SRV → priority, weight, port, target; TXT → txtdata, unencoded; TYPE257 (CAA) → flag, tag, value.
      * @param {string} domain Domain name or PK.
      * @param {string} source \&#39;internal\&#39; or \&#39;external\&#39;.
-     * @param {DNSRecordCreate} dNSRecordCreate 
+     * @param {DNSRecordCreateRequest} dNSRecordCreateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public freednsDnsAddRecordCreate(domain: string, source: string, dNSRecordCreate: DNSRecordCreate, options?: RawAxiosRequestConfig) {
-        return FreednsApiFp(this.configuration).freednsDnsAddRecordCreate(domain, source, dNSRecordCreate, options).then((request) => request(this.axios, this.basePath));
+    public freednsDnsAddRecordCreate(domain: string, source: string, dNSRecordCreateRequest: DNSRecordCreateRequest, options?: RawAxiosRequestConfig) {
+        return FreednsApiFp(this.configuration).freednsDnsAddRecordCreate(domain, source, dNSRecordCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Deactivate FreeDNS for a domain. The DNS zone is removed from the cPanel node and, for internal domains, the original nameservers are restored.
-     * @param {DeactivateFreeDNS} deactivateFreeDNS 
+     * @param {DeactivateFreeDNSRequest} deactivateFreeDNSRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public freednsDnsDeactivateCreate(deactivateFreeDNS: DeactivateFreeDNS, options?: RawAxiosRequestConfig) {
-        return FreednsApiFp(this.configuration).freednsDnsDeactivateCreate(deactivateFreeDNS, options).then((request) => request(this.axios, this.basePath));
+    public freednsDnsDeactivateCreate(deactivateFreeDNSRequest: DeactivateFreeDNSRequest, options?: RawAxiosRequestConfig) {
+        return FreednsApiFp(this.configuration).freednsDnsDeactivateCreate(deactivateFreeDNSRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Delete a DNS record by its line number.
      * @param {string} domain Domain name or PK.
      * @param {string} source \&#39;internal\&#39; or \&#39;external\&#39;.
-     * @param {DeleteRecord} deleteRecord 
+     * @param {DeleteRecordRequest} deleteRecordRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public freednsDnsDeleteRecordCreate(domain: string, source: string, deleteRecord: DeleteRecord, options?: RawAxiosRequestConfig) {
-        return FreednsApiFp(this.configuration).freednsDnsDeleteRecordCreate(domain, source, deleteRecord, options).then((request) => request(this.axios, this.basePath));
+    public freednsDnsDeleteRecordCreate(domain: string, source: string, deleteRecordRequest: DeleteRecordRequest, options?: RawAxiosRequestConfig) {
+        return FreednsApiFp(this.configuration).freednsDnsDeleteRecordCreate(domain, source, deleteRecordRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -20175,15 +20944,15 @@ export const HostingApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Change the cPanel password for this hosting service.
          * @param {string} id 
-         * @param {ChangePassword} changePassword 
+         * @param {ChangePasswordRequest} changePasswordRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        hostingHostingChangePasswordCreate: async (id: string, changePassword: ChangePassword, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        hostingHostingChangePasswordCreate: async (id: string, changePasswordRequest: ChangePasswordRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('hostingHostingChangePasswordCreate', 'id', id)
-            // verify required parameter 'changePassword' is not null or undefined
-            assertParamExists('hostingHostingChangePasswordCreate', 'changePassword', changePassword)
+            // verify required parameter 'changePasswordRequest' is not null or undefined
+            assertParamExists('hostingHostingChangePasswordCreate', 'changePasswordRequest', changePasswordRequest)
             const localVarPath = `/api/hosting/hosting/{id}/change-password/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -20208,7 +20977,7 @@ export const HostingApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(changePassword, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(changePasswordRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -20304,12 +21073,12 @@ export const HostingApiFp = function(configuration?: Configuration) {
         /**
          * Change the cPanel password for this hosting service.
          * @param {string} id 
-         * @param {ChangePassword} changePassword 
+         * @param {ChangePasswordRequest} changePasswordRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async hostingHostingChangePasswordCreate(id: string, changePassword: ChangePassword, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HostingChangePasswordResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.hostingHostingChangePasswordCreate(id, changePassword, options);
+        async hostingHostingChangePasswordCreate(id: string, changePasswordRequest: ChangePasswordRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HostingChangePasswordResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.hostingHostingChangePasswordCreate(id, changePasswordRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['HostingApi.hostingHostingChangePasswordCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -20350,12 +21119,12 @@ export const HostingApiFactory = function (configuration?: Configuration, basePa
         /**
          * Change the cPanel password for this hosting service.
          * @param {string} id 
-         * @param {ChangePassword} changePassword 
+         * @param {ChangePasswordRequest} changePasswordRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        hostingHostingChangePasswordCreate(id: string, changePassword: ChangePassword, options?: RawAxiosRequestConfig): AxiosPromise<HostingChangePasswordResponse> {
-            return localVarFp.hostingHostingChangePasswordCreate(id, changePassword, options).then((request) => request(axios, basePath));
+        hostingHostingChangePasswordCreate(id: string, changePasswordRequest: ChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<HostingChangePasswordResponse> {
+            return localVarFp.hostingHostingChangePasswordCreate(id, changePasswordRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List and manage cPanel/shared hosting services.
@@ -20385,12 +21154,12 @@ export class HostingApi extends BaseAPI {
     /**
      * Change the cPanel password for this hosting service.
      * @param {string} id 
-     * @param {ChangePassword} changePassword 
+     * @param {ChangePasswordRequest} changePasswordRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public hostingHostingChangePasswordCreate(id: string, changePassword: ChangePassword, options?: RawAxiosRequestConfig) {
-        return HostingApiFp(this.configuration).hostingHostingChangePasswordCreate(id, changePassword, options).then((request) => request(this.axios, this.basePath));
+    public hostingHostingChangePasswordCreate(id: string, changePasswordRequest: ChangePasswordRequest, options?: RawAxiosRequestConfig) {
+        return HostingApiFp(this.configuration).hostingHostingChangePasswordCreate(id, changePasswordRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -20543,13 +21312,13 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
         },
         /**
          * Create new k8s cluster
-         * @param {ClusterAdd} clusterAdd 
+         * @param {ClusterAddRequest} clusterAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersCreate: async (clusterAdd: ClusterAdd, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'clusterAdd' is not null or undefined
-            assertParamExists('kubernetesClustersCreate', 'clusterAdd', clusterAdd)
+        kubernetesClustersCreate: async (clusterAddRequest: ClusterAddRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'clusterAddRequest' is not null or undefined
+            assertParamExists('kubernetesClustersCreate', 'clusterAddRequest', clusterAddRequest)
             const localVarPath = `/api/kubernetes/clusters/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -20573,7 +21342,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(clusterAdd, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(clusterAddRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -20699,17 +21468,179 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             };
         },
         /**
-         * Create new HTTPRoute
-         * @param {number} clusterId 
-         * @param {HTTPRoute} hTTPRoute 
+         * Enable or disable WireGuard encryption for cluster traffic.
+         * @param {string} id 
+         * @param {ClusterEncryptionRequest} clusterEncryptionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersHttproutesCreate: async (clusterId: number, hTTPRoute: HTTPRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersEncryptionCreate: async (id: string, clusterEncryptionRequest: ClusterEncryptionRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersEncryptionCreate', 'id', id)
+            // verify required parameter 'clusterEncryptionRequest' is not null or undefined
+            assertParamExists('kubernetesClustersEncryptionCreate', 'clusterEncryptionRequest', clusterEncryptionRequest)
+            const localVarPath = `/api/kubernetes/clusters/{id}/encryption/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(clusterEncryptionRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Re-count the workloads that still predate the encryption change.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersEncryptionRecheckCreate: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersEncryptionRecheckCreate', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{id}/encryption/recheck/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Staff only: resolve a cluster whose encryption state is unknown.
+         * @param {string} id 
+         * @param {ClusterEncryptionReconcileRequest} clusterEncryptionReconcileRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersEncryptionReconcileCreate: async (id: string, clusterEncryptionReconcileRequest: ClusterEncryptionReconcileRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersEncryptionReconcileCreate', 'id', id)
+            // verify required parameter 'clusterEncryptionReconcileRequest' is not null or undefined
+            assertParamExists('kubernetesClustersEncryptionReconcileCreate', 'clusterEncryptionReconcileRequest', clusterEncryptionReconcileRequest)
+            const localVarPath = `/api/kubernetes/clusters/{id}/encryption/reconcile/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(clusterEncryptionReconcileRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Read the cluster\'s encryption state, restart gate and per-node verification evidence.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersEncryptionRetrieve: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersEncryptionRetrieve', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{id}/encryption/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Create new HTTPRoute
+         * @param {number} clusterId 
+         * @param {HTTPRouteRequest} hTTPRouteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersHttproutesCreate: async (clusterId: number, hTTPRouteRequest: HTTPRouteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersHttproutesCreate', 'clusterId', clusterId)
-            // verify required parameter 'hTTPRoute' is not null or undefined
-            assertParamExists('kubernetesClustersHttproutesCreate', 'hTTPRoute', hTTPRoute)
+            // verify required parameter 'hTTPRouteRequest' is not null or undefined
+            assertParamExists('kubernetesClustersHttproutesCreate', 'hTTPRouteRequest', hTTPRouteRequest)
             const localVarPath = `/api/kubernetes/clusters/{cluster_id}/httproutes/`
                 .replace('{cluster_id}', encodeURIComponent(String(clusterId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -20734,7 +21665,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(hTTPRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(hTTPRouteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -20829,11 +21760,11 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Partially update HTTPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedHTTPRoute} [patchedHTTPRoute] 
+         * @param {PatchedHTTPRouteRequest} [patchedHTTPRouteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersHttproutesPartialUpdate: async (clusterId: number, id: string, patchedHTTPRoute?: PatchedHTTPRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersHttproutesPartialUpdate: async (clusterId: number, id: string, patchedHTTPRouteRequest?: PatchedHTTPRouteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersHttproutesPartialUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
@@ -20863,7 +21794,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedHTTPRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedHTTPRouteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -20916,17 +21847,17 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Update HTTPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {HTTPRoute} hTTPRoute 
+         * @param {HTTPRouteRequest} hTTPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersHttproutesUpdate: async (clusterId: number, id: string, hTTPRoute: HTTPRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersHttproutesUpdate: async (clusterId: number, id: string, hTTPRouteRequest: HTTPRouteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersHttproutesUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
             assertParamExists('kubernetesClustersHttproutesUpdate', 'id', id)
-            // verify required parameter 'hTTPRoute' is not null or undefined
-            assertParamExists('kubernetesClustersHttproutesUpdate', 'hTTPRoute', hTTPRoute)
+            // verify required parameter 'hTTPRouteRequest' is not null or undefined
+            assertParamExists('kubernetesClustersHttproutesUpdate', 'hTTPRouteRequest', hTTPRouteRequest)
             const localVarPath = `/api/kubernetes/clusters/{cluster_id}/httproutes/{id}/`
                 .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
                 .replace('{id}', encodeURIComponent(String(id)));
@@ -20952,7 +21883,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(hTTPRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(hTTPRouteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -21076,11 +22007,11 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
-         * @param {LBFirewallRule} [lBFirewallRule] 
+         * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersLbFirewallCreate: async (clusterId: number, lBFirewallRule?: LBFirewallRule, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersLbFirewallCreate: async (clusterId: number, lBFirewallRuleRequest?: LBFirewallRuleRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersLbFirewallCreate', 'clusterId', clusterId)
             const localVarPath = `/api/kubernetes/clusters/{cluster_id}/lb-firewall/`
@@ -21107,7 +22038,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(lBFirewallRule, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(lBFirewallRuleRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -21202,11 +22133,11 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedLBFirewallRule} [patchedLBFirewallRule] 
+         * @param {PatchedLBFirewallRuleRequest} [patchedLBFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersLbFirewallPartialUpdate: async (clusterId: number, id: string, patchedLBFirewallRule?: PatchedLBFirewallRule, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersLbFirewallPartialUpdate: async (clusterId: number, id: string, patchedLBFirewallRuleRequest?: PatchedLBFirewallRuleRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersLbFirewallPartialUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
@@ -21236,7 +22167,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedLBFirewallRule, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedLBFirewallRuleRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -21289,11 +22220,11 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {LBFirewallRule} [lBFirewallRule] 
+         * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersLbFirewallUpdate: async (clusterId: number, id: string, lBFirewallRule?: LBFirewallRule, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersLbFirewallUpdate: async (clusterId: number, id: string, lBFirewallRuleRequest?: LBFirewallRuleRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersLbFirewallUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
@@ -21323,7 +22254,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(lBFirewallRule, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(lBFirewallRuleRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -21370,13 +22301,227 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             };
         },
         /**
-         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * Uncordon the node and abort a blocked operation.
+         * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedClusterDetail} [patchedClusterDetail] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersPartialUpdate: async (id: string, patchedClusterDetail?: PatchedClusterDetail, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersNodeOperationsCancelCreate: async (clusterId: number, id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'clusterId' is not null or undefined
+            assertParamExists('kubernetesClustersNodeOperationsCancelCreate', 'clusterId', clusterId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersNodeOperationsCancelCreate', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{cluster_id}/node-operations/{id}/cancel/`
+                .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
+         * @param {number} clusterId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersNodeOperationsList: async (clusterId: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'clusterId' is not null or undefined
+            assertParamExists('kubernetesClustersNodeOperationsList', 'clusterId', clusterId)
+            const localVarPath = `/api/kubernetes/clusters/{cluster_id}/node-operations/`
+                .replace('{cluster_id}', encodeURIComponent(String(clusterId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Staff-only resume of an operation waiting for support.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersNodeOperationsResumeCreate: async (clusterId: number, id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'clusterId' is not null or undefined
+            assertParamExists('kubernetesClustersNodeOperationsResumeCreate', 'clusterId', clusterId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersNodeOperationsResumeCreate', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{cluster_id}/node-operations/{id}/resume/`
+                .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersNodeOperationsRetrieve: async (clusterId: number, id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'clusterId' is not null or undefined
+            assertParamExists('kubernetesClustersNodeOperationsRetrieve', 'clusterId', clusterId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersNodeOperationsRetrieve', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{cluster_id}/node-operations/{id}/`
+                .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retry a blocked operation with the overrides that answer its blocker.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {NodeOperationRetryRequest} [nodeOperationRetryRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersNodeOperationsRetryCreate: async (clusterId: number, id: string, nodeOperationRetryRequest?: NodeOperationRetryRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'clusterId' is not null or undefined
+            assertParamExists('kubernetesClustersNodeOperationsRetryCreate', 'clusterId', clusterId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersNodeOperationsRetryCreate', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{cluster_id}/node-operations/{id}/retry/`
+                .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(nodeOperationRetryRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * @param {string} id 
+         * @param {PatchedClusterDetailRequest} [patchedClusterDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersPartialUpdate: async (id: string, patchedClusterDetailRequest?: PatchedClusterDetailRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('kubernetesClustersPartialUpdate', 'id', id)
             const localVarPath = `/api/kubernetes/clusters/{id}/`
@@ -21403,7 +22548,134 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedClusterDetail, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedClusterDetailRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A downsize or pool deletion, its milestones, and its staff resume.  The list route is not in the spec\'s table and is here anyway: with retrieve as the only route, a customer whose downsize parked has no way to learn the journal id, and the panel\'s poll would be the sole path to a published REST resource.
+         * @param {number} clusterId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersPoolRemovalJournalsList: async (clusterId: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'clusterId' is not null or undefined
+            assertParamExists('kubernetesClustersPoolRemovalJournalsList', 'clusterId', clusterId)
+            const localVarPath = `/api/kubernetes/clusters/{cluster_id}/pool-removal-journals/`
+                .replace('{cluster_id}', encodeURIComponent(String(clusterId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Staff-only resume of a pool removal waiting for support.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersPoolRemovalJournalsResumeCreate: async (clusterId: number, id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'clusterId' is not null or undefined
+            assertParamExists('kubernetesClustersPoolRemovalJournalsResumeCreate', 'clusterId', clusterId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersPoolRemovalJournalsResumeCreate', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{cluster_id}/pool-removal-journals/{id}/resume/`
+                .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A downsize or pool deletion, its milestones, and its staff resume.  The list route is not in the spec\'s table and is here anyway: with retrieve as the only route, a customer whose downsize parked has no way to learn the journal id, and the panel\'s poll would be the sole path to a published REST resource.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersPoolRemovalJournalsRetrieve: async (clusterId: number, id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'clusterId' is not null or undefined
+            assertParamExists('kubernetesClustersPoolRemovalJournalsRetrieve', 'clusterId', clusterId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersPoolRemovalJournalsRetrieve', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{cluster_id}/pool-removal-journals/{id}/`
+                .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -21413,15 +22685,15 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
-         * @param {K8sPortForward} k8sPortForward 
+         * @param {K8sPortForwardRequest} k8sPortForwardRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersPortForwardsCreate: async (clusterId: number, k8sPortForward: K8sPortForward, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersPortForwardsCreate: async (clusterId: number, k8sPortForwardRequest: K8sPortForwardRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersPortForwardsCreate', 'clusterId', clusterId)
-            // verify required parameter 'k8sPortForward' is not null or undefined
-            assertParamExists('kubernetesClustersPortForwardsCreate', 'k8sPortForward', k8sPortForward)
+            // verify required parameter 'k8sPortForwardRequest' is not null or undefined
+            assertParamExists('kubernetesClustersPortForwardsCreate', 'k8sPortForwardRequest', k8sPortForwardRequest)
             const localVarPath = `/api/kubernetes/clusters/{cluster_id}/port-forwards/`
                 .replace('{cluster_id}', encodeURIComponent(String(clusterId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -21446,7 +22718,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(k8sPortForward, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(k8sPortForwardRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -21541,11 +22813,11 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedK8sPortForward} [patchedK8sPortForward] 
+         * @param {PatchedK8sPortForwardRequest} [patchedK8sPortForwardRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersPortForwardsPartialUpdate: async (clusterId: number, id: string, patchedK8sPortForward?: PatchedK8sPortForward, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersPortForwardsPartialUpdate: async (clusterId: number, id: string, patchedK8sPortForwardRequest?: PatchedK8sPortForwardRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersPortForwardsPartialUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
@@ -21575,7 +22847,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedK8sPortForward, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedK8sPortForwardRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -21628,17 +22900,17 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {K8sPortForward} k8sPortForward 
+         * @param {K8sPortForwardRequest} k8sPortForwardRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersPortForwardsUpdate: async (clusterId: number, id: string, k8sPortForward: K8sPortForward, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersPortForwardsUpdate: async (clusterId: number, id: string, k8sPortForwardRequest: K8sPortForwardRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersPortForwardsUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
             assertParamExists('kubernetesClustersPortForwardsUpdate', 'id', id)
-            // verify required parameter 'k8sPortForward' is not null or undefined
-            assertParamExists('kubernetesClustersPortForwardsUpdate', 'k8sPortForward', k8sPortForward)
+            // verify required parameter 'k8sPortForwardRequest' is not null or undefined
+            assertParamExists('kubernetesClustersPortForwardsUpdate', 'k8sPortForwardRequest', k8sPortForwardRequest)
             const localVarPath = `/api/kubernetes/clusters/{cluster_id}/port-forwards/{id}/`
                 .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
                 .replace('{id}', encodeURIComponent(String(id)));
@@ -21664,7 +22936,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(k8sPortForward, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(k8sPortForwardRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -21674,15 +22946,15 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
         /**
          * Create new resource pool
          * @param {number} clusterId 
-         * @param {ResourcePoolAdd} resourcePoolAdd 
+         * @param {ResourcePoolAddRequest} resourcePoolAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersResourcePoolsCreate: async (clusterId: number, resourcePoolAdd: ResourcePoolAdd, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersResourcePoolsCreate: async (clusterId: number, resourcePoolAddRequest: ResourcePoolAddRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersResourcePoolsCreate', 'clusterId', clusterId)
-            // verify required parameter 'resourcePoolAdd' is not null or undefined
-            assertParamExists('kubernetesClustersResourcePoolsCreate', 'resourcePoolAdd', resourcePoolAdd)
+            // verify required parameter 'resourcePoolAddRequest' is not null or undefined
+            assertParamExists('kubernetesClustersResourcePoolsCreate', 'resourcePoolAddRequest', resourcePoolAddRequest)
             const localVarPath = `/api/kubernetes/clusters/{cluster_id}/resource-pools/`
                 .replace('{cluster_id}', encodeURIComponent(String(clusterId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -21707,7 +22979,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(resourcePoolAdd, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(resourcePoolAddRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -21799,7 +23071,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             };
         },
         /**
-         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * Start a safe delete of one worker node.
          * @param {number} clusterId 
          * @param {string} id 
          * @param {number} poolId 
@@ -21833,6 +23105,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
 
             // authentication cookieAuth required
 
+            localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
@@ -21930,6 +23203,55 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Restart one worker node, draining it first.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {number} poolId 
+         * @param {NodeOperationRebootRequest} [nodeOperationRebootRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersResourcePoolsNodesRebootCreate: async (clusterId: number, id: string, poolId: number, nodeOperationRebootRequest?: NodeOperationRebootRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'clusterId' is not null or undefined
+            assertParamExists('kubernetesClustersResourcePoolsNodesRebootCreate', 'clusterId', clusterId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersResourcePoolsNodesRebootCreate', 'id', id)
+            // verify required parameter 'poolId' is not null or undefined
+            assertParamExists('kubernetesClustersResourcePoolsNodesRebootCreate', 'poolId', poolId)
+            const localVarPath = `/api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/{id}/reboot/`
+                .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
+                .replace('{id}', encodeURIComponent(String(id)))
+                .replace('{pool_id}', encodeURIComponent(String(poolId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(nodeOperationRebootRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22037,11 +23359,11 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedResourcePool} [patchedResourcePool] 
+         * @param {PatchedResourcePoolRequest} [patchedResourcePoolRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersResourcePoolsPartialUpdate: async (clusterId: number, id: string, patchedResourcePool?: PatchedResourcePool, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersResourcePoolsPartialUpdate: async (clusterId: number, id: string, patchedResourcePoolRequest?: PatchedResourcePoolRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersResourcePoolsPartialUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
@@ -22071,7 +23393,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedResourcePool, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedResourcePoolRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22124,11 +23446,11 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {ResourcePool} [resourcePool] 
+         * @param {ResourcePoolRequest} [resourcePoolRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersResourcePoolsUpdate: async (clusterId: number, id: string, resourcePool?: ResourcePool, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersResourcePoolsUpdate: async (clusterId: number, id: string, resourcePoolRequest?: ResourcePoolRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersResourcePoolsUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
@@ -22158,7 +23480,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(resourcePool, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(resourcePoolRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22244,15 +23566,15 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
         /**
          * Create new TCPRoute
          * @param {number} clusterId 
-         * @param {TCPRoute} tCPRoute 
+         * @param {TCPRouteRequest} tCPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersTcproutesCreate: async (clusterId: number, tCPRoute: TCPRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersTcproutesCreate: async (clusterId: number, tCPRouteRequest: TCPRouteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersTcproutesCreate', 'clusterId', clusterId)
-            // verify required parameter 'tCPRoute' is not null or undefined
-            assertParamExists('kubernetesClustersTcproutesCreate', 'tCPRoute', tCPRoute)
+            // verify required parameter 'tCPRouteRequest' is not null or undefined
+            assertParamExists('kubernetesClustersTcproutesCreate', 'tCPRouteRequest', tCPRouteRequest)
             const localVarPath = `/api/kubernetes/clusters/{cluster_id}/tcproutes/`
                 .replace('{cluster_id}', encodeURIComponent(String(clusterId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -22277,7 +23599,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(tCPRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(tCPRouteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22372,11 +23694,11 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Partially update TCPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedTCPRoute} [patchedTCPRoute] 
+         * @param {PatchedTCPRouteRequest} [patchedTCPRouteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersTcproutesPartialUpdate: async (clusterId: number, id: string, patchedTCPRoute?: PatchedTCPRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersTcproutesPartialUpdate: async (clusterId: number, id: string, patchedTCPRouteRequest?: PatchedTCPRouteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersTcproutesPartialUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
@@ -22406,7 +23728,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedTCPRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedTCPRouteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22459,17 +23781,17 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Update TCPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {TCPRoute} tCPRoute 
+         * @param {TCPRouteRequest} tCPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersTcproutesUpdate: async (clusterId: number, id: string, tCPRoute: TCPRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersTcproutesUpdate: async (clusterId: number, id: string, tCPRouteRequest: TCPRouteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersTcproutesUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
             assertParamExists('kubernetesClustersTcproutesUpdate', 'id', id)
-            // verify required parameter 'tCPRoute' is not null or undefined
-            assertParamExists('kubernetesClustersTcproutesUpdate', 'tCPRoute', tCPRoute)
+            // verify required parameter 'tCPRouteRequest' is not null or undefined
+            assertParamExists('kubernetesClustersTcproutesUpdate', 'tCPRouteRequest', tCPRouteRequest)
             const localVarPath = `/api/kubernetes/clusters/{cluster_id}/tcproutes/{id}/`
                 .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
                 .replace('{id}', encodeURIComponent(String(id)));
@@ -22495,7 +23817,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(tCPRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(tCPRouteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22543,15 +23865,15 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
         /**
          * Create new UDPRoute
          * @param {number} clusterId 
-         * @param {UDPRoute} uDPRoute 
+         * @param {UDPRouteRequest} uDPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersUdproutesCreate: async (clusterId: number, uDPRoute: UDPRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersUdproutesCreate: async (clusterId: number, uDPRouteRequest: UDPRouteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersUdproutesCreate', 'clusterId', clusterId)
-            // verify required parameter 'uDPRoute' is not null or undefined
-            assertParamExists('kubernetesClustersUdproutesCreate', 'uDPRoute', uDPRoute)
+            // verify required parameter 'uDPRouteRequest' is not null or undefined
+            assertParamExists('kubernetesClustersUdproutesCreate', 'uDPRouteRequest', uDPRouteRequest)
             const localVarPath = `/api/kubernetes/clusters/{cluster_id}/udproutes/`
                 .replace('{cluster_id}', encodeURIComponent(String(clusterId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -22576,7 +23898,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(uDPRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(uDPRouteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22671,11 +23993,11 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Partially update UDPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedUDPRoute} [patchedUDPRoute] 
+         * @param {PatchedUDPRouteRequest} [patchedUDPRouteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersUdproutesPartialUpdate: async (clusterId: number, id: string, patchedUDPRoute?: PatchedUDPRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersUdproutesPartialUpdate: async (clusterId: number, id: string, patchedUDPRouteRequest?: PatchedUDPRouteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersUdproutesPartialUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
@@ -22705,7 +24027,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(patchedUDPRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedUDPRouteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22758,17 +24080,17 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * Update UDPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {UDPRoute} uDPRoute 
+         * @param {UDPRouteRequest} uDPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersUdproutesUpdate: async (clusterId: number, id: string, uDPRoute: UDPRoute, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersUdproutesUpdate: async (clusterId: number, id: string, uDPRouteRequest: UDPRouteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersUdproutesUpdate', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
             assertParamExists('kubernetesClustersUdproutesUpdate', 'id', id)
-            // verify required parameter 'uDPRoute' is not null or undefined
-            assertParamExists('kubernetesClustersUdproutesUpdate', 'uDPRoute', uDPRoute)
+            // verify required parameter 'uDPRouteRequest' is not null or undefined
+            assertParamExists('kubernetesClustersUdproutesUpdate', 'uDPRouteRequest', uDPRouteRequest)
             const localVarPath = `/api/kubernetes/clusters/{cluster_id}/udproutes/{id}/`
                 .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
                 .replace('{id}', encodeURIComponent(String(id)));
@@ -22794,7 +24116,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(uDPRoute, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(uDPRouteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22804,15 +24126,15 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} id 
-         * @param {ClusterDetail} clusterDetail 
+         * @param {ClusterDetailRequest} clusterDetailRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersUpdate: async (id: string, clusterDetail: ClusterDetail, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersUpdate: async (id: string, clusterDetailRequest: ClusterDetailRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('kubernetesClustersUpdate', 'id', id)
-            // verify required parameter 'clusterDetail' is not null or undefined
-            assertParamExists('kubernetesClustersUpdate', 'clusterDetail', clusterDetail)
+            // verify required parameter 'clusterDetailRequest' is not null or undefined
+            assertParamExists('kubernetesClustersUpdate', 'clusterDetailRequest', clusterDetailRequest)
             const localVarPath = `/api/kubernetes/clusters/{id}/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -22837,7 +24159,7 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(clusterDetail, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(clusterDetailRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22881,6 +24203,47 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(featureUpgradeRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Inspect or perform the load-balancer upgrade the server computes for this cluster. The caller never selects a level.
+         * @param {string} id 
+         * @param {LBUpgradeRequest} [lBUpgradeRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersUpgradeLbCreate: async (id: string, lBUpgradeRequest?: LBUpgradeRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersUpgradeLbCreate', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{id}/upgrade-lb/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(lBUpgradeRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22935,12 +24298,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
         },
         /**
          * Create new k8s cluster
-         * @param {ClusterAdd} clusterAdd 
+         * @param {ClusterAddRequest} clusterAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersCreate(clusterAdd: ClusterAdd, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterAddResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersCreate(clusterAdd, options);
+        async kubernetesClustersCreate(clusterAddRequest: ClusterAddRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterAddResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersCreate(clusterAddRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -22983,14 +24346,64 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Create new HTTPRoute
-         * @param {number} clusterId 
-         * @param {HTTPRoute} hTTPRoute 
+         * Enable or disable WireGuard encryption for cluster traffic.
+         * @param {string} id 
+         * @param {ClusterEncryptionRequest} clusterEncryptionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersHttproutesCreate(clusterId: number, hTTPRoute: HTTPRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HTTPRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersHttproutesCreate(clusterId, hTTPRoute, options);
+        async kubernetesClustersEncryptionCreate(id: string, clusterEncryptionRequest: ClusterEncryptionRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterEncryptionOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersEncryptionCreate(id, clusterEncryptionRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersEncryptionCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Re-count the workloads that still predate the encryption change.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersEncryptionRecheckCreate(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterEncryption>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersEncryptionRecheckCreate(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersEncryptionRecheckCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Staff only: resolve a cluster whose encryption state is unknown.
+         * @param {string} id 
+         * @param {ClusterEncryptionReconcileRequest} clusterEncryptionReconcileRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersEncryptionReconcileCreate(id: string, clusterEncryptionReconcileRequest: ClusterEncryptionReconcileRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterEncryptionOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersEncryptionReconcileCreate(id, clusterEncryptionReconcileRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersEncryptionReconcileCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Read the cluster\'s encryption state, restart gate and per-node verification evidence.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersEncryptionRetrieve(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterEncryption>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersEncryptionRetrieve(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersEncryptionRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Create new HTTPRoute
+         * @param {number} clusterId 
+         * @param {HTTPRouteRequest} hTTPRouteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersHttproutesCreate(clusterId: number, hTTPRouteRequest: HTTPRouteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HTTPRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersHttproutesCreate(clusterId, hTTPRouteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersHttproutesCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23025,12 +24438,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Partially update HTTPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedHTTPRoute} [patchedHTTPRoute] 
+         * @param {PatchedHTTPRouteRequest} [patchedHTTPRouteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersHttproutesPartialUpdate(clusterId: number, id: string, patchedHTTPRoute?: PatchedHTTPRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HTTPRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersHttproutesPartialUpdate(clusterId, id, patchedHTTPRoute, options);
+        async kubernetesClustersHttproutesPartialUpdate(clusterId: number, id: string, patchedHTTPRouteRequest?: PatchedHTTPRouteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HTTPRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersHttproutesPartialUpdate(clusterId, id, patchedHTTPRouteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersHttproutesPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23052,12 +24465,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Update HTTPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {HTTPRoute} hTTPRoute 
+         * @param {HTTPRouteRequest} hTTPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersHttproutesUpdate(clusterId: number, id: string, hTTPRoute: HTTPRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HTTPRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersHttproutesUpdate(clusterId, id, hTTPRoute, options);
+        async kubernetesClustersHttproutesUpdate(clusterId: number, id: string, hTTPRouteRequest: HTTPRouteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HTTPRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersHttproutesUpdate(clusterId, id, hTTPRouteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersHttproutesUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23101,12 +24514,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
-         * @param {LBFirewallRule} [lBFirewallRule] 
+         * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersLbFirewallCreate(clusterId: number, lBFirewallRule?: LBFirewallRule, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LBFirewallRule>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersLbFirewallCreate(clusterId, lBFirewallRule, options);
+        async kubernetesClustersLbFirewallCreate(clusterId: number, lBFirewallRuleRequest?: LBFirewallRuleRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LBFirewallRule>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersLbFirewallCreate(clusterId, lBFirewallRuleRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersLbFirewallCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23141,12 +24554,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedLBFirewallRule} [patchedLBFirewallRule] 
+         * @param {PatchedLBFirewallRuleRequest} [patchedLBFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersLbFirewallPartialUpdate(clusterId: number, id: string, patchedLBFirewallRule?: PatchedLBFirewallRule, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LBFirewallRule>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersLbFirewallPartialUpdate(clusterId, id, patchedLBFirewallRule, options);
+        async kubernetesClustersLbFirewallPartialUpdate(clusterId: number, id: string, patchedLBFirewallRuleRequest?: PatchedLBFirewallRuleRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LBFirewallRule>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersLbFirewallPartialUpdate(clusterId, id, patchedLBFirewallRuleRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersLbFirewallPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23168,12 +24581,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {LBFirewallRule} [lBFirewallRule] 
+         * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersLbFirewallUpdate(clusterId: number, id: string, lBFirewallRule?: LBFirewallRule, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LBFirewallRule>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersLbFirewallUpdate(clusterId, id, lBFirewallRule, options);
+        async kubernetesClustersLbFirewallUpdate(clusterId: number, id: string, lBFirewallRuleRequest?: LBFirewallRuleRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LBFirewallRule>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersLbFirewallUpdate(clusterId, id, lBFirewallRuleRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersLbFirewallUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23191,27 +24604,132 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * Uncordon the node and abort a blocked operation.
+         * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedClusterDetail} [patchedClusterDetail] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersPartialUpdate(id: string, patchedClusterDetail?: PatchedClusterDetail, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPartialUpdate(id, patchedClusterDetail, options);
+        async kubernetesClustersNodeOperationsCancelCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NodeOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersNodeOperationsCancelCreate(clusterId, id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersNodeOperationsCancelCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
+         * @param {number} clusterId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersNodeOperationsList(clusterId: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedNodeOperationList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersNodeOperationsList(clusterId, page, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersNodeOperationsList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Staff-only resume of an operation waiting for support.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersNodeOperationsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NodeOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersNodeOperationsResumeCreate(clusterId, id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersNodeOperationsResumeCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersNodeOperationsRetrieve(clusterId: number, id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NodeOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersNodeOperationsRetrieve(clusterId, id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersNodeOperationsRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retry a blocked operation with the overrides that answer its blocker.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {NodeOperationRetryRequest} [nodeOperationRetryRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersNodeOperationsRetryCreate(clusterId: number, id: string, nodeOperationRetryRequest?: NodeOperationRetryRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NodeOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersNodeOperationsRetryCreate(clusterId, id, nodeOperationRetryRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersNodeOperationsRetryCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * @param {string} id 
+         * @param {PatchedClusterDetailRequest} [patchedClusterDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersPartialUpdate(id: string, patchedClusterDetailRequest?: PatchedClusterDetailRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPartialUpdate(id, patchedClusterDetailRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * A downsize or pool deletion, its milestones, and its staff resume.  The list route is not in the spec\'s table and is here anyway: with retrieve as the only route, a customer whose downsize parked has no way to learn the journal id, and the panel\'s poll would be the sole path to a published REST resource.
          * @param {number} clusterId 
-         * @param {K8sPortForward} k8sPortForward 
+         * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersPortForwardsCreate(clusterId: number, k8sPortForward: K8sPortForward, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<K8sPortForward>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPortForwardsCreate(clusterId, k8sPortForward, options);
+        async kubernetesClustersPoolRemovalJournalsList(clusterId: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedPoolRemovalJournalList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPoolRemovalJournalsList(clusterId, page, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersPoolRemovalJournalsList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Staff-only resume of a pool removal waiting for support.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PoolRemovalJournal>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId, id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersPoolRemovalJournalsResumeCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A downsize or pool deletion, its milestones, and its staff resume.  The list route is not in the spec\'s table and is here anyway: with retrieve as the only route, a customer whose downsize parked has no way to learn the journal id, and the panel\'s poll would be the sole path to a published REST resource.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersPoolRemovalJournalsRetrieve(clusterId: number, id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PoolRemovalJournal>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPoolRemovalJournalsRetrieve(clusterId, id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersPoolRemovalJournalsRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * @param {number} clusterId 
+         * @param {K8sPortForwardRequest} k8sPortForwardRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersPortForwardsCreate(clusterId: number, k8sPortForwardRequest: K8sPortForwardRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<K8sPortForward>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPortForwardsCreate(clusterId, k8sPortForwardRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersPortForwardsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23246,12 +24764,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedK8sPortForward} [patchedK8sPortForward] 
+         * @param {PatchedK8sPortForwardRequest} [patchedK8sPortForwardRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersPortForwardsPartialUpdate(clusterId: number, id: string, patchedK8sPortForward?: PatchedK8sPortForward, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<K8sPortForward>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPortForwardsPartialUpdate(clusterId, id, patchedK8sPortForward, options);
+        async kubernetesClustersPortForwardsPartialUpdate(clusterId: number, id: string, patchedK8sPortForwardRequest?: PatchedK8sPortForwardRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<K8sPortForward>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPortForwardsPartialUpdate(clusterId, id, patchedK8sPortForwardRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersPortForwardsPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23273,12 +24791,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {K8sPortForward} k8sPortForward 
+         * @param {K8sPortForwardRequest} k8sPortForwardRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersPortForwardsUpdate(clusterId: number, id: string, k8sPortForward: K8sPortForward, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<K8sPortForward>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPortForwardsUpdate(clusterId, id, k8sPortForward, options);
+        async kubernetesClustersPortForwardsUpdate(clusterId: number, id: string, k8sPortForwardRequest: K8sPortForwardRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<K8sPortForward>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPortForwardsUpdate(clusterId, id, k8sPortForwardRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersPortForwardsUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23286,12 +24804,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
         /**
          * Create new resource pool
          * @param {number} clusterId 
-         * @param {ResourcePoolAdd} resourcePoolAdd 
+         * @param {ResourcePoolAddRequest} resourcePoolAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersResourcePoolsCreate(clusterId: number, resourcePoolAdd: ResourcePoolAdd, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ResourcePoolAddResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsCreate(clusterId, resourcePoolAdd, options);
+        async kubernetesClustersResourcePoolsCreate(clusterId: number, resourcePoolAddRequest: ResourcePoolAddRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ResourcePoolAddResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsCreate(clusterId, resourcePoolAddRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersResourcePoolsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23323,14 +24841,14 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * Start a safe delete of one worker node.
          * @param {number} clusterId 
          * @param {string} id 
          * @param {number} poolId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersResourcePoolsNodesDestroy(clusterId: number, id: string, poolId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async kubernetesClustersResourcePoolsNodesDestroy(clusterId: number, id: string, poolId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NodeOperation>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsNodesDestroy(clusterId, id, poolId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersResourcePoolsNodesDestroy']?.[localVarOperationServerIndex]?.url;
@@ -23362,6 +24880,21 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsNodesMetricsRetrieve(clusterId, id, poolId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersResourcePoolsNodesMetricsRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Restart one worker node, draining it first.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {number} poolId 
+         * @param {NodeOperationRebootRequest} [nodeOperationRebootRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersResourcePoolsNodesRebootCreate(clusterId: number, id: string, poolId: number, nodeOperationRebootRequest?: NodeOperationRebootRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NodeOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsNodesRebootCreate(clusterId, id, poolId, nodeOperationRebootRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersResourcePoolsNodesRebootCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -23397,12 +24930,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedResourcePool} [patchedResourcePool] 
+         * @param {PatchedResourcePoolRequest} [patchedResourcePoolRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersResourcePoolsPartialUpdate(clusterId: number, id: string, patchedResourcePool?: PatchedResourcePool, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ResourcePool>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsPartialUpdate(clusterId, id, patchedResourcePool, options);
+        async kubernetesClustersResourcePoolsPartialUpdate(clusterId: number, id: string, patchedResourcePoolRequest?: PatchedResourcePoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ResourcePool>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsPartialUpdate(clusterId, id, patchedResourcePoolRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersResourcePoolsPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23424,12 +24957,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {ResourcePool} [resourcePool] 
+         * @param {ResourcePoolRequest} [resourcePoolRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersResourcePoolsUpdate(clusterId: number, id: string, resourcePool?: ResourcePool, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ResourcePool>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsUpdate(clusterId, id, resourcePool, options);
+        async kubernetesClustersResourcePoolsUpdate(clusterId: number, id: string, resourcePoolRequest?: ResourcePoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ResourcePool>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsUpdate(clusterId, id, resourcePoolRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersResourcePoolsUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23461,12 +24994,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
         /**
          * Create new TCPRoute
          * @param {number} clusterId 
-         * @param {TCPRoute} tCPRoute 
+         * @param {TCPRouteRequest} tCPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersTcproutesCreate(clusterId: number, tCPRoute: TCPRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TCPRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersTcproutesCreate(clusterId, tCPRoute, options);
+        async kubernetesClustersTcproutesCreate(clusterId: number, tCPRouteRequest: TCPRouteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TCPRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersTcproutesCreate(clusterId, tCPRouteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersTcproutesCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23501,12 +25034,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Partially update TCPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedTCPRoute} [patchedTCPRoute] 
+         * @param {PatchedTCPRouteRequest} [patchedTCPRouteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersTcproutesPartialUpdate(clusterId: number, id: string, patchedTCPRoute?: PatchedTCPRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TCPRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersTcproutesPartialUpdate(clusterId, id, patchedTCPRoute, options);
+        async kubernetesClustersTcproutesPartialUpdate(clusterId: number, id: string, patchedTCPRouteRequest?: PatchedTCPRouteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TCPRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersTcproutesPartialUpdate(clusterId, id, patchedTCPRouteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersTcproutesPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23528,12 +25061,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Update TCPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {TCPRoute} tCPRoute 
+         * @param {TCPRouteRequest} tCPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersTcproutesUpdate(clusterId: number, id: string, tCPRoute: TCPRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TCPRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersTcproutesUpdate(clusterId, id, tCPRoute, options);
+        async kubernetesClustersTcproutesUpdate(clusterId: number, id: string, tCPRouteRequest: TCPRouteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TCPRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersTcproutesUpdate(clusterId, id, tCPRouteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersTcproutesUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23553,12 +25086,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
         /**
          * Create new UDPRoute
          * @param {number} clusterId 
-         * @param {UDPRoute} uDPRoute 
+         * @param {UDPRouteRequest} uDPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersUdproutesCreate(clusterId: number, uDPRoute: UDPRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UDPRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersUdproutesCreate(clusterId, uDPRoute, options);
+        async kubernetesClustersUdproutesCreate(clusterId: number, uDPRouteRequest: UDPRouteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UDPRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersUdproutesCreate(clusterId, uDPRouteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersUdproutesCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23593,12 +25126,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Partially update UDPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedUDPRoute} [patchedUDPRoute] 
+         * @param {PatchedUDPRouteRequest} [patchedUDPRouteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersUdproutesPartialUpdate(clusterId: number, id: string, patchedUDPRoute?: PatchedUDPRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UDPRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersUdproutesPartialUpdate(clusterId, id, patchedUDPRoute, options);
+        async kubernetesClustersUdproutesPartialUpdate(clusterId: number, id: string, patchedUDPRouteRequest?: PatchedUDPRouteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UDPRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersUdproutesPartialUpdate(clusterId, id, patchedUDPRouteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersUdproutesPartialUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23620,12 +25153,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * Update UDPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {UDPRoute} uDPRoute 
+         * @param {UDPRouteRequest} uDPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersUdproutesUpdate(clusterId: number, id: string, uDPRoute: UDPRoute, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UDPRoute>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersUdproutesUpdate(clusterId, id, uDPRoute, options);
+        async kubernetesClustersUdproutesUpdate(clusterId: number, id: string, uDPRouteRequest: UDPRouteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UDPRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersUdproutesUpdate(clusterId, id, uDPRouteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersUdproutesUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23633,12 +25166,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} id 
-         * @param {ClusterDetail} clusterDetail 
+         * @param {ClusterDetailRequest} clusterDetailRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersUpdate(id: string, clusterDetail: ClusterDetail, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersUpdate(id, clusterDetail, options);
+        async kubernetesClustersUpdate(id: string, clusterDetailRequest: ClusterDetailRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersUpdate(id, clusterDetailRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersUpdate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -23654,6 +25187,19 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersUpgradeFeatureCreate(id, featureUpgradeRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersUpgradeFeatureCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Inspect or perform the load-balancer upgrade the server computes for this cluster. The caller never selects a level.
+         * @param {string} id 
+         * @param {LBUpgradeRequest} [lBUpgradeRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersUpgradeLbCreate(id: string, lBUpgradeRequest?: LBUpgradeRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LBUpgradePlanResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersUpgradeLbCreate(id, lBUpgradeRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersUpgradeLbCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -23695,12 +25241,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
         },
         /**
          * Create new k8s cluster
-         * @param {ClusterAdd} clusterAdd 
+         * @param {ClusterAddRequest} clusterAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersCreate(clusterAdd: ClusterAdd, options?: RawAxiosRequestConfig): AxiosPromise<ClusterAddResponse> {
-            return localVarFp.kubernetesClustersCreate(clusterAdd, options).then((request) => request(axios, basePath));
+        kubernetesClustersCreate(clusterAddRequest: ClusterAddRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterAddResponse> {
+            return localVarFp.kubernetesClustersCreate(clusterAddRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -23731,14 +25277,52 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
             return localVarFp.kubernetesClustersEligibleVmsRetrieve(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * Create new HTTPRoute
-         * @param {number} clusterId 
-         * @param {HTTPRoute} hTTPRoute 
+         * Enable or disable WireGuard encryption for cluster traffic.
+         * @param {string} id 
+         * @param {ClusterEncryptionRequest} clusterEncryptionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersHttproutesCreate(clusterId: number, hTTPRoute: HTTPRoute, options?: RawAxiosRequestConfig): AxiosPromise<HTTPRoute> {
-            return localVarFp.kubernetesClustersHttproutesCreate(clusterId, hTTPRoute, options).then((request) => request(axios, basePath));
+        kubernetesClustersEncryptionCreate(id: string, clusterEncryptionRequest: ClusterEncryptionRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterEncryptionOperation> {
+            return localVarFp.kubernetesClustersEncryptionCreate(id, clusterEncryptionRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Re-count the workloads that still predate the encryption change.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersEncryptionRecheckCreate(id: string, options?: RawAxiosRequestConfig): AxiosPromise<ClusterEncryption> {
+            return localVarFp.kubernetesClustersEncryptionRecheckCreate(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Staff only: resolve a cluster whose encryption state is unknown.
+         * @param {string} id 
+         * @param {ClusterEncryptionReconcileRequest} clusterEncryptionReconcileRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersEncryptionReconcileCreate(id: string, clusterEncryptionReconcileRequest: ClusterEncryptionReconcileRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterEncryptionOperation> {
+            return localVarFp.kubernetesClustersEncryptionReconcileCreate(id, clusterEncryptionReconcileRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Read the cluster\'s encryption state, restart gate and per-node verification evidence.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersEncryptionRetrieve(id: string, options?: RawAxiosRequestConfig): AxiosPromise<ClusterEncryption> {
+            return localVarFp.kubernetesClustersEncryptionRetrieve(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Create new HTTPRoute
+         * @param {number} clusterId 
+         * @param {HTTPRouteRequest} hTTPRouteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersHttproutesCreate(clusterId: number, hTTPRouteRequest: HTTPRouteRequest, options?: RawAxiosRequestConfig): AxiosPromise<HTTPRoute> {
+            return localVarFp.kubernetesClustersHttproutesCreate(clusterId, hTTPRouteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * ViewSet for managing HTTPRoute resources.  HTTPRoutes expose HTTP/HTTPS services through the Gateway with optional automatic TLS certificate issuance.
@@ -23764,12 +25348,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Partially update HTTPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedHTTPRoute} [patchedHTTPRoute] 
+         * @param {PatchedHTTPRouteRequest} [patchedHTTPRouteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersHttproutesPartialUpdate(clusterId: number, id: string, patchedHTTPRoute?: PatchedHTTPRoute, options?: RawAxiosRequestConfig): AxiosPromise<HTTPRoute> {
-            return localVarFp.kubernetesClustersHttproutesPartialUpdate(clusterId, id, patchedHTTPRoute, options).then((request) => request(axios, basePath));
+        kubernetesClustersHttproutesPartialUpdate(clusterId: number, id: string, patchedHTTPRouteRequest?: PatchedHTTPRouteRequest, options?: RawAxiosRequestConfig): AxiosPromise<HTTPRoute> {
+            return localVarFp.kubernetesClustersHttproutesPartialUpdate(clusterId, id, patchedHTTPRouteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * ViewSet for managing HTTPRoute resources.  HTTPRoutes expose HTTP/HTTPS services through the Gateway with optional automatic TLS certificate issuance.
@@ -23785,12 +25369,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Update HTTPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {HTTPRoute} hTTPRoute 
+         * @param {HTTPRouteRequest} hTTPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersHttproutesUpdate(clusterId: number, id: string, hTTPRoute: HTTPRoute, options?: RawAxiosRequestConfig): AxiosPromise<HTTPRoute> {
-            return localVarFp.kubernetesClustersHttproutesUpdate(clusterId, id, hTTPRoute, options).then((request) => request(axios, basePath));
+        kubernetesClustersHttproutesUpdate(clusterId: number, id: string, hTTPRouteRequest: HTTPRouteRequest, options?: RawAxiosRequestConfig): AxiosPromise<HTTPRoute> {
+            return localVarFp.kubernetesClustersHttproutesUpdate(clusterId, id, hTTPRouteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Upgrade kubernetes to the next available version.
@@ -23822,12 +25406,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
-         * @param {LBFirewallRule} [lBFirewallRule] 
+         * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersLbFirewallCreate(clusterId: number, lBFirewallRule?: LBFirewallRule, options?: RawAxiosRequestConfig): AxiosPromise<LBFirewallRule> {
-            return localVarFp.kubernetesClustersLbFirewallCreate(clusterId, lBFirewallRule, options).then((request) => request(axios, basePath));
+        kubernetesClustersLbFirewallCreate(clusterId: number, lBFirewallRuleRequest?: LBFirewallRuleRequest, options?: RawAxiosRequestConfig): AxiosPromise<LBFirewallRule> {
+            return localVarFp.kubernetesClustersLbFirewallCreate(clusterId, lBFirewallRuleRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -23853,12 +25437,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedLBFirewallRule} [patchedLBFirewallRule] 
+         * @param {PatchedLBFirewallRuleRequest} [patchedLBFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersLbFirewallPartialUpdate(clusterId: number, id: string, patchedLBFirewallRule?: PatchedLBFirewallRule, options?: RawAxiosRequestConfig): AxiosPromise<LBFirewallRule> {
-            return localVarFp.kubernetesClustersLbFirewallPartialUpdate(clusterId, id, patchedLBFirewallRule, options).then((request) => request(axios, basePath));
+        kubernetesClustersLbFirewallPartialUpdate(clusterId: number, id: string, patchedLBFirewallRuleRequest?: PatchedLBFirewallRuleRequest, options?: RawAxiosRequestConfig): AxiosPromise<LBFirewallRule> {
+            return localVarFp.kubernetesClustersLbFirewallPartialUpdate(clusterId, id, patchedLBFirewallRuleRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -23874,12 +25458,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {LBFirewallRule} [lBFirewallRule] 
+         * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersLbFirewallUpdate(clusterId: number, id: string, lBFirewallRule?: LBFirewallRule, options?: RawAxiosRequestConfig): AxiosPromise<LBFirewallRule> {
-            return localVarFp.kubernetesClustersLbFirewallUpdate(clusterId, id, lBFirewallRule, options).then((request) => request(axios, basePath));
+        kubernetesClustersLbFirewallUpdate(clusterId: number, id: string, lBFirewallRuleRequest?: LBFirewallRuleRequest, options?: RawAxiosRequestConfig): AxiosPromise<LBFirewallRule> {
+            return localVarFp.kubernetesClustersLbFirewallUpdate(clusterId, id, lBFirewallRuleRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -23891,24 +25475,105 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
             return localVarFp.kubernetesClustersList(page, options).then((request) => request(axios, basePath));
         },
         /**
-         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * Uncordon the node and abort a blocked operation.
+         * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedClusterDetail} [patchedClusterDetail] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersPartialUpdate(id: string, patchedClusterDetail?: PatchedClusterDetail, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
-            return localVarFp.kubernetesClustersPartialUpdate(id, patchedClusterDetail, options).then((request) => request(axios, basePath));
+        kubernetesClustersNodeOperationsCancelCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig): AxiosPromise<NodeOperation> {
+            return localVarFp.kubernetesClustersNodeOperationsCancelCreate(clusterId, id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
+         * @param {number} clusterId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersNodeOperationsList(clusterId: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedNodeOperationList> {
+            return localVarFp.kubernetesClustersNodeOperationsList(clusterId, page, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Staff-only resume of an operation waiting for support.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersNodeOperationsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig): AxiosPromise<NodeOperation> {
+            return localVarFp.kubernetesClustersNodeOperationsResumeCreate(clusterId, id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersNodeOperationsRetrieve(clusterId: number, id: string, options?: RawAxiosRequestConfig): AxiosPromise<NodeOperation> {
+            return localVarFp.kubernetesClustersNodeOperationsRetrieve(clusterId, id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retry a blocked operation with the overrides that answer its blocker.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {NodeOperationRetryRequest} [nodeOperationRetryRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersNodeOperationsRetryCreate(clusterId: number, id: string, nodeOperationRetryRequest?: NodeOperationRetryRequest, options?: RawAxiosRequestConfig): AxiosPromise<NodeOperation> {
+            return localVarFp.kubernetesClustersNodeOperationsRetryCreate(clusterId, id, nodeOperationRetryRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * @param {string} id 
+         * @param {PatchedClusterDetailRequest} [patchedClusterDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersPartialUpdate(id: string, patchedClusterDetailRequest?: PatchedClusterDetailRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
+            return localVarFp.kubernetesClustersPartialUpdate(id, patchedClusterDetailRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A downsize or pool deletion, its milestones, and its staff resume.  The list route is not in the spec\'s table and is here anyway: with retrieve as the only route, a customer whose downsize parked has no way to learn the journal id, and the panel\'s poll would be the sole path to a published REST resource.
+         * @param {number} clusterId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersPoolRemovalJournalsList(clusterId: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedPoolRemovalJournalList> {
+            return localVarFp.kubernetesClustersPoolRemovalJournalsList(clusterId, page, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Staff-only resume of a pool removal waiting for support.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig): AxiosPromise<PoolRemovalJournal> {
+            return localVarFp.kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId, id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A downsize or pool deletion, its milestones, and its staff resume.  The list route is not in the spec\'s table and is here anyway: with retrieve as the only route, a customer whose downsize parked has no way to learn the journal id, and the panel\'s poll would be the sole path to a published REST resource.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersPoolRemovalJournalsRetrieve(clusterId: number, id: string, options?: RawAxiosRequestConfig): AxiosPromise<PoolRemovalJournal> {
+            return localVarFp.kubernetesClustersPoolRemovalJournalsRetrieve(clusterId, id, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
-         * @param {K8sPortForward} k8sPortForward 
+         * @param {K8sPortForwardRequest} k8sPortForwardRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersPortForwardsCreate(clusterId: number, k8sPortForward: K8sPortForward, options?: RawAxiosRequestConfig): AxiosPromise<K8sPortForward> {
-            return localVarFp.kubernetesClustersPortForwardsCreate(clusterId, k8sPortForward, options).then((request) => request(axios, basePath));
+        kubernetesClustersPortForwardsCreate(clusterId: number, k8sPortForwardRequest: K8sPortForwardRequest, options?: RawAxiosRequestConfig): AxiosPromise<K8sPortForward> {
+            return localVarFp.kubernetesClustersPortForwardsCreate(clusterId, k8sPortForwardRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -23934,12 +25599,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedK8sPortForward} [patchedK8sPortForward] 
+         * @param {PatchedK8sPortForwardRequest} [patchedK8sPortForwardRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersPortForwardsPartialUpdate(clusterId: number, id: string, patchedK8sPortForward?: PatchedK8sPortForward, options?: RawAxiosRequestConfig): AxiosPromise<K8sPortForward> {
-            return localVarFp.kubernetesClustersPortForwardsPartialUpdate(clusterId, id, patchedK8sPortForward, options).then((request) => request(axios, basePath));
+        kubernetesClustersPortForwardsPartialUpdate(clusterId: number, id: string, patchedK8sPortForwardRequest?: PatchedK8sPortForwardRequest, options?: RawAxiosRequestConfig): AxiosPromise<K8sPortForward> {
+            return localVarFp.kubernetesClustersPortForwardsPartialUpdate(clusterId, id, patchedK8sPortForwardRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -23955,22 +25620,22 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {K8sPortForward} k8sPortForward 
+         * @param {K8sPortForwardRequest} k8sPortForwardRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersPortForwardsUpdate(clusterId: number, id: string, k8sPortForward: K8sPortForward, options?: RawAxiosRequestConfig): AxiosPromise<K8sPortForward> {
-            return localVarFp.kubernetesClustersPortForwardsUpdate(clusterId, id, k8sPortForward, options).then((request) => request(axios, basePath));
+        kubernetesClustersPortForwardsUpdate(clusterId: number, id: string, k8sPortForwardRequest: K8sPortForwardRequest, options?: RawAxiosRequestConfig): AxiosPromise<K8sPortForward> {
+            return localVarFp.kubernetesClustersPortForwardsUpdate(clusterId, id, k8sPortForwardRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Create new resource pool
          * @param {number} clusterId 
-         * @param {ResourcePoolAdd} resourcePoolAdd 
+         * @param {ResourcePoolAddRequest} resourcePoolAddRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersResourcePoolsCreate(clusterId: number, resourcePoolAdd: ResourcePoolAdd, options?: RawAxiosRequestConfig): AxiosPromise<ResourcePoolAddResponse> {
-            return localVarFp.kubernetesClustersResourcePoolsCreate(clusterId, resourcePoolAdd, options).then((request) => request(axios, basePath));
+        kubernetesClustersResourcePoolsCreate(clusterId: number, resourcePoolAddRequest: ResourcePoolAddRequest, options?: RawAxiosRequestConfig): AxiosPromise<ResourcePoolAddResponse> {
+            return localVarFp.kubernetesClustersResourcePoolsCreate(clusterId, resourcePoolAddRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -23993,14 +25658,14 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
             return localVarFp.kubernetesClustersResourcePoolsList(clusterId, page, options).then((request) => request(axios, basePath));
         },
         /**
-         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * Start a safe delete of one worker node.
          * @param {number} clusterId 
          * @param {string} id 
          * @param {number} poolId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersResourcePoolsNodesDestroy(clusterId: number, id: string, poolId: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        kubernetesClustersResourcePoolsNodesDestroy(clusterId: number, id: string, poolId: number, options?: RawAxiosRequestConfig): AxiosPromise<NodeOperation> {
             return localVarFp.kubernetesClustersResourcePoolsNodesDestroy(clusterId, id, poolId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -24024,6 +25689,18 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          */
         kubernetesClustersResourcePoolsNodesMetricsRetrieve(clusterId: number, id: string, poolId: number, options?: RawAxiosRequestConfig): AxiosPromise<NodeMetricsResponse> {
             return localVarFp.kubernetesClustersResourcePoolsNodesMetricsRetrieve(clusterId, id, poolId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Restart one worker node, draining it first.
+         * @param {number} clusterId 
+         * @param {string} id 
+         * @param {number} poolId 
+         * @param {NodeOperationRebootRequest} [nodeOperationRebootRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersResourcePoolsNodesRebootCreate(clusterId: number, id: string, poolId: number, nodeOperationRebootRequest?: NodeOperationRebootRequest, options?: RawAxiosRequestConfig): AxiosPromise<NodeOperation> {
+            return localVarFp.kubernetesClustersResourcePoolsNodesRebootCreate(clusterId, id, poolId, nodeOperationRebootRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -24052,12 +25729,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedResourcePool} [patchedResourcePool] 
+         * @param {PatchedResourcePoolRequest} [patchedResourcePoolRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersResourcePoolsPartialUpdate(clusterId: number, id: string, patchedResourcePool?: PatchedResourcePool, options?: RawAxiosRequestConfig): AxiosPromise<ResourcePool> {
-            return localVarFp.kubernetesClustersResourcePoolsPartialUpdate(clusterId, id, patchedResourcePool, options).then((request) => request(axios, basePath));
+        kubernetesClustersResourcePoolsPartialUpdate(clusterId: number, id: string, patchedResourcePoolRequest?: PatchedResourcePoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<ResourcePool> {
+            return localVarFp.kubernetesClustersResourcePoolsPartialUpdate(clusterId, id, patchedResourcePoolRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -24073,12 +25750,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {ResourcePool} [resourcePool] 
+         * @param {ResourcePoolRequest} [resourcePoolRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersResourcePoolsUpdate(clusterId: number, id: string, resourcePool?: ResourcePool, options?: RawAxiosRequestConfig): AxiosPromise<ResourcePool> {
-            return localVarFp.kubernetesClustersResourcePoolsUpdate(clusterId, id, resourcePool, options).then((request) => request(axios, basePath));
+        kubernetesClustersResourcePoolsUpdate(clusterId: number, id: string, resourcePoolRequest?: ResourcePoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<ResourcePool> {
+            return localVarFp.kubernetesClustersResourcePoolsUpdate(clusterId, id, resourcePoolRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -24101,12 +25778,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
         /**
          * Create new TCPRoute
          * @param {number} clusterId 
-         * @param {TCPRoute} tCPRoute 
+         * @param {TCPRouteRequest} tCPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersTcproutesCreate(clusterId: number, tCPRoute: TCPRoute, options?: RawAxiosRequestConfig): AxiosPromise<TCPRoute> {
-            return localVarFp.kubernetesClustersTcproutesCreate(clusterId, tCPRoute, options).then((request) => request(axios, basePath));
+        kubernetesClustersTcproutesCreate(clusterId: number, tCPRouteRequest: TCPRouteRequest, options?: RawAxiosRequestConfig): AxiosPromise<TCPRoute> {
+            return localVarFp.kubernetesClustersTcproutesCreate(clusterId, tCPRouteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * ViewSet for managing TCPRoute resources.  TCPRoutes expose TCP services through the Gateway on specific external ports. Reserved ports (22, 6443, 50000, 50001) cannot be exposed.
@@ -24132,12 +25809,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Partially update TCPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedTCPRoute} [patchedTCPRoute] 
+         * @param {PatchedTCPRouteRequest} [patchedTCPRouteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersTcproutesPartialUpdate(clusterId: number, id: string, patchedTCPRoute?: PatchedTCPRoute, options?: RawAxiosRequestConfig): AxiosPromise<TCPRoute> {
-            return localVarFp.kubernetesClustersTcproutesPartialUpdate(clusterId, id, patchedTCPRoute, options).then((request) => request(axios, basePath));
+        kubernetesClustersTcproutesPartialUpdate(clusterId: number, id: string, patchedTCPRouteRequest?: PatchedTCPRouteRequest, options?: RawAxiosRequestConfig): AxiosPromise<TCPRoute> {
+            return localVarFp.kubernetesClustersTcproutesPartialUpdate(clusterId, id, patchedTCPRouteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * ViewSet for managing TCPRoute resources.  TCPRoutes expose TCP services through the Gateway on specific external ports. Reserved ports (22, 6443, 50000, 50001) cannot be exposed.
@@ -24153,12 +25830,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Update TCPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {TCPRoute} tCPRoute 
+         * @param {TCPRouteRequest} tCPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersTcproutesUpdate(clusterId: number, id: string, tCPRoute: TCPRoute, options?: RawAxiosRequestConfig): AxiosPromise<TCPRoute> {
-            return localVarFp.kubernetesClustersTcproutesUpdate(clusterId, id, tCPRoute, options).then((request) => request(axios, basePath));
+        kubernetesClustersTcproutesUpdate(clusterId: number, id: string, tCPRouteRequest: TCPRouteRequest, options?: RawAxiosRequestConfig): AxiosPromise<TCPRoute> {
+            return localVarFp.kubernetesClustersTcproutesUpdate(clusterId, id, tCPRouteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Toggle cloud VM access for this cluster.
@@ -24172,12 +25849,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
         /**
          * Create new UDPRoute
          * @param {number} clusterId 
-         * @param {UDPRoute} uDPRoute 
+         * @param {UDPRouteRequest} uDPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersUdproutesCreate(clusterId: number, uDPRoute: UDPRoute, options?: RawAxiosRequestConfig): AxiosPromise<UDPRoute> {
-            return localVarFp.kubernetesClustersUdproutesCreate(clusterId, uDPRoute, options).then((request) => request(axios, basePath));
+        kubernetesClustersUdproutesCreate(clusterId: number, uDPRouteRequest: UDPRouteRequest, options?: RawAxiosRequestConfig): AxiosPromise<UDPRoute> {
+            return localVarFp.kubernetesClustersUdproutesCreate(clusterId, uDPRouteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * ViewSet for managing UDPRoute resources.  UDPRoutes expose UDP services through the Gateway on specific external ports.
@@ -24203,12 +25880,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Partially update UDPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {PatchedUDPRoute} [patchedUDPRoute] 
+         * @param {PatchedUDPRouteRequest} [patchedUDPRouteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersUdproutesPartialUpdate(clusterId: number, id: string, patchedUDPRoute?: PatchedUDPRoute, options?: RawAxiosRequestConfig): AxiosPromise<UDPRoute> {
-            return localVarFp.kubernetesClustersUdproutesPartialUpdate(clusterId, id, patchedUDPRoute, options).then((request) => request(axios, basePath));
+        kubernetesClustersUdproutesPartialUpdate(clusterId: number, id: string, patchedUDPRouteRequest?: PatchedUDPRouteRequest, options?: RawAxiosRequestConfig): AxiosPromise<UDPRoute> {
+            return localVarFp.kubernetesClustersUdproutesPartialUpdate(clusterId, id, patchedUDPRouteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * ViewSet for managing UDPRoute resources.  UDPRoutes expose UDP services through the Gateway on specific external ports.
@@ -24224,22 +25901,22 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * Update UDPRoute
          * @param {number} clusterId 
          * @param {string} id 
-         * @param {UDPRoute} uDPRoute 
+         * @param {UDPRouteRequest} uDPRouteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersUdproutesUpdate(clusterId: number, id: string, uDPRoute: UDPRoute, options?: RawAxiosRequestConfig): AxiosPromise<UDPRoute> {
-            return localVarFp.kubernetesClustersUdproutesUpdate(clusterId, id, uDPRoute, options).then((request) => request(axios, basePath));
+        kubernetesClustersUdproutesUpdate(clusterId: number, id: string, uDPRouteRequest: UDPRouteRequest, options?: RawAxiosRequestConfig): AxiosPromise<UDPRoute> {
+            return localVarFp.kubernetesClustersUdproutesUpdate(clusterId, id, uDPRouteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} id 
-         * @param {ClusterDetail} clusterDetail 
+         * @param {ClusterDetailRequest} clusterDetailRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersUpdate(id: string, clusterDetail: ClusterDetail, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
-            return localVarFp.kubernetesClustersUpdate(id, clusterDetail, options).then((request) => request(axios, basePath));
+        kubernetesClustersUpdate(id: string, clusterDetailRequest: ClusterDetailRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
+            return localVarFp.kubernetesClustersUpdate(id, clusterDetailRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Upgrade a cluster feature to the latest compatible version.
@@ -24250,6 +25927,16 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          */
         kubernetesClustersUpgradeFeatureCreate(id: string, featureUpgradeRequest: FeatureUpgradeRequest, options?: RawAxiosRequestConfig): AxiosPromise<FeatureUpgradeResponse> {
             return localVarFp.kubernetesClustersUpgradeFeatureCreate(id, featureUpgradeRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Inspect or perform the load-balancer upgrade the server computes for this cluster. The caller never selects a level.
+         * @param {string} id 
+         * @param {LBUpgradeRequest} [lBUpgradeRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersUpgradeLbCreate(id: string, lBUpgradeRequest?: LBUpgradeRequest, options?: RawAxiosRequestConfig): AxiosPromise<LBUpgradePlanResponse> {
+            return localVarFp.kubernetesClustersUpgradeLbCreate(id, lBUpgradeRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -24291,12 +25978,12 @@ export class KubernetesApi extends BaseAPI {
 
     /**
      * Create new k8s cluster
-     * @param {ClusterAdd} clusterAdd 
+     * @param {ClusterAddRequest} clusterAddRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersCreate(clusterAdd: ClusterAdd, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersCreate(clusterAdd, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersCreate(clusterAddRequest: ClusterAddRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersCreate(clusterAddRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24331,14 +26018,56 @@ export class KubernetesApi extends BaseAPI {
     }
 
     /**
-     * Create new HTTPRoute
-     * @param {number} clusterId 
-     * @param {HTTPRoute} hTTPRoute 
+     * Enable or disable WireGuard encryption for cluster traffic.
+     * @param {string} id 
+     * @param {ClusterEncryptionRequest} clusterEncryptionRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersHttproutesCreate(clusterId: number, hTTPRoute: HTTPRoute, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersHttproutesCreate(clusterId, hTTPRoute, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersEncryptionCreate(id: string, clusterEncryptionRequest: ClusterEncryptionRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersEncryptionCreate(id, clusterEncryptionRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Re-count the workloads that still predate the encryption change.
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersEncryptionRecheckCreate(id: string, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersEncryptionRecheckCreate(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Staff only: resolve a cluster whose encryption state is unknown.
+     * @param {string} id 
+     * @param {ClusterEncryptionReconcileRequest} clusterEncryptionReconcileRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersEncryptionReconcileCreate(id: string, clusterEncryptionReconcileRequest: ClusterEncryptionReconcileRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersEncryptionReconcileCreate(id, clusterEncryptionReconcileRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Read the cluster\'s encryption state, restart gate and per-node verification evidence.
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersEncryptionRetrieve(id: string, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersEncryptionRetrieve(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Create new HTTPRoute
+     * @param {number} clusterId 
+     * @param {HTTPRouteRequest} hTTPRouteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersHttproutesCreate(clusterId: number, hTTPRouteRequest: HTTPRouteRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersHttproutesCreate(clusterId, hTTPRouteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24367,12 +26096,12 @@ export class KubernetesApi extends BaseAPI {
      * Partially update HTTPRoute
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {PatchedHTTPRoute} [patchedHTTPRoute] 
+     * @param {PatchedHTTPRouteRequest} [patchedHTTPRouteRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersHttproutesPartialUpdate(clusterId: number, id: string, patchedHTTPRoute?: PatchedHTTPRoute, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersHttproutesPartialUpdate(clusterId, id, patchedHTTPRoute, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersHttproutesPartialUpdate(clusterId: number, id: string, patchedHTTPRouteRequest?: PatchedHTTPRouteRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersHttproutesPartialUpdate(clusterId, id, patchedHTTPRouteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24390,12 +26119,12 @@ export class KubernetesApi extends BaseAPI {
      * Update HTTPRoute
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {HTTPRoute} hTTPRoute 
+     * @param {HTTPRouteRequest} hTTPRouteRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersHttproutesUpdate(clusterId: number, id: string, hTTPRoute: HTTPRoute, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersHttproutesUpdate(clusterId, id, hTTPRoute, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersHttproutesUpdate(clusterId: number, id: string, hTTPRouteRequest: HTTPRouteRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersHttproutesUpdate(clusterId, id, hTTPRouteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24431,12 +26160,12 @@ export class KubernetesApi extends BaseAPI {
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} clusterId 
-     * @param {LBFirewallRule} [lBFirewallRule] 
+     * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersLbFirewallCreate(clusterId: number, lBFirewallRule?: LBFirewallRule, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersLbFirewallCreate(clusterId, lBFirewallRule, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersLbFirewallCreate(clusterId: number, lBFirewallRuleRequest?: LBFirewallRuleRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersLbFirewallCreate(clusterId, lBFirewallRuleRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24465,12 +26194,12 @@ export class KubernetesApi extends BaseAPI {
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {PatchedLBFirewallRule} [patchedLBFirewallRule] 
+     * @param {PatchedLBFirewallRuleRequest} [patchedLBFirewallRuleRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersLbFirewallPartialUpdate(clusterId: number, id: string, patchedLBFirewallRule?: PatchedLBFirewallRule, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersLbFirewallPartialUpdate(clusterId, id, patchedLBFirewallRule, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersLbFirewallPartialUpdate(clusterId: number, id: string, patchedLBFirewallRuleRequest?: PatchedLBFirewallRuleRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersLbFirewallPartialUpdate(clusterId, id, patchedLBFirewallRuleRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24488,12 +26217,12 @@ export class KubernetesApi extends BaseAPI {
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {LBFirewallRule} [lBFirewallRule] 
+     * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersLbFirewallUpdate(clusterId: number, id: string, lBFirewallRule?: LBFirewallRule, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersLbFirewallUpdate(clusterId, id, lBFirewallRule, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersLbFirewallUpdate(clusterId: number, id: string, lBFirewallRuleRequest?: LBFirewallRuleRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersLbFirewallUpdate(clusterId, id, lBFirewallRuleRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24507,25 +26236,114 @@ export class KubernetesApi extends BaseAPI {
     }
 
     /**
-     * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+     * Uncordon the node and abort a blocked operation.
+     * @param {number} clusterId 
      * @param {string} id 
-     * @param {PatchedClusterDetail} [patchedClusterDetail] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersPartialUpdate(id: string, patchedClusterDetail?: PatchedClusterDetail, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersPartialUpdate(id, patchedClusterDetail, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersNodeOperationsCancelCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersNodeOperationsCancelCreate(clusterId, id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
+     * @param {number} clusterId 
+     * @param {number} [page] A page number within the paginated result set.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersNodeOperationsList(clusterId: number, page?: number, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersNodeOperationsList(clusterId, page, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Staff-only resume of an operation waiting for support.
+     * @param {number} clusterId 
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersNodeOperationsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersNodeOperationsResumeCreate(clusterId, id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
+     * @param {number} clusterId 
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersNodeOperationsRetrieve(clusterId: number, id: string, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersNodeOperationsRetrieve(clusterId, id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retry a blocked operation with the overrides that answer its blocker.
+     * @param {number} clusterId 
+     * @param {string} id 
+     * @param {NodeOperationRetryRequest} [nodeOperationRetryRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersNodeOperationsRetryCreate(clusterId: number, id: string, nodeOperationRetryRequest?: NodeOperationRetryRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersNodeOperationsRetryCreate(clusterId, id, nodeOperationRetryRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+     * @param {string} id 
+     * @param {PatchedClusterDetailRequest} [patchedClusterDetailRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersPartialUpdate(id: string, patchedClusterDetailRequest?: PatchedClusterDetailRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersPartialUpdate(id, patchedClusterDetailRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A downsize or pool deletion, its milestones, and its staff resume.  The list route is not in the spec\'s table and is here anyway: with retrieve as the only route, a customer whose downsize parked has no way to learn the journal id, and the panel\'s poll would be the sole path to a published REST resource.
+     * @param {number} clusterId 
+     * @param {number} [page] A page number within the paginated result set.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersPoolRemovalJournalsList(clusterId: number, page?: number, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersPoolRemovalJournalsList(clusterId, page, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Staff-only resume of a pool removal waiting for support.
+     * @param {number} clusterId 
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId, id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A downsize or pool deletion, its milestones, and its staff resume.  The list route is not in the spec\'s table and is here anyway: with retrieve as the only route, a customer whose downsize parked has no way to learn the journal id, and the panel\'s poll would be the sole path to a published REST resource.
+     * @param {number} clusterId 
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersPoolRemovalJournalsRetrieve(clusterId: number, id: string, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersPoolRemovalJournalsRetrieve(clusterId, id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} clusterId 
-     * @param {K8sPortForward} k8sPortForward 
+     * @param {K8sPortForwardRequest} k8sPortForwardRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersPortForwardsCreate(clusterId: number, k8sPortForward: K8sPortForward, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersPortForwardsCreate(clusterId, k8sPortForward, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersPortForwardsCreate(clusterId: number, k8sPortForwardRequest: K8sPortForwardRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersPortForwardsCreate(clusterId, k8sPortForwardRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24554,12 +26372,12 @@ export class KubernetesApi extends BaseAPI {
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {PatchedK8sPortForward} [patchedK8sPortForward] 
+     * @param {PatchedK8sPortForwardRequest} [patchedK8sPortForwardRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersPortForwardsPartialUpdate(clusterId: number, id: string, patchedK8sPortForward?: PatchedK8sPortForward, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersPortForwardsPartialUpdate(clusterId, id, patchedK8sPortForward, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersPortForwardsPartialUpdate(clusterId: number, id: string, patchedK8sPortForwardRequest?: PatchedK8sPortForwardRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersPortForwardsPartialUpdate(clusterId, id, patchedK8sPortForwardRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24577,23 +26395,23 @@ export class KubernetesApi extends BaseAPI {
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {K8sPortForward} k8sPortForward 
+     * @param {K8sPortForwardRequest} k8sPortForwardRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersPortForwardsUpdate(clusterId: number, id: string, k8sPortForward: K8sPortForward, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersPortForwardsUpdate(clusterId, id, k8sPortForward, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersPortForwardsUpdate(clusterId: number, id: string, k8sPortForwardRequest: K8sPortForwardRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersPortForwardsUpdate(clusterId, id, k8sPortForwardRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Create new resource pool
      * @param {number} clusterId 
-     * @param {ResourcePoolAdd} resourcePoolAdd 
+     * @param {ResourcePoolAddRequest} resourcePoolAddRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersResourcePoolsCreate(clusterId: number, resourcePoolAdd: ResourcePoolAdd, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersResourcePoolsCreate(clusterId, resourcePoolAdd, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersResourcePoolsCreate(clusterId: number, resourcePoolAddRequest: ResourcePoolAddRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersResourcePoolsCreate(clusterId, resourcePoolAddRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24619,7 +26437,7 @@ export class KubernetesApi extends BaseAPI {
     }
 
     /**
-     * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+     * Start a safe delete of one worker node.
      * @param {number} clusterId 
      * @param {string} id 
      * @param {number} poolId 
@@ -24655,6 +26473,19 @@ export class KubernetesApi extends BaseAPI {
     }
 
     /**
+     * Restart one worker node, draining it first.
+     * @param {number} clusterId 
+     * @param {string} id 
+     * @param {number} poolId 
+     * @param {NodeOperationRebootRequest} [nodeOperationRebootRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersResourcePoolsNodesRebootCreate(clusterId: number, id: string, poolId: number, nodeOperationRebootRequest?: NodeOperationRebootRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersResourcePoolsNodesRebootCreate(clusterId, id, poolId, nodeOperationRebootRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} clusterId 
      * @param {string} id 
@@ -24683,12 +26514,12 @@ export class KubernetesApi extends BaseAPI {
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {PatchedResourcePool} [patchedResourcePool] 
+     * @param {PatchedResourcePoolRequest} [patchedResourcePoolRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersResourcePoolsPartialUpdate(clusterId: number, id: string, patchedResourcePool?: PatchedResourcePool, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersResourcePoolsPartialUpdate(clusterId, id, patchedResourcePool, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersResourcePoolsPartialUpdate(clusterId: number, id: string, patchedResourcePoolRequest?: PatchedResourcePoolRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersResourcePoolsPartialUpdate(clusterId, id, patchedResourcePoolRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24706,12 +26537,12 @@ export class KubernetesApi extends BaseAPI {
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {ResourcePool} [resourcePool] 
+     * @param {ResourcePoolRequest} [resourcePoolRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersResourcePoolsUpdate(clusterId: number, id: string, resourcePool?: ResourcePool, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersResourcePoolsUpdate(clusterId, id, resourcePool, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersResourcePoolsUpdate(clusterId: number, id: string, resourcePoolRequest?: ResourcePoolRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersResourcePoolsUpdate(clusterId, id, resourcePoolRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24737,12 +26568,12 @@ export class KubernetesApi extends BaseAPI {
     /**
      * Create new TCPRoute
      * @param {number} clusterId 
-     * @param {TCPRoute} tCPRoute 
+     * @param {TCPRouteRequest} tCPRouteRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersTcproutesCreate(clusterId: number, tCPRoute: TCPRoute, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersTcproutesCreate(clusterId, tCPRoute, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersTcproutesCreate(clusterId: number, tCPRouteRequest: TCPRouteRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersTcproutesCreate(clusterId, tCPRouteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24771,12 +26602,12 @@ export class KubernetesApi extends BaseAPI {
      * Partially update TCPRoute
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {PatchedTCPRoute} [patchedTCPRoute] 
+     * @param {PatchedTCPRouteRequest} [patchedTCPRouteRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersTcproutesPartialUpdate(clusterId: number, id: string, patchedTCPRoute?: PatchedTCPRoute, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersTcproutesPartialUpdate(clusterId, id, patchedTCPRoute, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersTcproutesPartialUpdate(clusterId: number, id: string, patchedTCPRouteRequest?: PatchedTCPRouteRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersTcproutesPartialUpdate(clusterId, id, patchedTCPRouteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24794,12 +26625,12 @@ export class KubernetesApi extends BaseAPI {
      * Update TCPRoute
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {TCPRoute} tCPRoute 
+     * @param {TCPRouteRequest} tCPRouteRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersTcproutesUpdate(clusterId: number, id: string, tCPRoute: TCPRoute, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersTcproutesUpdate(clusterId, id, tCPRoute, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersTcproutesUpdate(clusterId: number, id: string, tCPRouteRequest: TCPRouteRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersTcproutesUpdate(clusterId, id, tCPRouteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24815,12 +26646,12 @@ export class KubernetesApi extends BaseAPI {
     /**
      * Create new UDPRoute
      * @param {number} clusterId 
-     * @param {UDPRoute} uDPRoute 
+     * @param {UDPRouteRequest} uDPRouteRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersUdproutesCreate(clusterId: number, uDPRoute: UDPRoute, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersUdproutesCreate(clusterId, uDPRoute, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersUdproutesCreate(clusterId: number, uDPRouteRequest: UDPRouteRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersUdproutesCreate(clusterId, uDPRouteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24849,12 +26680,12 @@ export class KubernetesApi extends BaseAPI {
      * Partially update UDPRoute
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {PatchedUDPRoute} [patchedUDPRoute] 
+     * @param {PatchedUDPRouteRequest} [patchedUDPRouteRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersUdproutesPartialUpdate(clusterId: number, id: string, patchedUDPRoute?: PatchedUDPRoute, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersUdproutesPartialUpdate(clusterId, id, patchedUDPRoute, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersUdproutesPartialUpdate(clusterId: number, id: string, patchedUDPRouteRequest?: PatchedUDPRouteRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersUdproutesPartialUpdate(clusterId, id, patchedUDPRouteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24872,23 +26703,23 @@ export class KubernetesApi extends BaseAPI {
      * Update UDPRoute
      * @param {number} clusterId 
      * @param {string} id 
-     * @param {UDPRoute} uDPRoute 
+     * @param {UDPRouteRequest} uDPRouteRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersUdproutesUpdate(clusterId: number, id: string, uDPRoute: UDPRoute, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersUdproutesUpdate(clusterId, id, uDPRoute, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersUdproutesUpdate(clusterId: number, id: string, uDPRouteRequest: UDPRouteRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersUdproutesUpdate(clusterId, id, uDPRouteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {string} id 
-     * @param {ClusterDetail} clusterDetail 
+     * @param {ClusterDetailRequest} clusterDetailRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersUpdate(id: string, clusterDetail: ClusterDetail, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersUpdate(id, clusterDetail, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersUpdate(id: string, clusterDetailRequest: ClusterDetailRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersUpdate(id, clusterDetailRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -24900,6 +26731,17 @@ export class KubernetesApi extends BaseAPI {
      */
     public kubernetesClustersUpgradeFeatureCreate(id: string, featureUpgradeRequest: FeatureUpgradeRequest, options?: RawAxiosRequestConfig) {
         return KubernetesApiFp(this.configuration).kubernetesClustersUpgradeFeatureCreate(id, featureUpgradeRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Inspect or perform the load-balancer upgrade the server computes for this cluster. The caller never selects a level.
+     * @param {string} id 
+     * @param {LBUpgradeRequest} [lBUpgradeRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersUpgradeLbCreate(id: string, lBUpgradeRequest?: LBUpgradeRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersUpgradeLbCreate(id, lBUpgradeRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -25202,13 +27044,13 @@ export const SupportApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * Create a new support ticket.
-         * @param {TicketCreate} ticketCreate 
+         * @param {TicketCreateRequest} ticketCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        supportTicketsCreate: async (ticketCreate: TicketCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'ticketCreate' is not null or undefined
-            assertParamExists('supportTicketsCreate', 'ticketCreate', ticketCreate)
+        supportTicketsCreate: async (ticketCreateRequest: TicketCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'ticketCreateRequest' is not null or undefined
+            assertParamExists('supportTicketsCreate', 'ticketCreateRequest', ticketCreateRequest)
             const localVarPath = `/api/support/tickets/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -25232,7 +27074,7 @@ export const SupportApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(ticketCreate, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(ticketCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -25361,15 +27203,15 @@ export const SupportApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Reply to a ticket.
          * @param {string} id 
-         * @param {TicketReply} ticketReply 
+         * @param {TicketReplyRequest} ticketReplyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        supportTicketsReplyCreate: async (id: string, ticketReply: TicketReply, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        supportTicketsReplyCreate: async (id: string, ticketReplyRequest: TicketReplyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('supportTicketsReplyCreate', 'id', id)
-            // verify required parameter 'ticketReply' is not null or undefined
-            assertParamExists('supportTicketsReplyCreate', 'ticketReply', ticketReply)
+            // verify required parameter 'ticketReplyRequest' is not null or undefined
+            assertParamExists('supportTicketsReplyCreate', 'ticketReplyRequest', ticketReplyRequest)
             const localVarPath = `/api/support/tickets/{id}/reply/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -25394,7 +27236,7 @@ export const SupportApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(ticketReply, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(ticketReplyRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -25473,12 +27315,12 @@ export const SupportApiFp = function(configuration?: Configuration) {
         },
         /**
          * Create a new support ticket.
-         * @param {TicketCreate} ticketCreate 
+         * @param {TicketCreateRequest} ticketCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async supportTicketsCreate(ticketCreate: TicketCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TicketDetail>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.supportTicketsCreate(ticketCreate, options);
+        async supportTicketsCreate(ticketCreateRequest: TicketCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TicketDetail>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.supportTicketsCreate(ticketCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['SupportApi.supportTicketsCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -25523,12 +27365,12 @@ export const SupportApiFp = function(configuration?: Configuration) {
         /**
          * Reply to a ticket.
          * @param {string} id 
-         * @param {TicketReply} ticketReply 
+         * @param {TicketReplyRequest} ticketReplyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async supportTicketsReplyCreate(id: string, ticketReply: TicketReply, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TicketReplyResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.supportTicketsReplyCreate(id, ticketReply, options);
+        async supportTicketsReplyCreate(id: string, ticketReplyRequest: TicketReplyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TicketReplyResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.supportTicketsReplyCreate(id, ticketReplyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['SupportApi.supportTicketsReplyCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -25573,12 +27415,12 @@ export const SupportApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * Create a new support ticket.
-         * @param {TicketCreate} ticketCreate 
+         * @param {TicketCreateRequest} ticketCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        supportTicketsCreate(ticketCreate: TicketCreate, options?: RawAxiosRequestConfig): AxiosPromise<TicketDetail> {
-            return localVarFp.supportTicketsCreate(ticketCreate, options).then((request) => request(axios, basePath));
+        supportTicketsCreate(ticketCreateRequest: TicketCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<TicketDetail> {
+            return localVarFp.supportTicketsCreate(ticketCreateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List, create, and manage support tickets.
@@ -25611,12 +27453,12 @@ export const SupportApiFactory = function (configuration?: Configuration, basePa
         /**
          * Reply to a ticket.
          * @param {string} id 
-         * @param {TicketReply} ticketReply 
+         * @param {TicketReplyRequest} ticketReplyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        supportTicketsReplyCreate(id: string, ticketReply: TicketReply, options?: RawAxiosRequestConfig): AxiosPromise<TicketReplyResponse> {
-            return localVarFp.supportTicketsReplyCreate(id, ticketReply, options).then((request) => request(axios, basePath));
+        supportTicketsReplyCreate(id: string, ticketReplyRequest: TicketReplyRequest, options?: RawAxiosRequestConfig): AxiosPromise<TicketReplyResponse> {
+            return localVarFp.supportTicketsReplyCreate(id, ticketReplyRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * List, create, and manage support tickets.
@@ -25655,12 +27497,12 @@ export class SupportApi extends BaseAPI {
 
     /**
      * Create a new support ticket.
-     * @param {TicketCreate} ticketCreate 
+     * @param {TicketCreateRequest} ticketCreateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public supportTicketsCreate(ticketCreate: TicketCreate, options?: RawAxiosRequestConfig) {
-        return SupportApiFp(this.configuration).supportTicketsCreate(ticketCreate, options).then((request) => request(this.axios, this.basePath));
+    public supportTicketsCreate(ticketCreateRequest: TicketCreateRequest, options?: RawAxiosRequestConfig) {
+        return SupportApiFp(this.configuration).supportTicketsCreate(ticketCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -25697,12 +27539,12 @@ export class SupportApi extends BaseAPI {
     /**
      * Reply to a ticket.
      * @param {string} id 
-     * @param {TicketReply} ticketReply 
+     * @param {TicketReplyRequest} ticketReplyRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public supportTicketsReplyCreate(id: string, ticketReply: TicketReply, options?: RawAxiosRequestConfig) {
-        return SupportApiFp(this.configuration).supportTicketsReplyCreate(id, ticketReply, options).then((request) => request(this.axios, this.basePath));
+    public supportTicketsReplyCreate(id: string, ticketReplyRequest: TicketReplyRequest, options?: RawAxiosRequestConfig) {
+        return SupportApiFp(this.configuration).supportTicketsReplyCreate(id, ticketReplyRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

@@ -79,7 +79,7 @@ const { status, data } = await apiInstance.domainDomainCancelCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **domainDomainCheckAvailabilityCreate**
-> CheckAvailability domainDomainCheckAvailabilityCreate(checkAvailability)
+> CheckAvailability domainDomainCheckAvailabilityCreate(checkAvailabilityRequest)
 
 Manage your domains
 
@@ -89,16 +89,16 @@ Manage your domains
 import {
     DomainApi,
     Configuration,
-    CheckAvailability
+    CheckAvailabilityRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
-let checkAvailability: CheckAvailability; //
+let checkAvailabilityRequest: CheckAvailabilityRequest; //
 
 const { status, data } = await apiInstance.domainDomainCheckAvailabilityCreate(
-    checkAvailability
+    checkAvailabilityRequest
 );
 ```
 
@@ -106,7 +106,7 @@ const { status, data } = await apiInstance.domainDomainCheckAvailabilityCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **checkAvailability** | **CheckAvailability**|  | |
+| **checkAvailabilityRequest** | **CheckAvailabilityRequest**|  | |
 
 
 ### Return type
@@ -131,7 +131,7 @@ const { status, data } = await apiInstance.domainDomainCheckAvailabilityCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **domainDomainContactsCreate**
-> ContactsUpdateResponse domainDomainContactsCreate(contactsUpdate)
+> ContactsUpdateResponse domainDomainContactsCreate(contactsUpdateRequest)
 
 Update a contact on this domain using a saved DomainRegistrant.
 
@@ -141,18 +141,18 @@ Update a contact on this domain using a saved DomainRegistrant.
 import {
     DomainApi,
     Configuration,
-    ContactsUpdate
+    ContactsUpdateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
 let domain: string; // (default to undefined)
-let contactsUpdate: ContactsUpdate; //
+let contactsUpdateRequest: ContactsUpdateRequest; //
 
 const { status, data } = await apiInstance.domainDomainContactsCreate(
     domain,
-    contactsUpdate
+    contactsUpdateRequest
 );
 ```
 
@@ -160,7 +160,7 @@ const { status, data } = await apiInstance.domainDomainContactsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **contactsUpdate** | **ContactsUpdate**|  | |
+| **contactsUpdateRequest** | **ContactsUpdateRequest**|  | |
 | **domain** | [**string**] |  | defaults to undefined|
 
 
@@ -186,7 +186,7 @@ const { status, data } = await apiInstance.domainDomainContactsCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **domainDomainCreate**
-> DomainCreate domainDomainCreate(domainCreate)
+> DomainCreate domainDomainCreate(domainCreateRequest)
 
 Manage your domains
 
@@ -196,16 +196,16 @@ Manage your domains
 import {
     DomainApi,
     Configuration,
-    DomainCreate
+    DomainCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
-let domainCreate: DomainCreate; //
+let domainCreateRequest: DomainCreateRequest; //
 
 const { status, data } = await apiInstance.domainDomainCreate(
-    domainCreate
+    domainCreateRequest
 );
 ```
 
@@ -213,7 +213,7 @@ const { status, data } = await apiInstance.domainDomainCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **domainCreate** | **DomainCreate**|  | |
+| **domainCreateRequest** | **DomainCreateRequest**|  | |
 
 
 ### Return type
@@ -238,7 +238,7 @@ const { status, data } = await apiInstance.domainDomainCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **domainDomainDnsCreate**
-> DNSGlue domainDomainDnsCreate(dNSGlue)
+> DNSGlue domainDomainDnsCreate(dNSGlueRequest)
 
 List or upsert glue / personal-DNS records (child nameserver hosts) for this domain. POST body: ``{\"name\": \"ns1\", \"ip\": \"1.2.3.4\", \"ip2\": \"\"}``.
 
@@ -248,18 +248,18 @@ List or upsert glue / personal-DNS records (child nameserver hosts) for this dom
 import {
     DomainApi,
     Configuration,
-    DNSGlue
+    DNSGlueRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
 let domain: string; // (default to undefined)
-let dNSGlue: DNSGlue; //
+let dNSGlueRequest: DNSGlueRequest; //
 
 const { status, data } = await apiInstance.domainDomainDnsCreate(
     domain,
-    dNSGlue
+    dNSGlueRequest
 );
 ```
 
@@ -267,7 +267,7 @@ const { status, data } = await apiInstance.domainDomainDnsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **dNSGlue** | **DNSGlue**|  | |
+| **dNSGlueRequest** | **DNSGlueRequest**|  | |
 | **domain** | [**string**] |  | defaults to undefined|
 
 
@@ -452,7 +452,7 @@ const { status, data } = await apiInstance.domainDomainList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **domainDomainNameserversCreate**
-> NameserversUpdateResponse domainDomainNameserversCreate(nameserversUpdate)
+> NameserversUpdateResponse domainDomainNameserversCreate(nameserversUpdateRequest)
 
 Update nameservers for this domain.
 
@@ -462,18 +462,18 @@ Update nameservers for this domain.
 import {
     DomainApi,
     Configuration,
-    NameserversUpdate
+    NameserversUpdateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
 let domain: string; // (default to undefined)
-let nameserversUpdate: NameserversUpdate; //
+let nameserversUpdateRequest: NameserversUpdateRequest; //
 
 const { status, data } = await apiInstance.domainDomainNameserversCreate(
     domain,
-    nameserversUpdate
+    nameserversUpdateRequest
 );
 ```
 
@@ -481,7 +481,7 @@ const { status, data } = await apiInstance.domainDomainNameserversCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **nameserversUpdate** | **NameserversUpdate**|  | |
+| **nameserversUpdateRequest** | **NameserversUpdateRequest**|  | |
 | **domain** | [**string**] |  | defaults to undefined|
 
 
@@ -517,18 +517,18 @@ Manage your domains
 import {
     DomainApi,
     Configuration,
-    PatchedDomain
+    PatchedDomainRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
 let domain: string; // (default to undefined)
-let patchedDomain: PatchedDomain; // (optional)
+let patchedDomainRequest: PatchedDomainRequest; // (optional)
 
 const { status, data } = await apiInstance.domainDomainPartialUpdate(
     domain,
-    patchedDomain
+    patchedDomainRequest
 );
 ```
 
@@ -536,7 +536,7 @@ const { status, data } = await apiInstance.domainDomainPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedDomain** | **PatchedDomain**|  | |
+| **patchedDomainRequest** | **PatchedDomainRequest**|  | |
 | **domain** | [**string**] |  | defaults to undefined|
 
 
@@ -562,7 +562,7 @@ const { status, data } = await apiInstance.domainDomainPartialUpdate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **domainDomainRenewCreate**
-> RenewDomain domainDomainRenewCreate(renewDomain)
+> RenewDomain domainDomainRenewCreate(renewDomainRequest)
 
 Manage your domains
 
@@ -572,18 +572,18 @@ Manage your domains
 import {
     DomainApi,
     Configuration,
-    RenewDomain
+    RenewDomainRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
 let domain: string; // (default to undefined)
-let renewDomain: RenewDomain; //
+let renewDomainRequest: RenewDomainRequest; //
 
 const { status, data } = await apiInstance.domainDomainRenewCreate(
     domain,
-    renewDomain
+    renewDomainRequest
 );
 ```
 
@@ -591,7 +591,7 @@ const { status, data } = await apiInstance.domainDomainRenewCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **renewDomain** | **RenewDomain**|  | |
+| **renewDomainRequest** | **RenewDomainRequest**|  | |
 | **domain** | [**string**] |  | defaults to undefined|
 
 
@@ -668,7 +668,7 @@ const { status, data } = await apiInstance.domainDomainRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **domainDomainTransferRoDomainCreate**
-> TransferRoDomain domainDomainTransferRoDomainCreate(transferRoDomain)
+> TransferRoDomain domainDomainTransferRoDomainCreate(transferRoDomainRequest)
 
 Manage your domains
 
@@ -678,16 +678,16 @@ Manage your domains
 import {
     DomainApi,
     Configuration,
-    TransferRoDomain
+    TransferRoDomainRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
-let transferRoDomain: TransferRoDomain; //
+let transferRoDomainRequest: TransferRoDomainRequest; //
 
 const { status, data } = await apiInstance.domainDomainTransferRoDomainCreate(
-    transferRoDomain
+    transferRoDomainRequest
 );
 ```
 
@@ -695,7 +695,7 @@ const { status, data } = await apiInstance.domainDomainTransferRoDomainCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **transferRoDomain** | **TransferRoDomain**|  | |
+| **transferRoDomainRequest** | **TransferRoDomainRequest**|  | |
 
 
 ### Return type
@@ -730,18 +730,18 @@ Manage your domains
 import {
     DomainApi,
     Configuration,
-    Domain
+    DomainRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
 let domain: string; // (default to undefined)
-let domain2: Domain; // (optional)
+let domainRequest: DomainRequest; // (optional)
 
 const { status, data } = await apiInstance.domainDomainUpdate(
     domain,
-    domain2
+    domainRequest
 );
 ```
 
@@ -749,7 +749,7 @@ const { status, data } = await apiInstance.domainDomainUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **domain2** | **Domain**|  | |
+| **domainRequest** | **DomainRequest**|  | |
 | **domain** | [**string**] |  | defaults to undefined|
 
 
@@ -775,7 +775,7 @@ const { status, data } = await apiInstance.domainDomainUpdate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **domainRegistrantsCreate**
-> DomainRegistrant domainRegistrantsCreate(domainRegistrant)
+> DomainRegistrant domainRegistrantsCreate(domainRegistrantRequest)
 
 Manage your domain registrant views
 
@@ -785,16 +785,16 @@ Manage your domain registrant views
 import {
     DomainApi,
     Configuration,
-    DomainRegistrant
+    DomainRegistrantRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
-let domainRegistrant: DomainRegistrant; //
+let domainRegistrantRequest: DomainRegistrantRequest; //
 
 const { status, data } = await apiInstance.domainRegistrantsCreate(
-    domainRegistrant
+    domainRegistrantRequest
 );
 ```
 
@@ -802,7 +802,7 @@ const { status, data } = await apiInstance.domainRegistrantsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **domainRegistrant** | **DomainRegistrant**|  | |
+| **domainRegistrantRequest** | **DomainRegistrantRequest**|  | |
 
 
 ### Return type
@@ -939,18 +939,18 @@ Manage your domain registrant views
 import {
     DomainApi,
     Configuration,
-    PatchedDomainRegistrant
+    PatchedDomainRegistrantRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
 let id: string; // (default to undefined)
-let patchedDomainRegistrant: PatchedDomainRegistrant; // (optional)
+let patchedDomainRegistrantRequest: PatchedDomainRegistrantRequest; // (optional)
 
 const { status, data } = await apiInstance.domainRegistrantsPartialUpdate(
     id,
-    patchedDomainRegistrant
+    patchedDomainRegistrantRequest
 );
 ```
 
@@ -958,7 +958,7 @@ const { status, data } = await apiInstance.domainRegistrantsPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedDomainRegistrant** | **PatchedDomainRegistrant**|  | |
+| **patchedDomainRegistrantRequest** | **PatchedDomainRegistrantRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 
@@ -1035,7 +1035,7 @@ const { status, data } = await apiInstance.domainRegistrantsRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **domainRegistrantsUpdate**
-> DomainRegistrant domainRegistrantsUpdate(domainRegistrant)
+> DomainRegistrant domainRegistrantsUpdate(domainRegistrantRequest)
 
 Manage your domain registrant views
 
@@ -1045,18 +1045,18 @@ Manage your domain registrant views
 import {
     DomainApi,
     Configuration,
-    DomainRegistrant
+    DomainRegistrantRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
 let id: string; // (default to undefined)
-let domainRegistrant: DomainRegistrant; //
+let domainRegistrantRequest: DomainRegistrantRequest; //
 
 const { status, data } = await apiInstance.domainRegistrantsUpdate(
     id,
-    domainRegistrant
+    domainRegistrantRequest
 );
 ```
 
@@ -1064,7 +1064,7 @@ const { status, data } = await apiInstance.domainRegistrantsUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **domainRegistrant** | **DomainRegistrant**|  | |
+| **domainRegistrantRequest** | **DomainRegistrantRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 

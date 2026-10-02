@@ -13,8 +13,8 @@ Name | Type | Description | Notes
 **next_invoice** | **string** |  | [readonly] [default to undefined]
 **created** | **string** |  | [readonly] [default to undefined]
 **billing_cycle** | **string** |  | [readonly] [default to undefined]
-**server_status** | **string** |  | [readonly] [default to undefined]
-**ips** | **string** |  | [readonly] [default to undefined]
+**server_status** | [**DedicatedServerStatus**](DedicatedServerStatus.md) |  | [readonly] [default to undefined]
+**ips** | [**Array&lt;DedicatedServerIP&gt;**](DedicatedServerIP.md) |  | [readonly] [default to undefined]
 **os_name** | **string** |  | [readonly] [default to undefined]
 
 ## Example

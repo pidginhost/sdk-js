@@ -11,6 +11,10 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**kubernetesClustersDestroy**](#kubernetesclustersdestroy) | **DELETE** /api/kubernetes/clusters/{id}/ | |
 |[**kubernetesClustersDisconnectVmCreate**](#kubernetesclustersdisconnectvmcreate) | **POST** /api/kubernetes/clusters/{id}/disconnect-vm/ | |
 |[**kubernetesClustersEligibleVmsRetrieve**](#kubernetesclusterseligiblevmsretrieve) | **GET** /api/kubernetes/clusters/{id}/eligible-vms/ | |
+|[**kubernetesClustersEncryptionCreate**](#kubernetesclustersencryptioncreate) | **POST** /api/kubernetes/clusters/{id}/encryption/ | |
+|[**kubernetesClustersEncryptionRecheckCreate**](#kubernetesclustersencryptionrecheckcreate) | **POST** /api/kubernetes/clusters/{id}/encryption/recheck/ | |
+|[**kubernetesClustersEncryptionReconcileCreate**](#kubernetesclustersencryptionreconcilecreate) | **POST** /api/kubernetes/clusters/{id}/encryption/reconcile/ | |
+|[**kubernetesClustersEncryptionRetrieve**](#kubernetesclustersencryptionretrieve) | **GET** /api/kubernetes/clusters/{id}/encryption/ | |
 |[**kubernetesClustersHttproutesCreate**](#kubernetesclustershttproutescreate) | **POST** /api/kubernetes/clusters/{cluster_id}/httproutes/ | |
 |[**kubernetesClustersHttproutesDestroy**](#kubernetesclustershttproutesdestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/httproutes/{id}/ | |
 |[**kubernetesClustersHttproutesList**](#kubernetesclustershttprouteslist) | **GET** /api/kubernetes/clusters/{cluster_id}/httproutes/ | |
@@ -27,7 +31,15 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**kubernetesClustersLbFirewallRetrieve**](#kubernetesclusterslbfirewallretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | |
 |[**kubernetesClustersLbFirewallUpdate**](#kubernetesclusterslbfirewallupdate) | **PUT** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | |
 |[**kubernetesClustersList**](#kubernetesclusterslist) | **GET** /api/kubernetes/clusters/ | |
+|[**kubernetesClustersNodeOperationsCancelCreate**](#kubernetesclustersnodeoperationscancelcreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/cancel/ | |
+|[**kubernetesClustersNodeOperationsList**](#kubernetesclustersnodeoperationslist) | **GET** /api/kubernetes/clusters/{cluster_id}/node-operations/ | |
+|[**kubernetesClustersNodeOperationsResumeCreate**](#kubernetesclustersnodeoperationsresumecreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/resume/ | |
+|[**kubernetesClustersNodeOperationsRetrieve**](#kubernetesclustersnodeoperationsretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/ | |
+|[**kubernetesClustersNodeOperationsRetryCreate**](#kubernetesclustersnodeoperationsretrycreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/retry/ | |
 |[**kubernetesClustersPartialUpdate**](#kubernetesclusterspartialupdate) | **PATCH** /api/kubernetes/clusters/{id}/ | |
+|[**kubernetesClustersPoolRemovalJournalsList**](#kubernetesclusterspoolremovaljournalslist) | **GET** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/ | |
+|[**kubernetesClustersPoolRemovalJournalsResumeCreate**](#kubernetesclusterspoolremovaljournalsresumecreate) | **POST** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/{id}/resume/ | |
+|[**kubernetesClustersPoolRemovalJournalsRetrieve**](#kubernetesclusterspoolremovaljournalsretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/{id}/ | |
 |[**kubernetesClustersPortForwardsCreate**](#kubernetesclustersportforwardscreate) | **POST** /api/kubernetes/clusters/{cluster_id}/port-forwards/ | |
 |[**kubernetesClustersPortForwardsDestroy**](#kubernetesclustersportforwardsdestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/port-forwards/{id}/ | |
 |[**kubernetesClustersPortForwardsList**](#kubernetesclustersportforwardslist) | **GET** /api/kubernetes/clusters/{cluster_id}/port-forwards/ | |
@@ -40,6 +52,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**kubernetesClustersResourcePoolsNodesDestroy**](#kubernetesclustersresourcepoolsnodesdestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/{id}/ | |
 |[**kubernetesClustersResourcePoolsNodesList**](#kubernetesclustersresourcepoolsnodeslist) | **GET** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/ | |
 |[**kubernetesClustersResourcePoolsNodesMetricsRetrieve**](#kubernetesclustersresourcepoolsnodesmetricsretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/{id}/metrics/ | |
+|[**kubernetesClustersResourcePoolsNodesRebootCreate**](#kubernetesclustersresourcepoolsnodesrebootcreate) | **POST** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/{id}/reboot/ | |
 |[**kubernetesClustersResourcePoolsNodesRetrieve**](#kubernetesclustersresourcepoolsnodesretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/{id}/ | |
 |[**kubernetesClustersResourcePoolsNodesRrdRetrieve**](#kubernetesclustersresourcepoolsnodesrrdretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/{id}/rrd/ | |
 |[**kubernetesClustersResourcePoolsPartialUpdate**](#kubernetesclustersresourcepoolspartialupdate) | **PATCH** /api/kubernetes/clusters/{cluster_id}/resource-pools/{id}/ | |
@@ -62,6 +75,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**kubernetesClustersUdproutesUpdate**](#kubernetesclustersudproutesupdate) | **PUT** /api/kubernetes/clusters/{cluster_id}/udproutes/{id}/ | |
 |[**kubernetesClustersUpdate**](#kubernetesclustersupdate) | **PUT** /api/kubernetes/clusters/{id}/ | |
 |[**kubernetesClustersUpgradeFeatureCreate**](#kubernetesclustersupgradefeaturecreate) | **POST** /api/kubernetes/clusters/{id}/upgrade-feature/ | |
+|[**kubernetesClustersUpgradeLbCreate**](#kubernetesclustersupgradelbcreate) | **POST** /api/kubernetes/clusters/{id}/upgrade-lb/ | |
 
 # **kubernetesClusterTypesList**
 > PaginatedClusterTypeList kubernetesClusterTypesList()
@@ -221,7 +235,7 @@ const { status, data } = await apiInstance.kubernetesClustersConnectedVmsRetriev
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **kubernetesClustersCreate**
-> ClusterAddResponse kubernetesClustersCreate(clusterAdd)
+> ClusterAddResponse kubernetesClustersCreate(clusterAddRequest)
 
 Create new k8s cluster
 
@@ -231,16 +245,16 @@ Create new k8s cluster
 import {
     KubernetesApi,
     Configuration,
-    ClusterAdd
+    ClusterAddRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new KubernetesApi(configuration);
 
-let clusterAdd: ClusterAdd; //
+let clusterAddRequest: ClusterAddRequest; //
 
 const { status, data } = await apiInstance.kubernetesClustersCreate(
-    clusterAdd
+    clusterAddRequest
 );
 ```
 
@@ -248,7 +262,7 @@ const { status, data } = await apiInstance.kubernetesClustersCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **clusterAdd** | **ClusterAdd**|  | |
+| **clusterAddRequest** | **ClusterAddRequest**|  | |
 
 
 ### Return type
@@ -429,8 +443,237 @@ const { status, data } = await apiInstance.kubernetesClustersEligibleVmsRetrieve
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **kubernetesClustersEncryptionCreate**
+> ClusterEncryptionOperation kubernetesClustersEncryptionCreate(clusterEncryptionRequest)
+
+Enable or disable WireGuard encryption for cluster traffic.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration,
+    ClusterEncryptionRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let id: string; // (default to undefined)
+let clusterEncryptionRequest: ClusterEncryptionRequest; //
+
+const { status, data } = await apiInstance.kubernetesClustersEncryptionCreate(
+    id,
+    clusterEncryptionRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **clusterEncryptionRequest** | **ClusterEncryptionRequest**|  | |
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**ClusterEncryptionOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**400** |  |  -  |
+|**403** |  |  -  |
+|**404** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersEncryptionRecheckCreate**
+> ClusterEncryption kubernetesClustersEncryptionRecheckCreate()
+
+Re-count the workloads that still predate the encryption change.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.kubernetesClustersEncryptionRecheckCreate(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**ClusterEncryption**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**400** |  |  -  |
+|**403** |  |  -  |
+|**404** |  |  -  |
+|**409** |  |  -  |
+|**429** |  |  -  |
+|**503** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersEncryptionReconcileCreate**
+> ClusterEncryptionOperation kubernetesClustersEncryptionReconcileCreate(clusterEncryptionReconcileRequest)
+
+Staff only: resolve a cluster whose encryption state is unknown.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration,
+    ClusterEncryptionReconcileRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let id: string; // (default to undefined)
+let clusterEncryptionReconcileRequest: ClusterEncryptionReconcileRequest; //
+
+const { status, data } = await apiInstance.kubernetesClustersEncryptionReconcileCreate(
+    id,
+    clusterEncryptionReconcileRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **clusterEncryptionReconcileRequest** | **ClusterEncryptionReconcileRequest**|  | |
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**ClusterEncryptionOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**400** |  |  -  |
+|**403** |  |  -  |
+|**404** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersEncryptionRetrieve**
+> ClusterEncryption kubernetesClustersEncryptionRetrieve()
+
+Read the cluster\'s encryption state, restart gate and per-node verification evidence.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.kubernetesClustersEncryptionRetrieve(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**ClusterEncryption**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**403** |  |  -  |
+|**404** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **kubernetesClustersHttproutesCreate**
-> HTTPRoute kubernetesClustersHttproutesCreate(hTTPRoute)
+> HTTPRoute kubernetesClustersHttproutesCreate(hTTPRouteRequest)
 
 Create new HTTPRoute
 
@@ -440,18 +683,18 @@ Create new HTTPRoute
 import {
     KubernetesApi,
     Configuration,
-    HTTPRoute
+    HTTPRouteRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
-let hTTPRoute: HTTPRoute; //
+let hTTPRouteRequest: HTTPRouteRequest; //
 
 const { status, data } = await apiInstance.kubernetesClustersHttproutesCreate(
     clusterId,
-    hTTPRoute
+    hTTPRouteRequest
 );
 ```
 
@@ -459,7 +702,7 @@ const { status, data } = await apiInstance.kubernetesClustersHttproutesCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **hTTPRoute** | **HTTPRoute**|  | |
+| **hTTPRouteRequest** | **HTTPRouteRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 
 
@@ -603,7 +846,7 @@ Partially update HTTPRoute
 import {
     KubernetesApi,
     Configuration,
-    PatchedHTTPRoute
+    PatchedHTTPRouteRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -611,12 +854,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let patchedHTTPRoute: PatchedHTTPRoute; // (optional)
+let patchedHTTPRouteRequest: PatchedHTTPRouteRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersHttproutesPartialUpdate(
     clusterId,
     id,
-    patchedHTTPRoute
+    patchedHTTPRouteRequest
 );
 ```
 
@@ -624,7 +867,7 @@ const { status, data } = await apiInstance.kubernetesClustersHttproutesPartialUp
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedHTTPRoute** | **PatchedHTTPRoute**|  | |
+| **patchedHTTPRouteRequest** | **PatchedHTTPRouteRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -705,7 +948,7 @@ const { status, data } = await apiInstance.kubernetesClustersHttproutesRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **kubernetesClustersHttproutesUpdate**
-> HTTPRoute kubernetesClustersHttproutesUpdate(hTTPRoute)
+> HTTPRoute kubernetesClustersHttproutesUpdate(hTTPRouteRequest)
 
 Update HTTPRoute
 
@@ -715,7 +958,7 @@ Update HTTPRoute
 import {
     KubernetesApi,
     Configuration,
-    HTTPRoute
+    HTTPRouteRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -723,12 +966,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let hTTPRoute: HTTPRoute; //
+let hTTPRouteRequest: HTTPRouteRequest; //
 
 const { status, data } = await apiInstance.kubernetesClustersHttproutesUpdate(
     clusterId,
     id,
-    hTTPRoute
+    hTTPRouteRequest
 );
 ```
 
@@ -736,7 +979,7 @@ const { status, data } = await apiInstance.kubernetesClustersHttproutesUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **hTTPRoute** | **HTTPRoute**|  | |
+| **hTTPRouteRequest** | **HTTPRouteRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -926,18 +1169,18 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     KubernetesApi,
     Configuration,
-    LBFirewallRule
+    LBFirewallRuleRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
-let lBFirewallRule: LBFirewallRule; // (optional)
+let lBFirewallRuleRequest: LBFirewallRuleRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersLbFirewallCreate(
     clusterId,
-    lBFirewallRule
+    lBFirewallRuleRequest
 );
 ```
 
@@ -945,7 +1188,7 @@ const { status, data } = await apiInstance.kubernetesClustersLbFirewallCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **lBFirewallRule** | **LBFirewallRule**|  | |
+| **lBFirewallRuleRequest** | **LBFirewallRuleRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 
 
@@ -1089,7 +1332,7 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     KubernetesApi,
     Configuration,
-    PatchedLBFirewallRule
+    PatchedLBFirewallRuleRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -1097,12 +1340,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let patchedLBFirewallRule: PatchedLBFirewallRule; // (optional)
+let patchedLBFirewallRuleRequest: PatchedLBFirewallRuleRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersLbFirewallPartialUpdate(
     clusterId,
     id,
-    patchedLBFirewallRule
+    patchedLBFirewallRuleRequest
 );
 ```
 
@@ -1110,7 +1353,7 @@ const { status, data } = await apiInstance.kubernetesClustersLbFirewallPartialUp
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedLBFirewallRule** | **PatchedLBFirewallRule**|  | |
+| **patchedLBFirewallRuleRequest** | **PatchedLBFirewallRuleRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -1201,7 +1444,7 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     KubernetesApi,
     Configuration,
-    LBFirewallRule
+    LBFirewallRuleRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -1209,12 +1452,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let lBFirewallRule: LBFirewallRule; // (optional)
+let lBFirewallRuleRequest: LBFirewallRuleRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersLbFirewallUpdate(
     clusterId,
     id,
-    lBFirewallRule
+    lBFirewallRuleRequest
 );
 ```
 
@@ -1222,7 +1465,7 @@ const { status, data } = await apiInstance.kubernetesClustersLbFirewallUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **lBFirewallRule** | **LBFirewallRule**|  | |
+| **lBFirewallRuleRequest** | **LBFirewallRuleRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -1299,6 +1542,280 @@ const { status, data } = await apiInstance.kubernetesClustersList(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **kubernetesClustersNodeOperationsCancelCreate**
+> NodeOperation kubernetesClustersNodeOperationsCancelCreate()
+
+Uncordon the node and abort a blocked operation.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let clusterId: number; // (default to undefined)
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.kubernetesClustersNodeOperationsCancelCreate(
+    clusterId,
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **clusterId** | [**number**] |  | defaults to undefined|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**NodeOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersNodeOperationsList**
+> PaginatedNodeOperationList kubernetesClustersNodeOperationsList()
+
+Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let clusterId: number; // (default to undefined)
+let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.kubernetesClustersNodeOperationsList(
+    clusterId,
+    page
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **clusterId** | [**number**] |  | defaults to undefined|
+| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+
+
+### Return type
+
+**PaginatedNodeOperationList**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersNodeOperationsResumeCreate**
+> NodeOperation kubernetesClustersNodeOperationsResumeCreate()
+
+Staff-only resume of an operation waiting for support.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let clusterId: number; // (default to undefined)
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.kubernetesClustersNodeOperationsResumeCreate(
+    clusterId,
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **clusterId** | [**number**] |  | defaults to undefined|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**NodeOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersNodeOperationsRetrieve**
+> NodeOperation kubernetesClustersNodeOperationsRetrieve()
+
+Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let clusterId: number; // (default to undefined)
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.kubernetesClustersNodeOperationsRetrieve(
+    clusterId,
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **clusterId** | [**number**] |  | defaults to undefined|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**NodeOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersNodeOperationsRetryCreate**
+> NodeOperation kubernetesClustersNodeOperationsRetryCreate()
+
+Retry a blocked operation with the overrides that answer its blocker.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration,
+    NodeOperationRetryRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let clusterId: number; // (default to undefined)
+let id: string; // (default to undefined)
+let nodeOperationRetryRequest: NodeOperationRetryRequest; // (optional)
+
+const { status, data } = await apiInstance.kubernetesClustersNodeOperationsRetryCreate(
+    clusterId,
+    id,
+    nodeOperationRetryRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **nodeOperationRetryRequest** | **NodeOperationRetryRequest**|  | |
+| **clusterId** | [**number**] |  | defaults to undefined|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**NodeOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **kubernetesClustersPartialUpdate**
 > ClusterDetail kubernetesClustersPartialUpdate()
 
@@ -1310,18 +1827,18 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     KubernetesApi,
     Configuration,
-    PatchedClusterDetail
+    PatchedClusterDetailRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new KubernetesApi(configuration);
 
 let id: string; // (default to undefined)
-let patchedClusterDetail: PatchedClusterDetail; // (optional)
+let patchedClusterDetailRequest: PatchedClusterDetailRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersPartialUpdate(
     id,
-    patchedClusterDetail
+    patchedClusterDetailRequest
 );
 ```
 
@@ -1329,7 +1846,7 @@ const { status, data } = await apiInstance.kubernetesClustersPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedClusterDetail** | **PatchedClusterDetail**|  | |
+| **patchedClusterDetailRequest** | **PatchedClusterDetailRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 
@@ -1354,8 +1871,170 @@ const { status, data } = await apiInstance.kubernetesClustersPartialUpdate(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **kubernetesClustersPoolRemovalJournalsList**
+> PaginatedPoolRemovalJournalList kubernetesClustersPoolRemovalJournalsList()
+
+A downsize or pool deletion, its milestones, and its staff resume.  The list route is not in the spec\'s table and is here anyway: with retrieve as the only route, a customer whose downsize parked has no way to learn the journal id, and the panel\'s poll would be the sole path to a published REST resource.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let clusterId: number; // (default to undefined)
+let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.kubernetesClustersPoolRemovalJournalsList(
+    clusterId,
+    page
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **clusterId** | [**number**] |  | defaults to undefined|
+| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+
+
+### Return type
+
+**PaginatedPoolRemovalJournalList**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersPoolRemovalJournalsResumeCreate**
+> PoolRemovalJournal kubernetesClustersPoolRemovalJournalsResumeCreate()
+
+Staff-only resume of a pool removal waiting for support.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let clusterId: number; // (default to undefined)
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.kubernetesClustersPoolRemovalJournalsResumeCreate(
+    clusterId,
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **clusterId** | [**number**] |  | defaults to undefined|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**PoolRemovalJournal**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersPoolRemovalJournalsRetrieve**
+> PoolRemovalJournal kubernetesClustersPoolRemovalJournalsRetrieve()
+
+A downsize or pool deletion, its milestones, and its staff resume.  The list route is not in the spec\'s table and is here anyway: with retrieve as the only route, a customer whose downsize parked has no way to learn the journal id, and the panel\'s poll would be the sole path to a published REST resource.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let clusterId: number; // (default to undefined)
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.kubernetesClustersPoolRemovalJournalsRetrieve(
+    clusterId,
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **clusterId** | [**number**] |  | defaults to undefined|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**PoolRemovalJournal**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **kubernetesClustersPortForwardsCreate**
-> K8sPortForward kubernetesClustersPortForwardsCreate(k8sPortForward)
+> K8sPortForward kubernetesClustersPortForwardsCreate(k8sPortForwardRequest)
 
 Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
 
@@ -1365,18 +2044,18 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     KubernetesApi,
     Configuration,
-    K8sPortForward
+    K8sPortForwardRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
-let k8sPortForward: K8sPortForward; //
+let k8sPortForwardRequest: K8sPortForwardRequest; //
 
 const { status, data } = await apiInstance.kubernetesClustersPortForwardsCreate(
     clusterId,
-    k8sPortForward
+    k8sPortForwardRequest
 );
 ```
 
@@ -1384,7 +2063,7 @@ const { status, data } = await apiInstance.kubernetesClustersPortForwardsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **k8sPortForward** | **K8sPortForward**|  | |
+| **k8sPortForwardRequest** | **K8sPortForwardRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 
 
@@ -1528,7 +2207,7 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     KubernetesApi,
     Configuration,
-    PatchedK8sPortForward
+    PatchedK8sPortForwardRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -1536,12 +2215,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let patchedK8sPortForward: PatchedK8sPortForward; // (optional)
+let patchedK8sPortForwardRequest: PatchedK8sPortForwardRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersPortForwardsPartialUpdate(
     clusterId,
     id,
-    patchedK8sPortForward
+    patchedK8sPortForwardRequest
 );
 ```
 
@@ -1549,7 +2228,7 @@ const { status, data } = await apiInstance.kubernetesClustersPortForwardsPartial
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedK8sPortForward** | **PatchedK8sPortForward**|  | |
+| **patchedK8sPortForwardRequest** | **PatchedK8sPortForwardRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -1630,7 +2309,7 @@ const { status, data } = await apiInstance.kubernetesClustersPortForwardsRetriev
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **kubernetesClustersPortForwardsUpdate**
-> K8sPortForward kubernetesClustersPortForwardsUpdate(k8sPortForward)
+> K8sPortForward kubernetesClustersPortForwardsUpdate(k8sPortForwardRequest)
 
 Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
 
@@ -1640,7 +2319,7 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     KubernetesApi,
     Configuration,
-    K8sPortForward
+    K8sPortForwardRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -1648,12 +2327,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let k8sPortForward: K8sPortForward; //
+let k8sPortForwardRequest: K8sPortForwardRequest; //
 
 const { status, data } = await apiInstance.kubernetesClustersPortForwardsUpdate(
     clusterId,
     id,
-    k8sPortForward
+    k8sPortForwardRequest
 );
 ```
 
@@ -1661,7 +2340,7 @@ const { status, data } = await apiInstance.kubernetesClustersPortForwardsUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **k8sPortForward** | **K8sPortForward**|  | |
+| **k8sPortForwardRequest** | **K8sPortForwardRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -1688,7 +2367,7 @@ const { status, data } = await apiInstance.kubernetesClustersPortForwardsUpdate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **kubernetesClustersResourcePoolsCreate**
-> ResourcePoolAddResponse kubernetesClustersResourcePoolsCreate(resourcePoolAdd)
+> ResourcePoolAddResponse kubernetesClustersResourcePoolsCreate(resourcePoolAddRequest)
 
 Create new resource pool
 
@@ -1698,18 +2377,18 @@ Create new resource pool
 import {
     KubernetesApi,
     Configuration,
-    ResourcePoolAdd
+    ResourcePoolAddRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
-let resourcePoolAdd: ResourcePoolAdd; //
+let resourcePoolAddRequest: ResourcePoolAddRequest; //
 
 const { status, data } = await apiInstance.kubernetesClustersResourcePoolsCreate(
     clusterId,
-    resourcePoolAdd
+    resourcePoolAddRequest
 );
 ```
 
@@ -1717,7 +2396,7 @@ const { status, data } = await apiInstance.kubernetesClustersResourcePoolsCreate
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **resourcePoolAdd** | **ResourcePoolAdd**|  | |
+| **resourcePoolAddRequest** | **ResourcePoolAddRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 
 
@@ -1851,9 +2530,9 @@ const { status, data } = await apiInstance.kubernetesClustersResourcePoolsList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **kubernetesClustersResourcePoolsNodesDestroy**
-> kubernetesClustersResourcePoolsNodesDestroy()
+> NodeOperation kubernetesClustersResourcePoolsNodesDestroy()
 
-Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+Start a safe delete of one worker node.
 
 ### Example
 
@@ -1888,7 +2567,7 @@ const { status, data } = await apiInstance.kubernetesClustersResourcePoolsNodesD
 
 ### Return type
 
-void (empty response body)
+**NodeOperation**
 
 ### Authorization
 
@@ -1897,13 +2576,13 @@ void (empty response body)
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**204** | No response body |  -  |
+|**202** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -2018,6 +2697,67 @@ const { status, data } = await apiInstance.kubernetesClustersResourcePoolsNodesM
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersResourcePoolsNodesRebootCreate**
+> NodeOperation kubernetesClustersResourcePoolsNodesRebootCreate()
+
+Restart one worker node, draining it first.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration,
+    NodeOperationRebootRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let clusterId: number; // (default to undefined)
+let id: string; // (default to undefined)
+let poolId: number; // (default to undefined)
+let nodeOperationRebootRequest: NodeOperationRebootRequest; // (optional)
+
+const { status, data } = await apiInstance.kubernetesClustersResourcePoolsNodesRebootCreate(
+    clusterId,
+    id,
+    poolId,
+    nodeOperationRebootRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **nodeOperationRebootRequest** | **NodeOperationRebootRequest**|  | |
+| **clusterId** | [**number**] |  | defaults to undefined|
+| **id** | [**string**] |  | defaults to undefined|
+| **poolId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**NodeOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -2149,7 +2889,7 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     KubernetesApi,
     Configuration,
-    PatchedResourcePool
+    PatchedResourcePoolRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -2157,12 +2897,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let patchedResourcePool: PatchedResourcePool; // (optional)
+let patchedResourcePoolRequest: PatchedResourcePoolRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersResourcePoolsPartialUpdate(
     clusterId,
     id,
-    patchedResourcePool
+    patchedResourcePoolRequest
 );
 ```
 
@@ -2170,7 +2910,7 @@ const { status, data } = await apiInstance.kubernetesClustersResourcePoolsPartia
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedResourcePool** | **PatchedResourcePool**|  | |
+| **patchedResourcePoolRequest** | **PatchedResourcePoolRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -2261,7 +3001,7 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     KubernetesApi,
     Configuration,
-    ResourcePool
+    ResourcePoolRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -2269,12 +3009,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let resourcePool: ResourcePool; // (optional)
+let resourcePoolRequest: ResourcePoolRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersResourcePoolsUpdate(
     clusterId,
     id,
-    resourcePool
+    resourcePoolRequest
 );
 ```
 
@@ -2282,7 +3022,7 @@ const { status, data } = await apiInstance.kubernetesClustersResourcePoolsUpdate
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **resourcePool** | **ResourcePool**|  | |
+| **resourcePoolRequest** | **ResourcePoolRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -2411,7 +3151,7 @@ const { status, data } = await apiInstance.kubernetesClustersTalosVersionUpgrade
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **kubernetesClustersTcproutesCreate**
-> TCPRoute kubernetesClustersTcproutesCreate(tCPRoute)
+> TCPRoute kubernetesClustersTcproutesCreate(tCPRouteRequest)
 
 Create new TCPRoute
 
@@ -2421,18 +3161,18 @@ Create new TCPRoute
 import {
     KubernetesApi,
     Configuration,
-    TCPRoute
+    TCPRouteRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
-let tCPRoute: TCPRoute; //
+let tCPRouteRequest: TCPRouteRequest; //
 
 const { status, data } = await apiInstance.kubernetesClustersTcproutesCreate(
     clusterId,
-    tCPRoute
+    tCPRouteRequest
 );
 ```
 
@@ -2440,7 +3180,7 @@ const { status, data } = await apiInstance.kubernetesClustersTcproutesCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **tCPRoute** | **TCPRoute**|  | |
+| **tCPRouteRequest** | **TCPRouteRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 
 
@@ -2584,7 +3324,7 @@ Partially update TCPRoute
 import {
     KubernetesApi,
     Configuration,
-    PatchedTCPRoute
+    PatchedTCPRouteRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -2592,12 +3332,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let patchedTCPRoute: PatchedTCPRoute; // (optional)
+let patchedTCPRouteRequest: PatchedTCPRouteRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersTcproutesPartialUpdate(
     clusterId,
     id,
-    patchedTCPRoute
+    patchedTCPRouteRequest
 );
 ```
 
@@ -2605,7 +3345,7 @@ const { status, data } = await apiInstance.kubernetesClustersTcproutesPartialUpd
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedTCPRoute** | **PatchedTCPRoute**|  | |
+| **patchedTCPRouteRequest** | **PatchedTCPRouteRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -2686,7 +3426,7 @@ const { status, data } = await apiInstance.kubernetesClustersTcproutesRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **kubernetesClustersTcproutesUpdate**
-> TCPRoute kubernetesClustersTcproutesUpdate(tCPRoute)
+> TCPRoute kubernetesClustersTcproutesUpdate(tCPRouteRequest)
 
 Update TCPRoute
 
@@ -2696,7 +3436,7 @@ Update TCPRoute
 import {
     KubernetesApi,
     Configuration,
-    TCPRoute
+    TCPRouteRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -2704,12 +3444,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let tCPRoute: TCPRoute; //
+let tCPRouteRequest: TCPRouteRequest; //
 
 const { status, data } = await apiInstance.kubernetesClustersTcproutesUpdate(
     clusterId,
     id,
-    tCPRoute
+    tCPRouteRequest
 );
 ```
 
@@ -2717,7 +3457,7 @@ const { status, data } = await apiInstance.kubernetesClustersTcproutesUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **tCPRoute** | **TCPRoute**|  | |
+| **tCPRouteRequest** | **TCPRouteRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -2795,7 +3535,7 @@ const { status, data } = await apiInstance.kubernetesClustersToggleCloudVmAccess
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **kubernetesClustersUdproutesCreate**
-> UDPRoute kubernetesClustersUdproutesCreate(uDPRoute)
+> UDPRoute kubernetesClustersUdproutesCreate(uDPRouteRequest)
 
 Create new UDPRoute
 
@@ -2805,18 +3545,18 @@ Create new UDPRoute
 import {
     KubernetesApi,
     Configuration,
-    UDPRoute
+    UDPRouteRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
-let uDPRoute: UDPRoute; //
+let uDPRouteRequest: UDPRouteRequest; //
 
 const { status, data } = await apiInstance.kubernetesClustersUdproutesCreate(
     clusterId,
-    uDPRoute
+    uDPRouteRequest
 );
 ```
 
@@ -2824,7 +3564,7 @@ const { status, data } = await apiInstance.kubernetesClustersUdproutesCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **uDPRoute** | **UDPRoute**|  | |
+| **uDPRouteRequest** | **UDPRouteRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 
 
@@ -2968,7 +3708,7 @@ Partially update UDPRoute
 import {
     KubernetesApi,
     Configuration,
-    PatchedUDPRoute
+    PatchedUDPRouteRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -2976,12 +3716,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let patchedUDPRoute: PatchedUDPRoute; // (optional)
+let patchedUDPRouteRequest: PatchedUDPRouteRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersUdproutesPartialUpdate(
     clusterId,
     id,
-    patchedUDPRoute
+    patchedUDPRouteRequest
 );
 ```
 
@@ -2989,7 +3729,7 @@ const { status, data } = await apiInstance.kubernetesClustersUdproutesPartialUpd
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedUDPRoute** | **PatchedUDPRoute**|  | |
+| **patchedUDPRouteRequest** | **PatchedUDPRouteRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -3070,7 +3810,7 @@ const { status, data } = await apiInstance.kubernetesClustersUdproutesRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **kubernetesClustersUdproutesUpdate**
-> UDPRoute kubernetesClustersUdproutesUpdate(uDPRoute)
+> UDPRoute kubernetesClustersUdproutesUpdate(uDPRouteRequest)
 
 Update UDPRoute
 
@@ -3080,7 +3820,7 @@ Update UDPRoute
 import {
     KubernetesApi,
     Configuration,
-    UDPRoute
+    UDPRouteRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -3088,12 +3828,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
-let uDPRoute: UDPRoute; //
+let uDPRouteRequest: UDPRouteRequest; //
 
 const { status, data } = await apiInstance.kubernetesClustersUdproutesUpdate(
     clusterId,
     id,
-    uDPRoute
+    uDPRouteRequest
 );
 ```
 
@@ -3101,7 +3841,7 @@ const { status, data } = await apiInstance.kubernetesClustersUdproutesUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **uDPRoute** | **UDPRoute**|  | |
+| **uDPRouteRequest** | **UDPRouteRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -3128,7 +3868,7 @@ const { status, data } = await apiInstance.kubernetesClustersUdproutesUpdate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **kubernetesClustersUpdate**
-> ClusterDetail kubernetesClustersUpdate(clusterDetail)
+> ClusterDetail kubernetesClustersUpdate(clusterDetailRequest)
 
 Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
 
@@ -3138,18 +3878,18 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     KubernetesApi,
     Configuration,
-    ClusterDetail
+    ClusterDetailRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new KubernetesApi(configuration);
 
 let id: string; // (default to undefined)
-let clusterDetail: ClusterDetail; //
+let clusterDetailRequest: ClusterDetailRequest; //
 
 const { status, data } = await apiInstance.kubernetesClustersUpdate(
     id,
-    clusterDetail
+    clusterDetailRequest
 );
 ```
 
@@ -3157,7 +3897,7 @@ const { status, data } = await apiInstance.kubernetesClustersUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **clusterDetail** | **ClusterDetail**|  | |
+| **clusterDetailRequest** | **ClusterDetailRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 
@@ -3234,6 +3974,62 @@ const { status, data } = await apiInstance.kubernetesClustersUpgradeFeatureCreat
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersUpgradeLbCreate**
+> LBUpgradePlanResponse kubernetesClustersUpgradeLbCreate()
+
+Inspect or perform the load-balancer upgrade the server computes for this cluster. The caller never selects a level.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration,
+    LBUpgradeRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let id: string; // (default to undefined)
+let lBUpgradeRequest: LBUpgradeRequest; // (optional)
+
+const { status, data } = await apiInstance.kubernetesClustersUpgradeLbCreate(
+    id,
+    lBUpgradeRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **lBUpgradeRequest** | **LBUpgradeRequest**|  | |
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**LBUpgradePlanResponse**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**202** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

@@ -97,6 +97,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**cloudServersSnapshotsDestroy**](#cloudserverssnapshotsdestroy) | **DELETE** /api/cloud/servers/{id}/snapshots/{snapshot_name}/ | |
 |[**cloudServersSnapshotsList**](#cloudserverssnapshotslist) | **GET** /api/cloud/servers/{id}/snapshots/ | |
 |[**cloudServersSnapshotsRollbackCreate**](#cloudserverssnapshotsrollbackcreate) | **POST** /api/cloud/servers/{id}/snapshots/{snapshot_name}/rollback/ | |
+|[**cloudServersTrafficRetrieve**](#cloudserverstrafficretrieve) | **GET** /api/cloud/servers/{id}/traffic/ | |
 |[**cloudServersUpdate**](#cloudserversupdate) | **PUT** /api/cloud/servers/{id}/ | |
 |[**cloudServersUsageRetrieve**](#cloudserversusageretrieve) | **GET** /api/cloud/servers/{id}/usage/ | |
 |[**cloudServersVolumesCreate**](#cloudserversvolumescreate) | **POST** /api/cloud/servers/{server_id}/volumes/ | |
@@ -116,7 +117,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**cloudVolumesUpdate**](#cloudvolumesupdate) | **PUT** /api/cloud/volumes/{id}/ | |
 
 # **cloudBucketsCreate**
-> Bucket cloudBucketsCreate(bucketCreate)
+> Bucket cloudBucketsCreate(bucketCreateRequest)
 
 Create a bucket
 
@@ -126,16 +127,16 @@ Create a bucket
 import {
     CloudApi,
     Configuration,
-    BucketCreate
+    BucketCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
-let bucketCreate: BucketCreate; //
+let bucketCreateRequest: BucketCreateRequest; //
 
 const { status, data } = await apiInstance.cloudBucketsCreate(
-    bucketCreate
+    bucketCreateRequest
 );
 ```
 
@@ -143,7 +144,7 @@ const { status, data } = await apiInstance.cloudBucketsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **bucketCreate** | **BucketCreate**|  | |
+| **bucketCreateRequest** | **BucketCreateRequest**|  | |
 
 
 ### Return type
@@ -365,7 +366,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudBucketsResizeCreate**
-> Bucket cloudBucketsResizeCreate(bucketResize)
+> Bucket cloudBucketsResizeCreate(bucketResizeRequest)
 
 Resize a bucket
 
@@ -375,18 +376,18 @@ Resize a bucket
 import {
     CloudApi,
     Configuration,
-    BucketResize
+    BucketResizeRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this S3 bucket. (default to undefined)
-let bucketResize: BucketResize; //
+let bucketResizeRequest: BucketResizeRequest; //
 
 const { status, data } = await apiInstance.cloudBucketsResizeCreate(
     id,
-    bucketResize
+    bucketResizeRequest
 );
 ```
 
@@ -394,7 +395,7 @@ const { status, data } = await apiInstance.cloudBucketsResizeCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **bucketResize** | **BucketResize**|  | |
+| **bucketResizeRequest** | **BucketResizeRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this S3 bucket. | defaults to undefined|
 
 
@@ -471,7 +472,7 @@ const { status, data } = await apiInstance.cloudBucketsRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudBucketsVisibilityCreate**
-> Bucket cloudBucketsVisibilityCreate(bucketVisibility)
+> Bucket cloudBucketsVisibilityCreate(bucketVisibilityRequest)
 
 Set bucket visibility
 
@@ -481,18 +482,18 @@ Set bucket visibility
 import {
     CloudApi,
     Configuration,
-    BucketVisibility
+    BucketVisibilityRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this S3 bucket. (default to undefined)
-let bucketVisibility: BucketVisibility; //
+let bucketVisibilityRequest: BucketVisibilityRequest; //
 
 const { status, data } = await apiInstance.cloudBucketsVisibilityCreate(
     id,
-    bucketVisibility
+    bucketVisibilityRequest
 );
 ```
 
@@ -500,7 +501,7 @@ const { status, data } = await apiInstance.cloudBucketsVisibilityCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **bucketVisibility** | **BucketVisibility**|  | |
+| **bucketVisibilityRequest** | **BucketVisibilityRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this S3 bucket. | defaults to undefined|
 
 
@@ -526,7 +527,7 @@ const { status, data } = await apiInstance.cloudBucketsVisibilityCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudFirewallRulesSetCreate**
-> FirewallRulesSet cloudFirewallRulesSetCreate(firewallRulesSet)
+> FirewallRulesSet cloudFirewallRulesSetCreate(firewallRulesSetRequest)
 
 Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
 
@@ -536,16 +537,16 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     CloudApi,
     Configuration,
-    FirewallRulesSet
+    FirewallRulesSetRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
-let firewallRulesSet: FirewallRulesSet; //
+let firewallRulesSetRequest: FirewallRulesSetRequest; //
 
 const { status, data } = await apiInstance.cloudFirewallRulesSetCreate(
-    firewallRulesSet
+    firewallRulesSetRequest
 );
 ```
 
@@ -553,7 +554,7 @@ const { status, data } = await apiInstance.cloudFirewallRulesSetCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **firewallRulesSet** | **FirewallRulesSet**|  | |
+| **firewallRulesSetRequest** | **FirewallRulesSetRequest**|  | |
 
 
 ### Return type
@@ -683,18 +684,18 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     CloudApi,
     Configuration,
-    PatchedFirewallRulesSet
+    PatchedFirewallRulesSetRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this firewall rules set. (default to undefined)
-let patchedFirewallRulesSet: PatchedFirewallRulesSet; // (optional)
+let patchedFirewallRulesSetRequest: PatchedFirewallRulesSetRequest; // (optional)
 
 const { status, data } = await apiInstance.cloudFirewallRulesSetPartialUpdate(
     id,
-    patchedFirewallRulesSet
+    patchedFirewallRulesSetRequest
 );
 ```
 
@@ -702,7 +703,7 @@ const { status, data } = await apiInstance.cloudFirewallRulesSetPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedFirewallRulesSet** | **PatchedFirewallRulesSet**|  | |
+| **patchedFirewallRulesSetRequest** | **PatchedFirewallRulesSetRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this firewall rules set. | defaults to undefined|
 
 
@@ -779,7 +780,7 @@ const { status, data } = await apiInstance.cloudFirewallRulesSetRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudFirewallRulesSetRulesCreate**
-> FirewallRule cloudFirewallRulesSetRulesCreate(firewallRule)
+> FirewallRule cloudFirewallRulesSetRulesCreate(firewallRuleRequest)
 
 Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
 
@@ -789,18 +790,18 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     CloudApi,
     Configuration,
-    FirewallRule
+    FirewallRuleRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let rulesSetId: string; // (default to undefined)
-let firewallRule: FirewallRule; //
+let firewallRuleRequest: FirewallRuleRequest; //
 
 const { status, data } = await apiInstance.cloudFirewallRulesSetRulesCreate(
     rulesSetId,
-    firewallRule
+    firewallRuleRequest
 );
 ```
 
@@ -808,7 +809,7 @@ const { status, data } = await apiInstance.cloudFirewallRulesSetRulesCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **firewallRule** | **FirewallRule**|  | |
+| **firewallRuleRequest** | **FirewallRuleRequest**|  | |
 | **rulesSetId** | [**string**] |  | defaults to undefined|
 
 
@@ -949,7 +950,7 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     CloudApi,
     Configuration,
-    PatchedFirewallRule
+    PatchedFirewallRuleRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -957,12 +958,12 @@ const apiInstance = new CloudApi(configuration);
 
 let ruleId: string; // (default to undefined)
 let rulesSetId: string; // (default to undefined)
-let patchedFirewallRule: PatchedFirewallRule; // (optional)
+let patchedFirewallRuleRequest: PatchedFirewallRuleRequest; // (optional)
 
 const { status, data } = await apiInstance.cloudFirewallRulesSetRulesPartialUpdate(
     ruleId,
     rulesSetId,
-    patchedFirewallRule
+    patchedFirewallRuleRequest
 );
 ```
 
@@ -970,7 +971,7 @@ const { status, data } = await apiInstance.cloudFirewallRulesSetRulesPartialUpda
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedFirewallRule** | **PatchedFirewallRule**|  | |
+| **patchedFirewallRuleRequest** | **PatchedFirewallRuleRequest**|  | |
 | **ruleId** | [**string**] |  | defaults to undefined|
 | **rulesSetId** | [**string**] |  | defaults to undefined|
 
@@ -1051,7 +1052,7 @@ const { status, data } = await apiInstance.cloudFirewallRulesSetRulesRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudFirewallRulesSetRulesUpdate**
-> FirewallRule cloudFirewallRulesSetRulesUpdate(firewallRule)
+> FirewallRule cloudFirewallRulesSetRulesUpdate(firewallRuleRequest)
 
 Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
 
@@ -1061,7 +1062,7 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     CloudApi,
     Configuration,
-    FirewallRule
+    FirewallRuleRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -1069,12 +1070,12 @@ const apiInstance = new CloudApi(configuration);
 
 let ruleId: string; // (default to undefined)
 let rulesSetId: string; // (default to undefined)
-let firewallRule: FirewallRule; //
+let firewallRuleRequest: FirewallRuleRequest; //
 
 const { status, data } = await apiInstance.cloudFirewallRulesSetRulesUpdate(
     ruleId,
     rulesSetId,
-    firewallRule
+    firewallRuleRequest
 );
 ```
 
@@ -1082,7 +1083,7 @@ const { status, data } = await apiInstance.cloudFirewallRulesSetRulesUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **firewallRule** | **FirewallRule**|  | |
+| **firewallRuleRequest** | **FirewallRuleRequest**|  | |
 | **ruleId** | [**string**] |  | defaults to undefined|
 | **rulesSetId** | [**string**] |  | defaults to undefined|
 
@@ -1109,7 +1110,7 @@ const { status, data } = await apiInstance.cloudFirewallRulesSetRulesUpdate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudFirewallRulesSetUpdate**
-> FirewallRulesSet cloudFirewallRulesSetUpdate(firewallRulesSet)
+> FirewallRulesSet cloudFirewallRulesSetUpdate(firewallRulesSetRequest)
 
 Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
 
@@ -1119,18 +1120,18 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     CloudApi,
     Configuration,
-    FirewallRulesSet
+    FirewallRulesSetRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this firewall rules set. (default to undefined)
-let firewallRulesSet: FirewallRulesSet; //
+let firewallRulesSetRequest: FirewallRulesSetRequest; //
 
 const { status, data } = await apiInstance.cloudFirewallRulesSetUpdate(
     id,
-    firewallRulesSet
+    firewallRulesSetRequest
 );
 ```
 
@@ -1138,7 +1139,7 @@ const { status, data } = await apiInstance.cloudFirewallRulesSetUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **firewallRulesSet** | **FirewallRulesSet**|  | |
+| **firewallRulesSetRequest** | **FirewallRulesSetRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this firewall rules set. | defaults to undefined|
 
 
@@ -1283,16 +1284,16 @@ Manage floating IPv4 addresses. A floating IP can be authorized on multiple VMs 
 import {
     CloudApi,
     Configuration,
-    FloatingIPv4Create
+    FloatingIPv4CreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
-let floatingIPv4Create: FloatingIPv4Create; // (optional)
+let floatingIPv4CreateRequest: FloatingIPv4CreateRequest; // (optional)
 
 const { status, data } = await apiInstance.cloudFloatingIpv4Create(
-    floatingIPv4Create
+    floatingIPv4CreateRequest
 );
 ```
 
@@ -1300,7 +1301,7 @@ const { status, data } = await apiInstance.cloudFloatingIpv4Create(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **floatingIPv4Create** | **FloatingIPv4Create**|  | |
+| **floatingIPv4CreateRequest** | **FloatingIPv4CreateRequest**|  | |
 
 
 ### Return type
@@ -1427,7 +1428,7 @@ const { status, data } = await apiInstance.cloudFloatingIpv4List(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudFloatingIpv4RdnsCreate**
-> ReverseDNS cloudFloatingIpv4RdnsCreate(reverseDNS)
+> ReverseDNS cloudFloatingIpv4RdnsCreate(reverseDNSRequest)
 
 Get or update reverse DNS (PTR) for the IPv4 address wrapped by this floating IP.
 
@@ -1437,18 +1438,18 @@ Get or update reverse DNS (PTR) for the IPv4 address wrapped by this floating IP
 import {
     CloudApi,
     Configuration,
-    ReverseDNS
+    ReverseDNSRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this floating IPv4. (default to undefined)
-let reverseDNS: ReverseDNS; //
+let reverseDNSRequest: ReverseDNSRequest; //
 
 const { status, data } = await apiInstance.cloudFloatingIpv4RdnsCreate(
     id,
-    reverseDNS
+    reverseDNSRequest
 );
 ```
 
@@ -1456,7 +1457,7 @@ const { status, data } = await apiInstance.cloudFloatingIpv4RdnsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **reverseDNS** | **ReverseDNS**|  | |
+| **reverseDNSRequest** | **ReverseDNSRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this floating IPv4. | defaults to undefined|
 
 
@@ -1758,16 +1759,16 @@ Manage floating IPv6 addresses.
 import {
     CloudApi,
     Configuration,
-    FloatingIPv6Create
+    FloatingIPv6CreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
-let floatingIPv6Create: FloatingIPv6Create; // (optional)
+let floatingIPv6CreateRequest: FloatingIPv6CreateRequest; // (optional)
 
 const { status, data } = await apiInstance.cloudFloatingIpv6Create(
-    floatingIPv6Create
+    floatingIPv6CreateRequest
 );
 ```
 
@@ -1775,7 +1776,7 @@ const { status, data } = await apiInstance.cloudFloatingIpv6Create(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **floatingIPv6Create** | **FloatingIPv6Create**|  | |
+| **floatingIPv6CreateRequest** | **FloatingIPv6CreateRequest**|  | |
 
 
 ### Return type
@@ -1902,7 +1903,7 @@ const { status, data } = await apiInstance.cloudFloatingIpv6List(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudFloatingIpv6RdnsCreate**
-> ReverseDNS cloudFloatingIpv6RdnsCreate(reverseDNS)
+> ReverseDNS cloudFloatingIpv6RdnsCreate(reverseDNSRequest)
 
 Get or update reverse DNS (PTR) for the IPv6 address wrapped by this floating IP.
 
@@ -1912,18 +1913,18 @@ Get or update reverse DNS (PTR) for the IPv6 address wrapped by this floating IP
 import {
     CloudApi,
     Configuration,
-    ReverseDNS
+    ReverseDNSRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this floating IPv6. (default to undefined)
-let reverseDNS: ReverseDNS; //
+let reverseDNSRequest: ReverseDNSRequest; //
 
 const { status, data } = await apiInstance.cloudFloatingIpv6RdnsCreate(
     id,
-    reverseDNS
+    reverseDNSRequest
 );
 ```
 
@@ -1931,7 +1932,7 @@ const { status, data } = await apiInstance.cloudFloatingIpv6RdnsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **reverseDNS** | **ReverseDNS**|  | |
+| **reverseDNSRequest** | **ReverseDNSRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this floating IPv6. | defaults to undefined|
 
 
@@ -2320,25 +2321,17 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 ```typescript
 import {
     CloudApi,
-    Configuration,
-    PublicIPv4
+    Configuration
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
-let publicIPv4: PublicIPv4; // (optional)
-
-const { status, data } = await apiInstance.cloudIpv4Create(
-    publicIPv4
-);
+const { status, data } = await apiInstance.cloudIpv4Create();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **publicIPv4** | **PublicIPv4**|  | |
+This endpoint does not have any parameters.
 
 
 ### Return type
@@ -2351,7 +2344,7 @@ const { status, data } = await apiInstance.cloudIpv4Create(
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
@@ -2423,19 +2416,16 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 ```typescript
 import {
     CloudApi,
-    Configuration,
-    PublicIPv4
+    Configuration
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this Public IPv4. (default to undefined)
-let publicIPv4: PublicIPv4; // (optional)
 
 const { status, data } = await apiInstance.cloudIpv4DetachCreate(
-    id,
-    publicIPv4
+    id
 );
 ```
 
@@ -2443,7 +2433,6 @@ const { status, data } = await apiInstance.cloudIpv4DetachCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **publicIPv4** | **PublicIPv4**|  | |
 | **id** | [**number**] | A unique integer value identifying this Public IPv4. | defaults to undefined|
 
 
@@ -2457,7 +2446,7 @@ const { status, data } = await apiInstance.cloudIpv4DetachCreate(
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
@@ -2520,7 +2509,7 @@ const { status, data } = await apiInstance.cloudIpv4List(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudIpv4RdnsCreate**
-> ReverseDNS cloudIpv4RdnsCreate(reverseDNS)
+> ReverseDNS cloudIpv4RdnsCreate(reverseDNSRequest)
 
 Get or update reverse DNS (PTR) for this IPv4 address.
 
@@ -2530,18 +2519,18 @@ Get or update reverse DNS (PTR) for this IPv4 address.
 import {
     CloudApi,
     Configuration,
-    ReverseDNS
+    ReverseDNSRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this Public IPv4. (default to undefined)
-let reverseDNS: ReverseDNS; //
+let reverseDNSRequest: ReverseDNSRequest; //
 
 const { status, data } = await apiInstance.cloudIpv4RdnsCreate(
     id,
-    reverseDNS
+    reverseDNSRequest
 );
 ```
 
@@ -2549,7 +2538,7 @@ const { status, data } = await apiInstance.cloudIpv4RdnsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **reverseDNS** | **ReverseDNS**|  | |
+| **reverseDNSRequest** | **ReverseDNSRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this Public IPv4. | defaults to undefined|
 
 
@@ -2686,25 +2675,17 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 ```typescript
 import {
     CloudApi,
-    Configuration,
-    PublicIPv6
+    Configuration
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
-let publicIPv6: PublicIPv6; // (optional)
-
-const { status, data } = await apiInstance.cloudIpv6Create(
-    publicIPv6
-);
+const { status, data } = await apiInstance.cloudIpv6Create();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **publicIPv6** | **PublicIPv6**|  | |
+This endpoint does not have any parameters.
 
 
 ### Return type
@@ -2717,7 +2698,7 @@ const { status, data } = await apiInstance.cloudIpv6Create(
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
@@ -2789,19 +2770,16 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 ```typescript
 import {
     CloudApi,
-    Configuration,
-    PublicIPv6
+    Configuration
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this Public IPv6. (default to undefined)
-let publicIPv6: PublicIPv6; // (optional)
 
 const { status, data } = await apiInstance.cloudIpv6DetachCreate(
-    id,
-    publicIPv6
+    id
 );
 ```
 
@@ -2809,7 +2787,6 @@ const { status, data } = await apiInstance.cloudIpv6DetachCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **publicIPv6** | **PublicIPv6**|  | |
 | **id** | [**number**] | A unique integer value identifying this Public IPv6. | defaults to undefined|
 
 
@@ -2823,7 +2800,7 @@ const { status, data } = await apiInstance.cloudIpv6DetachCreate(
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
@@ -2886,7 +2863,7 @@ const { status, data } = await apiInstance.cloudIpv6List(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudIpv6RdnsCreate**
-> ReverseDNS cloudIpv6RdnsCreate(reverseDNS)
+> ReverseDNS cloudIpv6RdnsCreate(reverseDNSRequest)
 
 Get or update reverse DNS (PTR) for this IPv6 address.
 
@@ -2896,18 +2873,18 @@ Get or update reverse DNS (PTR) for this IPv6 address.
 import {
     CloudApi,
     Configuration,
-    ReverseDNS
+    ReverseDNSRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this Public IPv6. (default to undefined)
-let reverseDNS: ReverseDNS; //
+let reverseDNSRequest: ReverseDNSRequest; //
 
 const { status, data } = await apiInstance.cloudIpv6RdnsCreate(
     id,
-    reverseDNS
+    reverseDNSRequest
 );
 ```
 
@@ -2915,7 +2892,7 @@ const { status, data } = await apiInstance.cloudIpv6RdnsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **reverseDNS** | **ReverseDNS**|  | |
+| **reverseDNSRequest** | **ReverseDNSRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this Public IPv6. | defaults to undefined|
 
 
@@ -3043,7 +3020,7 @@ const { status, data } = await apiInstance.cloudIpv6Retrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudPrivateNetworksAddServerCreate**
-> AddServerResponse cloudPrivateNetworksAddServerCreate(privateNetworkAddHost)
+> AddServerResponse cloudPrivateNetworksAddServerCreate(privateNetworkAddHostRequest)
 
 Manage private networks
 
@@ -3053,18 +3030,18 @@ Manage private networks
 import {
     CloudApi,
     Configuration,
-    PrivateNetworkAddHost
+    PrivateNetworkAddHostRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this private network. (default to undefined)
-let privateNetworkAddHost: PrivateNetworkAddHost; //
+let privateNetworkAddHostRequest: PrivateNetworkAddHostRequest; //
 
 const { status, data } = await apiInstance.cloudPrivateNetworksAddServerCreate(
     id,
-    privateNetworkAddHost
+    privateNetworkAddHostRequest
 );
 ```
 
@@ -3072,7 +3049,7 @@ const { status, data } = await apiInstance.cloudPrivateNetworksAddServerCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **privateNetworkAddHost** | **PrivateNetworkAddHost**|  | |
+| **privateNetworkAddHostRequest** | **PrivateNetworkAddHostRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this private network. | defaults to undefined|
 
 
@@ -3098,7 +3075,7 @@ const { status, data } = await apiInstance.cloudPrivateNetworksAddServerCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudPrivateNetworksCreate**
-> PrivateNetwork cloudPrivateNetworksCreate(privateNetwork)
+> PrivateNetwork cloudPrivateNetworksCreate(privateNetworkRequest)
 
 Manage private networks
 
@@ -3108,16 +3085,16 @@ Manage private networks
 import {
     CloudApi,
     Configuration,
-    PrivateNetwork
+    PrivateNetworkRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
-let privateNetwork: PrivateNetwork; //
+let privateNetworkRequest: PrivateNetworkRequest; //
 
 const { status, data } = await apiInstance.cloudPrivateNetworksCreate(
-    privateNetwork
+    privateNetworkRequest
 );
 ```
 
@@ -3125,7 +3102,7 @@ const { status, data } = await apiInstance.cloudPrivateNetworksCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **privateNetwork** | **PrivateNetwork**|  | |
+| **privateNetworkRequest** | **PrivateNetworkRequest**|  | |
 
 
 ### Return type
@@ -3262,18 +3239,18 @@ Manage private networks
 import {
     CloudApi,
     Configuration,
-    PatchedPrivateNetwork
+    PatchedPrivateNetworkUpdateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this private network. (default to undefined)
-let patchedPrivateNetwork: PatchedPrivateNetwork; // (optional)
+let patchedPrivateNetworkUpdateRequest: PatchedPrivateNetworkUpdateRequest; // (optional)
 
 const { status, data } = await apiInstance.cloudPrivateNetworksPartialUpdate(
     id,
-    patchedPrivateNetwork
+    patchedPrivateNetworkUpdateRequest
 );
 ```
 
@@ -3281,7 +3258,7 @@ const { status, data } = await apiInstance.cloudPrivateNetworksPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedPrivateNetwork** | **PatchedPrivateNetwork**|  | |
+| **patchedPrivateNetworkUpdateRequest** | **PatchedPrivateNetworkUpdateRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this private network. | defaults to undefined|
 
 
@@ -3307,7 +3284,7 @@ const { status, data } = await apiInstance.cloudPrivateNetworksPartialUpdate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudPrivateNetworksRemoveServerCreate**
-> RemoveServerResponse cloudPrivateNetworksRemoveServerCreate(privateNetworkRemoveHost)
+> RemoveServerResponse cloudPrivateNetworksRemoveServerCreate(privateNetworkRemoveHostRequest)
 
 Manage private networks
 
@@ -3317,18 +3294,18 @@ Manage private networks
 import {
     CloudApi,
     Configuration,
-    PrivateNetworkRemoveHost
+    PrivateNetworkRemoveHostRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this private network. (default to undefined)
-let privateNetworkRemoveHost: PrivateNetworkRemoveHost; //
+let privateNetworkRemoveHostRequest: PrivateNetworkRemoveHostRequest; //
 
 const { status, data } = await apiInstance.cloudPrivateNetworksRemoveServerCreate(
     id,
-    privateNetworkRemoveHost
+    privateNetworkRemoveHostRequest
 );
 ```
 
@@ -3336,7 +3313,7 @@ const { status, data } = await apiInstance.cloudPrivateNetworksRemoveServerCreat
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **privateNetworkRemoveHost** | **PrivateNetworkRemoveHost**|  | |
+| **privateNetworkRemoveHostRequest** | **PrivateNetworkRemoveHostRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this private network. | defaults to undefined|
 
 
@@ -3413,7 +3390,7 @@ const { status, data } = await apiInstance.cloudPrivateNetworksRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudPrivateNetworksUpdate**
-> PrivateNetwork cloudPrivateNetworksUpdate(privateNetwork)
+> PrivateNetwork cloudPrivateNetworksUpdate()
 
 Manage private networks
 
@@ -3423,18 +3400,18 @@ Manage private networks
 import {
     CloudApi,
     Configuration,
-    PrivateNetwork
+    PrivateNetworkUpdateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this private network. (default to undefined)
-let privateNetwork: PrivateNetwork; //
+let privateNetworkUpdateRequest: PrivateNetworkUpdateRequest; // (optional)
 
 const { status, data } = await apiInstance.cloudPrivateNetworksUpdate(
     id,
-    privateNetwork
+    privateNetworkUpdateRequest
 );
 ```
 
@@ -3442,7 +3419,7 @@ const { status, data } = await apiInstance.cloudPrivateNetworksUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **privateNetwork** | **PrivateNetwork**|  | |
+| **privateNetworkUpdateRequest** | **PrivateNetworkUpdateRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this private network. | defaults to undefined|
 
 
@@ -3778,7 +3755,7 @@ const { status, data } = await apiInstance.cloudServersAttachIpv6Create(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudServersBootIsosList**
-> PaginatedBootISOList cloudServersBootIsosList()
+> Array<BootISO> cloudServersBootIsosList()
 
 List the ISO catalog entries visible to this user and their package compatibility.
 
@@ -3794,11 +3771,9 @@ const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this virtual machine. (default to undefined)
-let page: number; //A page number within the paginated result set. (optional) (default to undefined)
 
 const { status, data } = await apiInstance.cloudServersBootIsosList(
-    id,
-    page
+    id
 );
 ```
 
@@ -3807,12 +3782,11 @@ const { status, data } = await apiInstance.cloudServersBootIsosList(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **id** | [**number**] | A unique integer value identifying this virtual machine. | defaults to undefined|
-| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
 
 
 ### Return type
 
-**PaginatedBootISOList**
+**Array<BootISO>**
 
 ### Authorization
 
@@ -3883,7 +3857,7 @@ const { status, data } = await apiInstance.cloudServersConsoleCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudServersCreate**
-> ServerAddResponse cloudServersCreate(serverAdd)
+> ServerAddResponse cloudServersCreate(serverAddRequest)
 
 Create new server
 
@@ -3893,16 +3867,16 @@ Create new server
 import {
     CloudApi,
     Configuration,
-    ServerAdd
+    ServerAddRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
-let serverAdd: ServerAdd; //
+let serverAddRequest: ServerAddRequest; //
 
 const { status, data } = await apiInstance.cloudServersCreate(
-    serverAdd
+    serverAddRequest
 );
 ```
 
@@ -3910,7 +3884,7 @@ const { status, data } = await apiInstance.cloudServersCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **serverAdd** | **ServerAdd**|  | |
+| **serverAddRequest** | **ServerAddRequest**|  | |
 
 
 ### Return type
@@ -3986,7 +3960,7 @@ void (empty response body)
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudServersDestroyProtectionCreate**
-> DestroyProtectionResponse cloudServersDestroyProtectionCreate(destroyProtection)
+> DestroyProtectionResponse cloudServersDestroyProtectionCreate(destroyProtectionRequest)
 
 Enable or disable destroy protection.
 
@@ -3996,18 +3970,18 @@ Enable or disable destroy protection.
 import {
     CloudApi,
     Configuration,
-    DestroyProtection
+    DestroyProtectionRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this virtual machine. (default to undefined)
-let destroyProtection: DestroyProtection; //
+let destroyProtectionRequest: DestroyProtectionRequest; //
 
 const { status, data } = await apiInstance.cloudServersDestroyProtectionCreate(
     id,
-    destroyProtection
+    destroyProtectionRequest
 );
 ```
 
@@ -4015,7 +3989,7 @@ const { status, data } = await apiInstance.cloudServersDestroyProtectionCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **destroyProtection** | **DestroyProtection**|  | |
+| **destroyProtectionRequest** | **DestroyProtectionRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this virtual machine. | defaults to undefined|
 
 
@@ -4197,7 +4171,7 @@ const { status, data } = await apiInstance.cloudServersList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudServersModifyPackageCreate**
-> ServerUpgradeResponse cloudServersModifyPackageCreate(serverProductUpgrade)
+> ServerUpgradeResponse cloudServersModifyPackageCreate(serverProductUpgradeRequest)
 
 Modify server package: downgrade available only for packages with the same disk size.
 
@@ -4207,18 +4181,18 @@ Modify server package: downgrade available only for packages with the same disk 
 import {
     CloudApi,
     Configuration,
-    ServerProductUpgrade
+    ServerProductUpgradeRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this virtual machine. (default to undefined)
-let serverProductUpgrade: ServerProductUpgrade; //
+let serverProductUpgradeRequest: ServerProductUpgradeRequest; //
 
 const { status, data } = await apiInstance.cloudServersModifyPackageCreate(
     id,
-    serverProductUpgrade
+    serverProductUpgradeRequest
 );
 ```
 
@@ -4226,7 +4200,7 @@ const { status, data } = await apiInstance.cloudServersModifyPackageCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **serverProductUpgrade** | **ServerProductUpgrade**|  | |
+| **serverProductUpgradeRequest** | **ServerProductUpgradeRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this virtual machine. | defaults to undefined|
 
 
@@ -4262,18 +4236,18 @@ Cloud servers
 import {
     CloudApi,
     Configuration,
-    PatchedServerDetail
+    PatchedServerDetailRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this virtual machine. (default to undefined)
-let patchedServerDetail: PatchedServerDetail; // (optional)
+let patchedServerDetailRequest: PatchedServerDetailRequest; // (optional)
 
 const { status, data } = await apiInstance.cloudServersPartialUpdate(
     id,
-    patchedServerDetail
+    patchedServerDetailRequest
 );
 ```
 
@@ -4281,7 +4255,7 @@ const { status, data } = await apiInstance.cloudServersPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedServerDetail** | **PatchedServerDetail**|  | |
+| **patchedServerDetailRequest** | **PatchedServerDetailRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this virtual machine. | defaults to undefined|
 
 
@@ -4423,18 +4397,18 @@ Public interface
 import {
     CloudApi,
     Configuration,
-    PublicInterface
+    PublicInterfaceRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this virtual machine. (default to undefined)
-let publicInterface: PublicInterface; // (optional)
+let publicInterfaceRequest: PublicInterfaceRequest; // (optional)
 
 const { status, data } = await apiInstance.cloudServersPublicInterfaceCreate(
     id,
-    publicInterface
+    publicInterfaceRequest
 );
 ```
 
@@ -4442,7 +4416,7 @@ const { status, data } = await apiInstance.cloudServersPublicInterfaceCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **publicInterface** | **PublicInterface**|  | |
+| **publicInterfaceRequest** | **PublicInterfaceRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this virtual machine. | defaults to undefined|
 
 
@@ -4778,9 +4752,9 @@ const { status, data } = await apiInstance.cloudServersRetryProvisionCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudServersSnapshotsCreate**
-> PaginatedSnapshotList cloudServersSnapshotsCreate(snapshotCreate)
+> SnapshotCreateQueued cloudServersSnapshotsCreate(snapshotCreateRequest)
 
-List snapshots for this server or queue a new snapshot.
+Cloud servers
 
 ### Example
 
@@ -4788,20 +4762,18 @@ List snapshots for this server or queue a new snapshot.
 import {
     CloudApi,
     Configuration,
-    SnapshotCreate
+    SnapshotCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this virtual machine. (default to undefined)
-let snapshotCreate: SnapshotCreate; //
-let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+let snapshotCreateRequest: SnapshotCreateRequest; //
 
 const { status, data } = await apiInstance.cloudServersSnapshotsCreate(
     id,
-    snapshotCreate,
-    page
+    snapshotCreateRequest
 );
 ```
 
@@ -4809,14 +4781,13 @@ const { status, data } = await apiInstance.cloudServersSnapshotsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **snapshotCreate** | **SnapshotCreate**|  | |
+| **snapshotCreateRequest** | **SnapshotCreateRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this virtual machine. | defaults to undefined|
-| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
 
 
 ### Return type
 
-**PaginatedSnapshotList**
+**SnapshotCreateQueued**
 
 ### Authorization
 
@@ -4831,7 +4802,6 @@ const { status, data } = await apiInstance.cloudServersSnapshotsCreate(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** |  |  -  |
 |**202** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -4891,7 +4861,7 @@ const { status, data } = await apiInstance.cloudServersSnapshotsDestroy(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudServersSnapshotsList**
-> PaginatedSnapshotList cloudServersSnapshotsList()
+> Array<Snapshot> cloudServersSnapshotsList()
 
 List snapshots for this server or queue a new snapshot.
 
@@ -4907,11 +4877,9 @@ const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this virtual machine. (default to undefined)
-let page: number; //A page number within the paginated result set. (optional) (default to undefined)
 
 const { status, data } = await apiInstance.cloudServersSnapshotsList(
-    id,
-    page
+    id
 );
 ```
 
@@ -4920,12 +4888,11 @@ const { status, data } = await apiInstance.cloudServersSnapshotsList(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **id** | [**number**] | A unique integer value identifying this virtual machine. | defaults to undefined|
-| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
 
 
 ### Return type
 
-**PaginatedSnapshotList**
+**Array<Snapshot>**
 
 ### Authorization
 
@@ -4941,7 +4908,6 @@ const { status, data } = await apiInstance.cloudServersSnapshotsList(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** |  |  -  |
-|**202** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -4999,6 +4965,57 @@ const { status, data } = await apiInstance.cloudServersSnapshotsRollbackCreate(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **cloudServersTrafficRetrieve**
+> ServerTrafficResponse cloudServersTrafficRetrieve()
+
+Get this month\'s traffic usage for a server.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let id: number; //A unique integer value identifying this virtual machine. (default to undefined)
+
+const { status, data } = await apiInstance.cloudServersTrafficRetrieve(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**number**] | A unique integer value identifying this virtual machine. | defaults to undefined|
+
+
+### Return type
+
+**ServerTrafficResponse**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **cloudServersUpdate**
 > ServerDetail cloudServersUpdate()
 
@@ -5010,18 +5027,18 @@ Cloud servers
 import {
     CloudApi,
     Configuration,
-    ServerDetail
+    ServerDetailRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this virtual machine. (default to undefined)
-let serverDetail: ServerDetail; // (optional)
+let serverDetailRequest: ServerDetailRequest; // (optional)
 
 const { status, data } = await apiInstance.cloudServersUpdate(
     id,
-    serverDetail
+    serverDetailRequest
 );
 ```
 
@@ -5029,7 +5046,7 @@ const { status, data } = await apiInstance.cloudServersUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **serverDetail** | **ServerDetail**|  | |
+| **serverDetailRequest** | **ServerDetailRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this virtual machine. | defaults to undefined|
 
 
@@ -5106,7 +5123,7 @@ const { status, data } = await apiInstance.cloudServersUsageRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudServersVolumesCreate**
-> Volume cloudServersVolumesCreate(volume)
+> Volume cloudServersVolumesCreate(volumeRequest)
 
 Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
 
@@ -5116,18 +5133,18 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     CloudApi,
     Configuration,
-    Volume
+    VolumeRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let serverId: string; // (default to undefined)
-let volume: Volume; //
+let volumeRequest: VolumeRequest; //
 
 const { status, data } = await apiInstance.cloudServersVolumesCreate(
     serverId,
-    volume
+    volumeRequest
 );
 ```
 
@@ -5135,7 +5152,7 @@ const { status, data } = await apiInstance.cloudServersVolumesCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **volume** | **Volume**|  | |
+| **volumeRequest** | **VolumeRequest**|  | |
 | **serverId** | [**string**] |  | defaults to undefined|
 
 
@@ -5276,7 +5293,7 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     CloudApi,
     Configuration,
-    PatchedVolume
+    PatchedVolumeUpdateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -5284,12 +5301,12 @@ const apiInstance = new CloudApi(configuration);
 
 let serverId: string; // (default to undefined)
 let volumeId: string; // (default to undefined)
-let patchedVolume: PatchedVolume; // (optional)
+let patchedVolumeUpdateRequest: PatchedVolumeUpdateRequest; // (optional)
 
 const { status, data } = await apiInstance.cloudServersVolumesPartialUpdate(
     serverId,
     volumeId,
-    patchedVolume
+    patchedVolumeUpdateRequest
 );
 ```
 
@@ -5297,7 +5314,7 @@ const { status, data } = await apiInstance.cloudServersVolumesPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedVolume** | **PatchedVolume**|  | |
+| **patchedVolumeUpdateRequest** | **PatchedVolumeUpdateRequest**|  | |
 | **serverId** | [**string**] |  | defaults to undefined|
 | **volumeId** | [**string**] |  | defaults to undefined|
 
@@ -5378,7 +5395,7 @@ const { status, data } = await apiInstance.cloudServersVolumesRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudServersVolumesUpdate**
-> Volume cloudServersVolumesUpdate(volume)
+> Volume cloudServersVolumesUpdate(volumeUpdateRequest)
 
 Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
 
@@ -5388,7 +5405,7 @@ Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection wi
 import {
     CloudApi,
     Configuration,
-    Volume
+    VolumeUpdateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -5396,12 +5413,12 @@ const apiInstance = new CloudApi(configuration);
 
 let serverId: string; // (default to undefined)
 let volumeId: string; // (default to undefined)
-let volume: Volume; //
+let volumeUpdateRequest: VolumeUpdateRequest; //
 
 const { status, data } = await apiInstance.cloudServersVolumesUpdate(
     serverId,
     volumeId,
-    volume
+    volumeUpdateRequest
 );
 ```
 
@@ -5409,7 +5426,7 @@ const { status, data } = await apiInstance.cloudServersVolumesUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **volume** | **Volume**|  | |
+| **volumeUpdateRequest** | **VolumeUpdateRequest**|  | |
 | **serverId** | [**string**] |  | defaults to undefined|
 | **volumeId** | [**string**] |  | defaults to undefined|
 
@@ -5538,7 +5555,7 @@ const { status, data } = await apiInstance.cloudStorageProductsRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudVolumesAttachCreate**
-> AttachVolume cloudVolumesAttachCreate(attachVolume)
+> AttachVolume cloudVolumesAttachCreate(attachVolumeRequest)
 
 Attach existing volume to a server
 
@@ -5548,18 +5565,18 @@ Attach existing volume to a server
 import {
     CloudApi,
     Configuration,
-    AttachVolume
+    AttachVolumeRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this storage. (default to undefined)
-let attachVolume: AttachVolume; //
+let attachVolumeRequest: AttachVolumeRequest; //
 
 const { status, data } = await apiInstance.cloudVolumesAttachCreate(
     id,
-    attachVolume
+    attachVolumeRequest
 );
 ```
 
@@ -5567,7 +5584,7 @@ const { status, data } = await apiInstance.cloudVolumesAttachCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **attachVolume** | **AttachVolume**|  | |
+| **attachVolumeRequest** | **AttachVolumeRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this storage. | defaults to undefined|
 
 
@@ -5644,7 +5661,7 @@ void (empty response body)
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudVolumesDetachCreate**
-> DetachVolume cloudVolumesDetachCreate(volume)
+> DetachVolume cloudVolumesDetachCreate()
 
 Detach volume from server
 
@@ -5653,19 +5670,16 @@ Detach volume from server
 ```typescript
 import {
     CloudApi,
-    Configuration,
-    Volume
+    Configuration
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this storage. (default to undefined)
-let volume: Volume; //
 
 const { status, data } = await apiInstance.cloudVolumesDetachCreate(
-    id,
-    volume
+    id
 );
 ```
 
@@ -5673,7 +5687,6 @@ const { status, data } = await apiInstance.cloudVolumesDetachCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **volume** | **Volume**|  | |
 | **id** | [**number**] | A unique integer value identifying this storage. | defaults to undefined|
 
 
@@ -5687,7 +5700,7 @@ const { status, data } = await apiInstance.cloudVolumesDetachCreate(
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
@@ -5753,18 +5766,18 @@ Volumes management
 import {
     CloudApi,
     Configuration,
-    PatchedVolume
+    PatchedVolumeUpdateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this storage. (default to undefined)
-let patchedVolume: PatchedVolume; // (optional)
+let patchedVolumeUpdateRequest: PatchedVolumeUpdateRequest; // (optional)
 
 const { status, data } = await apiInstance.cloudVolumesPartialUpdate(
     id,
-    patchedVolume
+    patchedVolumeUpdateRequest
 );
 ```
 
@@ -5772,7 +5785,7 @@ const { status, data } = await apiInstance.cloudVolumesPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedVolume** | **PatchedVolume**|  | |
+| **patchedVolumeUpdateRequest** | **PatchedVolumeUpdateRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this storage. | defaults to undefined|
 
 
@@ -5849,7 +5862,7 @@ const { status, data } = await apiInstance.cloudVolumesRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudVolumesUpdate**
-> Volume cloudVolumesUpdate(volume)
+> Volume cloudVolumesUpdate(volumeUpdateRequest)
 
 Volumes management
 
@@ -5859,18 +5872,18 @@ Volumes management
 import {
     CloudApi,
     Configuration,
-    Volume
+    VolumeUpdateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new CloudApi(configuration);
 
 let id: number; //A unique integer value identifying this storage. (default to undefined)
-let volume: Volume; //
+let volumeUpdateRequest: VolumeUpdateRequest; //
 
 const { status, data } = await apiInstance.cloudVolumesUpdate(
     id,
-    volume
+    volumeUpdateRequest
 );
 ```
 
@@ -5878,7 +5891,7 @@ const { status, data } = await apiInstance.cloudVolumesUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **volume** | **Volume**|  | |
+| **volumeUpdateRequest** | **VolumeUpdateRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this storage. | defaults to undefined|
 
 

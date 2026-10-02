@@ -9,7 +9,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**hostingHostingRetrieve**](#hostinghostingretrieve) | **GET** /api/hosting/hosting/{id}/ | |
 
 # **hostingHostingChangePasswordCreate**
-> HostingChangePasswordResponse hostingHostingChangePasswordCreate(changePassword)
+> HostingChangePasswordResponse hostingHostingChangePasswordCreate(changePasswordRequest)
 
 Change the cPanel password for this hosting service.
 
@@ -19,18 +19,18 @@ Change the cPanel password for this hosting service.
 import {
     HostingApi,
     Configuration,
-    ChangePassword
+    ChangePasswordRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new HostingApi(configuration);
 
 let id: string; // (default to undefined)
-let changePassword: ChangePassword; //
+let changePasswordRequest: ChangePasswordRequest; //
 
 const { status, data } = await apiInstance.hostingHostingChangePasswordCreate(
     id,
-    changePassword
+    changePasswordRequest
 );
 ```
 
@@ -38,7 +38,7 @@ const { status, data } = await apiInstance.hostingHostingChangePasswordCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **changePassword** | **ChangePassword**|  | |
+| **changePasswordRequest** | **ChangePasswordRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 

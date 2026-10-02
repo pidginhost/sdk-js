@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **date** | **string** |  | [readonly] [default to undefined]
 **message** | **string** |  | [readonly] [default to undefined]
 **author_name** | **string** |  | [readonly] [default to undefined]
-**has_attachment** | **string** |  | [readonly] [default to undefined]
+**has_attachment** | **boolean** |  | [readonly] [default to undefined]
 **attachment_filename** | **string** |  | [readonly] [default to undefined]
 
 ## Example

@@ -109,7 +109,7 @@ const { status, data } = await apiInstance.supportTicketsCloseCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **supportTicketsCreate**
-> TicketDetail supportTicketsCreate(ticketCreate)
+> TicketDetail supportTicketsCreate(ticketCreateRequest)
 
 Create a new support ticket.
 
@@ -119,16 +119,16 @@ Create a new support ticket.
 import {
     SupportApi,
     Configuration,
-    TicketCreate
+    TicketCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new SupportApi(configuration);
 
-let ticketCreate: TicketCreate; //
+let ticketCreateRequest: TicketCreateRequest; //
 
 const { status, data } = await apiInstance.supportTicketsCreate(
-    ticketCreate
+    ticketCreateRequest
 );
 ```
 
@@ -136,7 +136,7 @@ const { status, data } = await apiInstance.supportTicketsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **ticketCreate** | **TicketCreate**|  | |
+| **ticketCreateRequest** | **TicketCreateRequest**|  | |
 
 
 ### Return type
@@ -317,7 +317,7 @@ const { status, data } = await apiInstance.supportTicketsReopenCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **supportTicketsReplyCreate**
-> TicketReplyResponse supportTicketsReplyCreate(ticketReply)
+> TicketReplyResponse supportTicketsReplyCreate(ticketReplyRequest)
 
 Reply to a ticket.
 
@@ -327,18 +327,18 @@ Reply to a ticket.
 import {
     SupportApi,
     Configuration,
-    TicketReply
+    TicketReplyRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new SupportApi(configuration);
 
 let id: string; // (default to undefined)
-let ticketReply: TicketReply; //
+let ticketReplyRequest: TicketReplyRequest; //
 
 const { status, data } = await apiInstance.supportTicketsReplyCreate(
     id,
-    ticketReply
+    ticketReplyRequest
 );
 ```
 
@@ -346,7 +346,7 @@ const { status, data } = await apiInstance.supportTicketsReplyCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **ticketReply** | **TicketReply**|  | |
+| **ticketReplyRequest** | **TicketReplyRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 

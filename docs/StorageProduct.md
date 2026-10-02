@@ -11,8 +11,8 @@ Name | Type | Description | Notes
 **type** | **string** |  | [readonly] [default to undefined]
 **unit** | **string** |  | [readonly] [default to undefined]
 **price** | **string** | price per quantity units per month (if applicable) | [default to undefined]
-**min_size** | **string** |  | [readonly] [default to undefined]
-**max_size** | **string** |  | [readonly] [default to undefined]
+**min_size** | **number** |  | [readonly] [default to undefined]
+**max_size** | **number** |  | [readonly] [default to undefined]
 
 ## Example
 

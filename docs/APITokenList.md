@@ -13,8 +13,8 @@ Name | Type | Description | Notes
 **created** | **string** |  | [readonly] [default to undefined]
 **last_used** | **string** |  | [readonly] [default to undefined]
 **request_count** | **number** |  | [readonly] [default to undefined]
-**account** | **string** |  | [readonly] [default to undefined]
-**membership_status** | **string** |  | [readonly] [default to undefined]
+**account** | **string** |  | [optional] [default to undefined]
+**membership_status** | **string** |  | [optional] [default to undefined]
 
 ## Example
 

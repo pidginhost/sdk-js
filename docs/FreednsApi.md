@@ -12,7 +12,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**freednsDnsRecordsList**](#freednsdnsrecordslist) | **GET** /api/freedns/dns/records/ | |
 
 # **freednsDnsActivateCreate**
-> ActivateFreeDNSResponse freednsDnsActivateCreate(activateFreeDNS)
+> ActivateFreeDNSResponse freednsDnsActivateCreate(activateFreeDNSRequest)
 
 Activate FreeDNS for a domain. For internal domains the nameservers are changed to PidginHost NS. A default zone is created on the cPanel node.
 
@@ -22,16 +22,16 @@ Activate FreeDNS for a domain. For internal domains the nameservers are changed 
 import {
     FreednsApi,
     Configuration,
-    ActivateFreeDNS
+    ActivateFreeDNSRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new FreednsApi(configuration);
 
-let activateFreeDNS: ActivateFreeDNS; //
+let activateFreeDNSRequest: ActivateFreeDNSRequest; //
 
 const { status, data } = await apiInstance.freednsDnsActivateCreate(
-    activateFreeDNS
+    activateFreeDNSRequest
 );
 ```
 
@@ -39,7 +39,7 @@ const { status, data } = await apiInstance.freednsDnsActivateCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **activateFreeDNS** | **ActivateFreeDNS**|  | |
+| **activateFreeDNSRequest** | **ActivateFreeDNSRequest**|  | |
 
 
 ### Return type
@@ -64,7 +64,7 @@ const { status, data } = await apiInstance.freednsDnsActivateCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **freednsDnsAddRecordCreate**
-> DNSRecordMutateResponse freednsDnsAddRecordCreate(dNSRecordCreate)
+> DNSRecordMutateResponse freednsDnsAddRecordCreate(dNSRecordCreateRequest)
 
 Add or edit a DNS record. To edit an existing record, include the \'line\' field with its line number. Required type-specific fields depend on \'type\': A/AAAA → address; CNAME → cname; MX → preference, exchange; SRV → priority, weight, port, target; TXT → txtdata, unencoded; TYPE257 (CAA) → flag, tag, value.
 
@@ -74,7 +74,7 @@ Add or edit a DNS record. To edit an existing record, include the \'line\' field
 import {
     FreednsApi,
     Configuration,
-    DNSRecordCreate
+    DNSRecordCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -82,12 +82,12 @@ const apiInstance = new FreednsApi(configuration);
 
 let domain: string; //Domain name or PK. (default to undefined)
 let source: string; //\'internal\' or \'external\'. (default to undefined)
-let dNSRecordCreate: DNSRecordCreate; //
+let dNSRecordCreateRequest: DNSRecordCreateRequest; //
 
 const { status, data } = await apiInstance.freednsDnsAddRecordCreate(
     domain,
     source,
-    dNSRecordCreate
+    dNSRecordCreateRequest
 );
 ```
 
@@ -95,7 +95,7 @@ const { status, data } = await apiInstance.freednsDnsAddRecordCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **dNSRecordCreate** | **DNSRecordCreate**|  | |
+| **dNSRecordCreateRequest** | **DNSRecordCreateRequest**|  | |
 | **domain** | [**string**] | Domain name or PK. | defaults to undefined|
 | **source** | [**string**] | \&#39;internal\&#39; or \&#39;external\&#39;. | defaults to undefined|
 
@@ -122,7 +122,7 @@ const { status, data } = await apiInstance.freednsDnsAddRecordCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **freednsDnsDeactivateCreate**
-> DeactivateFreeDNSResponse freednsDnsDeactivateCreate(deactivateFreeDNS)
+> DeactivateFreeDNSResponse freednsDnsDeactivateCreate(deactivateFreeDNSRequest)
 
 Deactivate FreeDNS for a domain. The DNS zone is removed from the cPanel node and, for internal domains, the original nameservers are restored.
 
@@ -132,16 +132,16 @@ Deactivate FreeDNS for a domain. The DNS zone is removed from the cPanel node an
 import {
     FreednsApi,
     Configuration,
-    DeactivateFreeDNS
+    DeactivateFreeDNSRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new FreednsApi(configuration);
 
-let deactivateFreeDNS: DeactivateFreeDNS; //
+let deactivateFreeDNSRequest: DeactivateFreeDNSRequest; //
 
 const { status, data } = await apiInstance.freednsDnsDeactivateCreate(
-    deactivateFreeDNS
+    deactivateFreeDNSRequest
 );
 ```
 
@@ -149,7 +149,7 @@ const { status, data } = await apiInstance.freednsDnsDeactivateCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **deactivateFreeDNS** | **DeactivateFreeDNS**|  | |
+| **deactivateFreeDNSRequest** | **DeactivateFreeDNSRequest**|  | |
 
 
 ### Return type
@@ -174,7 +174,7 @@ const { status, data } = await apiInstance.freednsDnsDeactivateCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **freednsDnsDeleteRecordCreate**
-> DeleteRecordResponse freednsDnsDeleteRecordCreate(deleteRecord)
+> DeleteRecordResponse freednsDnsDeleteRecordCreate(deleteRecordRequest)
 
 Delete a DNS record by its line number.
 
@@ -184,7 +184,7 @@ Delete a DNS record by its line number.
 import {
     FreednsApi,
     Configuration,
-    DeleteRecord
+    DeleteRecordRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -192,12 +192,12 @@ const apiInstance = new FreednsApi(configuration);
 
 let domain: string; //Domain name or PK. (default to undefined)
 let source: string; //\'internal\' or \'external\'. (default to undefined)
-let deleteRecord: DeleteRecord; //
+let deleteRecordRequest: DeleteRecordRequest; //
 
 const { status, data } = await apiInstance.freednsDnsDeleteRecordCreate(
     domain,
     source,
-    deleteRecord
+    deleteRecordRequest
 );
 ```
 
@@ -205,7 +205,7 @@ const { status, data } = await apiInstance.freednsDnsDeleteRecordCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **deleteRecord** | **DeleteRecord**|  | |
+| **deleteRecordRequest** | **DeleteRecordRequest**|  | |
 | **domain** | [**string**] | Domain name or PK. | defaults to undefined|
 | **source** | [**string**] | \&#39;internal\&#39; or \&#39;external\&#39;. | defaults to undefined|
 

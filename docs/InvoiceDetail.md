@@ -21,7 +21,7 @@ Name | Type | Description | Notes
 **client_info** | **any** |  | [readonly] [default to undefined]
 **invoice_info** | **any** |  | [readonly] [default to undefined]
 **payment_method** | **string** |  | [readonly] [default to undefined]
-**services** | **string** |  | [readonly] [default to undefined]
+**services** | [**Array&lt;InvoiceService&gt;**](InvoiceService.md) |  | [readonly] [default to undefined]
 
 ## Example
 

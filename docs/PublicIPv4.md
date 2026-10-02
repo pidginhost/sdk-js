@@ -11,7 +11,8 @@ Name | Type | Description | Notes
 **gateway** | **string** |  | [readonly] [default to undefined]
 **prefix** | **number** |  | [readonly] [default to undefined]
 **attached** | **boolean** |  | [readonly] [default to undefined]
-**server** | **string** |  | [readonly] [default to undefined]
+**server** | **string** | Hostname of the server this address is attached to. Empty when it is not attached. | [readonly] [default to undefined]
+**server_id** | **number** | ID of the attached server, as used by /api/cloud/servers/{id}/. Null when the address is not attached to a cloud server. | [readonly] [default to undefined]
 
 ## Example
 
@@ -26,6 +27,7 @@ const instance: PublicIPv4 = {
     prefix,
     attached,
     server,
+    server_id,
 };
 ```
 

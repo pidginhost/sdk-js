@@ -1,4 +1,4 @@
-## @pidginhost/sdk@0.13.0
+## @pidginhost/sdk@0.14.0
 
 This generator creates TypeScript/JavaScript client that utilizes [axios](https://github.com/axios/axios). The generated Node module can be used in the following environments:
 
@@ -36,7 +36,7 @@ navigate to the folder of your consuming project and run one of the following co
 _published:_
 
 ```
-npm install @pidginhost/sdk@0.13.0 --save
+npm install @pidginhost/sdk@0.14.0 --save
 ```
 
 _unPublished (not recommended):_
@@ -212,6 +212,7 @@ Class | Method | HTTP request | Description
 *CloudApi* | [**cloudServersSnapshotsDestroy**](docs/CloudApi.md#cloudserverssnapshotsdestroy) | **DELETE** /api/cloud/servers/{id}/snapshots/{snapshot_name}/ | 
 *CloudApi* | [**cloudServersSnapshotsList**](docs/CloudApi.md#cloudserverssnapshotslist) | **GET** /api/cloud/servers/{id}/snapshots/ | 
 *CloudApi* | [**cloudServersSnapshotsRollbackCreate**](docs/CloudApi.md#cloudserverssnapshotsrollbackcreate) | **POST** /api/cloud/servers/{id}/snapshots/{snapshot_name}/rollback/ | 
+*CloudApi* | [**cloudServersTrafficRetrieve**](docs/CloudApi.md#cloudserverstrafficretrieve) | **GET** /api/cloud/servers/{id}/traffic/ | 
 *CloudApi* | [**cloudServersUpdate**](docs/CloudApi.md#cloudserversupdate) | **PUT** /api/cloud/servers/{id}/ | 
 *CloudApi* | [**cloudServersUsageRetrieve**](docs/CloudApi.md#cloudserversusageretrieve) | **GET** /api/cloud/servers/{id}/usage/ | 
 *CloudApi* | [**cloudServersVolumesCreate**](docs/CloudApi.md#cloudserversvolumescreate) | **POST** /api/cloud/servers/{server_id}/volumes/ | 
@@ -286,7 +287,6 @@ Class | Method | HTTP request | Description
 *EmailApi* | [**emailServicesCreate**](docs/EmailApi.md#emailservicescreate) | **POST** /api/email/services/ | 
 *EmailApi* | [**emailServicesDedicatedIpCreate**](docs/EmailApi.md#emailservicesdedicatedipcreate) | **POST** /api/email/services/{id}/dedicated_ip/ | 
 *EmailApi* | [**emailServicesDedicatedIpDestroy**](docs/EmailApi.md#emailservicesdedicatedipdestroy) | **DELETE** /api/email/services/{id}/dedicated_ip/ | 
-*EmailApi* | [**emailServicesDestroy**](docs/EmailApi.md#emailservicesdestroy) | **DELETE** /api/email/services/{id}/ | 
 *EmailApi* | [**emailServicesDomainsCreate**](docs/EmailApi.md#emailservicesdomainscreate) | **POST** /api/email/services/{service_pk}/domains/ | 
 *EmailApi* | [**emailServicesDomainsList**](docs/EmailApi.md#emailservicesdomainslist) | **GET** /api/email/services/{service_pk}/domains/ | 
 *EmailApi* | [**emailServicesList**](docs/EmailApi.md#emailserviceslist) | **GET** /api/email/services/ | 
@@ -325,6 +325,10 @@ Class | Method | HTTP request | Description
 *KubernetesApi* | [**kubernetesClustersDestroy**](docs/KubernetesApi.md#kubernetesclustersdestroy) | **DELETE** /api/kubernetes/clusters/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersDisconnectVmCreate**](docs/KubernetesApi.md#kubernetesclustersdisconnectvmcreate) | **POST** /api/kubernetes/clusters/{id}/disconnect-vm/ | 
 *KubernetesApi* | [**kubernetesClustersEligibleVmsRetrieve**](docs/KubernetesApi.md#kubernetesclusterseligiblevmsretrieve) | **GET** /api/kubernetes/clusters/{id}/eligible-vms/ | 
+*KubernetesApi* | [**kubernetesClustersEncryptionCreate**](docs/KubernetesApi.md#kubernetesclustersencryptioncreate) | **POST** /api/kubernetes/clusters/{id}/encryption/ | 
+*KubernetesApi* | [**kubernetesClustersEncryptionRecheckCreate**](docs/KubernetesApi.md#kubernetesclustersencryptionrecheckcreate) | **POST** /api/kubernetes/clusters/{id}/encryption/recheck/ | 
+*KubernetesApi* | [**kubernetesClustersEncryptionReconcileCreate**](docs/KubernetesApi.md#kubernetesclustersencryptionreconcilecreate) | **POST** /api/kubernetes/clusters/{id}/encryption/reconcile/ | 
+*KubernetesApi* | [**kubernetesClustersEncryptionRetrieve**](docs/KubernetesApi.md#kubernetesclustersencryptionretrieve) | **GET** /api/kubernetes/clusters/{id}/encryption/ | 
 *KubernetesApi* | [**kubernetesClustersHttproutesCreate**](docs/KubernetesApi.md#kubernetesclustershttproutescreate) | **POST** /api/kubernetes/clusters/{cluster_id}/httproutes/ | 
 *KubernetesApi* | [**kubernetesClustersHttproutesDestroy**](docs/KubernetesApi.md#kubernetesclustershttproutesdestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/httproutes/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersHttproutesList**](docs/KubernetesApi.md#kubernetesclustershttprouteslist) | **GET** /api/kubernetes/clusters/{cluster_id}/httproutes/ | 
@@ -341,7 +345,15 @@ Class | Method | HTTP request | Description
 *KubernetesApi* | [**kubernetesClustersLbFirewallRetrieve**](docs/KubernetesApi.md#kubernetesclusterslbfirewallretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersLbFirewallUpdate**](docs/KubernetesApi.md#kubernetesclusterslbfirewallupdate) | **PUT** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersList**](docs/KubernetesApi.md#kubernetesclusterslist) | **GET** /api/kubernetes/clusters/ | 
+*KubernetesApi* | [**kubernetesClustersNodeOperationsCancelCreate**](docs/KubernetesApi.md#kubernetesclustersnodeoperationscancelcreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/cancel/ | 
+*KubernetesApi* | [**kubernetesClustersNodeOperationsList**](docs/KubernetesApi.md#kubernetesclustersnodeoperationslist) | **GET** /api/kubernetes/clusters/{cluster_id}/node-operations/ | 
+*KubernetesApi* | [**kubernetesClustersNodeOperationsResumeCreate**](docs/KubernetesApi.md#kubernetesclustersnodeoperationsresumecreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/resume/ | 
+*KubernetesApi* | [**kubernetesClustersNodeOperationsRetrieve**](docs/KubernetesApi.md#kubernetesclustersnodeoperationsretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/ | 
+*KubernetesApi* | [**kubernetesClustersNodeOperationsRetryCreate**](docs/KubernetesApi.md#kubernetesclustersnodeoperationsretrycreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/retry/ | 
 *KubernetesApi* | [**kubernetesClustersPartialUpdate**](docs/KubernetesApi.md#kubernetesclusterspartialupdate) | **PATCH** /api/kubernetes/clusters/{id}/ | 
+*KubernetesApi* | [**kubernetesClustersPoolRemovalJournalsList**](docs/KubernetesApi.md#kubernetesclusterspoolremovaljournalslist) | **GET** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/ | 
+*KubernetesApi* | [**kubernetesClustersPoolRemovalJournalsResumeCreate**](docs/KubernetesApi.md#kubernetesclusterspoolremovaljournalsresumecreate) | **POST** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/{id}/resume/ | 
+*KubernetesApi* | [**kubernetesClustersPoolRemovalJournalsRetrieve**](docs/KubernetesApi.md#kubernetesclusterspoolremovaljournalsretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersPortForwardsCreate**](docs/KubernetesApi.md#kubernetesclustersportforwardscreate) | **POST** /api/kubernetes/clusters/{cluster_id}/port-forwards/ | 
 *KubernetesApi* | [**kubernetesClustersPortForwardsDestroy**](docs/KubernetesApi.md#kubernetesclustersportforwardsdestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/port-forwards/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersPortForwardsList**](docs/KubernetesApi.md#kubernetesclustersportforwardslist) | **GET** /api/kubernetes/clusters/{cluster_id}/port-forwards/ | 
@@ -354,6 +366,7 @@ Class | Method | HTTP request | Description
 *KubernetesApi* | [**kubernetesClustersResourcePoolsNodesDestroy**](docs/KubernetesApi.md#kubernetesclustersresourcepoolsnodesdestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersResourcePoolsNodesList**](docs/KubernetesApi.md#kubernetesclustersresourcepoolsnodeslist) | **GET** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/ | 
 *KubernetesApi* | [**kubernetesClustersResourcePoolsNodesMetricsRetrieve**](docs/KubernetesApi.md#kubernetesclustersresourcepoolsnodesmetricsretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/{id}/metrics/ | 
+*KubernetesApi* | [**kubernetesClustersResourcePoolsNodesRebootCreate**](docs/KubernetesApi.md#kubernetesclustersresourcepoolsnodesrebootcreate) | **POST** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/{id}/reboot/ | 
 *KubernetesApi* | [**kubernetesClustersResourcePoolsNodesRetrieve**](docs/KubernetesApi.md#kubernetesclustersresourcepoolsnodesretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersResourcePoolsNodesRrdRetrieve**](docs/KubernetesApi.md#kubernetesclustersresourcepoolsnodesrrdretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/resource-pools/{pool_id}/nodes/{id}/rrd/ | 
 *KubernetesApi* | [**kubernetesClustersResourcePoolsPartialUpdate**](docs/KubernetesApi.md#kubernetesclustersresourcepoolspartialupdate) | **PATCH** /api/kubernetes/clusters/{cluster_id}/resource-pools/{id}/ | 
@@ -376,6 +389,7 @@ Class | Method | HTTP request | Description
 *KubernetesApi* | [**kubernetesClustersUdproutesUpdate**](docs/KubernetesApi.md#kubernetesclustersudproutesupdate) | **PUT** /api/kubernetes/clusters/{cluster_id}/udproutes/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersUpdate**](docs/KubernetesApi.md#kubernetesclustersupdate) | **PUT** /api/kubernetes/clusters/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersUpgradeFeatureCreate**](docs/KubernetesApi.md#kubernetesclustersupgradefeaturecreate) | **POST** /api/kubernetes/clusters/{id}/upgrade-feature/ | 
+*KubernetesApi* | [**kubernetesClustersUpgradeLbCreate**](docs/KubernetesApi.md#kubernetesclustersupgradelbcreate) | **POST** /api/kubernetes/clusters/{id}/upgrade-lb/ | 
 *OApi* | [**oRegisterCreate**](docs/OApi.md#oregistercreate) | **POST** /o/register | 
 *SchemaApi* | [**schemaRetrieve**](docs/SchemaApi.md#schemaretrieve) | **GET** /api/schema/ | 
 *SupportApi* | [**supportDepartmentsList**](docs/SupportApi.md#supportdepartmentslist) | **GET** /api/support/departments/ | 
@@ -391,69 +405,89 @@ Class | Method | HTTP request | Description
 ### Documentation For Models
 
  - [APITokenCreate](docs/APITokenCreate.md)
+ - [APITokenCreateRequest](docs/APITokenCreateRequest.md)
  - [APITokenList](docs/APITokenList.md)
- - [ActivateFreeDNS](docs/ActivateFreeDNS.md)
+ - [ActivateFreeDNSRequest](docs/ActivateFreeDNSRequest.md)
  - [ActivateFreeDNSResponse](docs/ActivateFreeDNSResponse.md)
  - [ActivityLogEntry](docs/ActivityLogEntry.md)
  - [ActivityLogResponse](docs/ActivityLogResponse.md)
  - [AddServerResponse](docs/AddServerResponse.md)
  - [Address](docs/Address.md)
+ - [AddressRequest](docs/AddressRequest.md)
  - [ApiCredential](docs/ApiCredential.md)
+ - [ApiCredentialCreated](docs/ApiCredentialCreated.md)
  - [AttachIPv4Request](docs/AttachIPv4Request.md)
  - [AttachIPv4Response](docs/AttachIPv4Response.md)
  - [AttachIPv6Request](docs/AttachIPv6Request.md)
  - [AttachIPv6Response](docs/AttachIPv6Response.md)
  - [AttachVolume](docs/AttachVolume.md)
+ - [AttachVolumeRequest](docs/AttachVolumeRequest.md)
+ - [AttachmentRequest](docs/AttachmentRequest.md)
+ - [BlankEnum](docs/BlankEnum.md)
  - [BootISO](docs/BootISO.md)
  - [Bucket](docs/Bucket.md)
  - [BucketCancelResponse](docs/BucketCancelResponse.md)
- - [BucketCreate](docs/BucketCreate.md)
+ - [BucketCreateRequest](docs/BucketCreateRequest.md)
  - [BucketCredentials](docs/BucketCredentials.md)
- - [BucketResize](docs/BucketResize.md)
- - [BucketVisibility](docs/BucketVisibility.md)
+ - [BucketResizeRequest](docs/BucketResizeRequest.md)
+ - [BucketVisibilityRequest](docs/BucketVisibilityRequest.md)
  - [CLISessionCreateResponse](docs/CLISessionCreateResponse.md)
  - [CLISessionPollResponse](docs/CLISessionPollResponse.md)
  - [CLISessionPollResponseStatusEnum](docs/CLISessionPollResponseStatusEnum.md)
  - [CancelServiceResponse](docs/CancelServiceResponse.md)
  - [CategoryEnum](docs/CategoryEnum.md)
- - [ChangeBillingCycle](docs/ChangeBillingCycle.md)
+ - [ChangeBillingCycleRequest](docs/ChangeBillingCycleRequest.md)
  - [ChangeBillingCycleResponse](docs/ChangeBillingCycleResponse.md)
- - [ChangeCompany](docs/ChangeCompany.md)
+ - [ChangeCompanyRequest](docs/ChangeCompanyRequest.md)
  - [ChangeCompanyResponse](docs/ChangeCompanyResponse.md)
- - [ChangePassword](docs/ChangePassword.md)
+ - [ChangePasswordRequest](docs/ChangePasswordRequest.md)
  - [CheckAvailability](docs/CheckAvailability.md)
- - [ClusterAdd](docs/ClusterAdd.md)
+ - [CheckAvailabilityRequest](docs/CheckAvailabilityRequest.md)
+ - [ClusterAddRequest](docs/ClusterAddRequest.md)
  - [ClusterAddResponse](docs/ClusterAddResponse.md)
  - [ClusterDetail](docs/ClusterDetail.md)
+ - [ClusterDetailRequest](docs/ClusterDetailRequest.md)
+ - [ClusterEncryption](docs/ClusterEncryption.md)
+ - [ClusterEncryptionError](docs/ClusterEncryptionError.md)
+ - [ClusterEncryptionOperation](docs/ClusterEncryptionOperation.md)
+ - [ClusterEncryptionReconcileRequest](docs/ClusterEncryptionReconcileRequest.md)
+ - [ClusterEncryptionRefusal](docs/ClusterEncryptionRefusal.md)
+ - [ClusterEncryptionRequest](docs/ClusterEncryptionRequest.md)
+ - [ClusterEncryptionStatusEnum](docs/ClusterEncryptionStatusEnum.md)
  - [ClusterPackage](docs/ClusterPackage.md)
  - [ClusterType](docs/ClusterType.md)
  - [ClusterTypeEnum](docs/ClusterTypeEnum.md)
  - [Company](docs/Company.md)
+ - [CompanyRequest](docs/CompanyRequest.md)
  - [ConnectVMRequest](docs/ConnectVMRequest.md)
  - [ConnectVMResponse](docs/ConnectVMResponse.md)
  - [ConnectedVM](docs/ConnectedVM.md)
  - [ConnectedVMsResponse](docs/ConnectedVMsResponse.md)
  - [ConsoleToken](docs/ConsoleToken.md)
  - [ContactTypeEnum](docs/ContactTypeEnum.md)
- - [ContactsUpdate](docs/ContactsUpdate.md)
+ - [ContactsUpdateRequest](docs/ContactsUpdateRequest.md)
  - [ContactsUpdateResponse](docs/ContactsUpdateResponse.md)
  - [CountryEnum](docs/CountryEnum.md)
+ - [CredentialCreateRequest](docs/CredentialCreateRequest.md)
  - [DNSGlue](docs/DNSGlue.md)
+ - [DNSGlueRequest](docs/DNSGlueRequest.md)
  - [DNSRecord](docs/DNSRecord.md)
- - [DNSRecordCreate](docs/DNSRecordCreate.md)
+ - [DNSRecordCreateRequest](docs/DNSRecordCreateRequest.md)
  - [DNSRecordCreateTypeEnum](docs/DNSRecordCreateTypeEnum.md)
  - [DNSRecordMutateResponse](docs/DNSRecordMutateResponse.md)
- - [DeactivateFreeDNS](docs/DeactivateFreeDNS.md)
+ - [DeactivateFreeDNSRequest](docs/DeactivateFreeDNSRequest.md)
  - [DeactivateFreeDNSResponse](docs/DeactivateFreeDNSResponse.md)
- - [DedicatedRDNS](docs/DedicatedRDNS.md)
+ - [DedicatedRDNSRequest](docs/DedicatedRDNSRequest.md)
  - [DedicatedServer](docs/DedicatedServer.md)
- - [DeleteRecord](docs/DeleteRecord.md)
+ - [DedicatedServerIP](docs/DedicatedServerIP.md)
+ - [DedicatedServerStatus](docs/DedicatedServerStatus.md)
+ - [DeleteRecordRequest](docs/DeleteRecordRequest.md)
  - [DeleteRecordResponse](docs/DeleteRecordResponse.md)
  - [Department](docs/Department.md)
  - [Deposit](docs/Deposit.md)
- - [DepositCreate](docs/DepositCreate.md)
+ - [DepositCreateRequest](docs/DepositCreateRequest.md)
  - [DepositStatusEnum](docs/DepositStatusEnum.md)
- - [DestroyProtection](docs/DestroyProtection.md)
+ - [DestroyProtectionRequest](docs/DestroyProtectionRequest.md)
  - [DestroyProtectionResponse](docs/DestroyProtectionResponse.md)
  - [DetachIPv4Response](docs/DetachIPv4Response.md)
  - [DetachIPv6](docs/DetachIPv6.md)
@@ -463,63 +497,90 @@ Class | Method | HTTP request | Description
  - [DisconnectVMResponse](docs/DisconnectVMResponse.md)
  - [DnsSourceEnum](docs/DnsSourceEnum.md)
  - [Domain](docs/Domain.md)
- - [DomainAdd](docs/DomainAdd.md)
+ - [DomainAddRequest](docs/DomainAddRequest.md)
  - [DomainCancelResponse](docs/DomainCancelResponse.md)
  - [DomainCreate](docs/DomainCreate.md)
+ - [DomainCreateRequest](docs/DomainCreateRequest.md)
  - [DomainRegistrant](docs/DomainRegistrant.md)
+ - [DomainRegistrantRequest](docs/DomainRegistrantRequest.md)
+ - [DomainRequest](docs/DomainRequest.md)
  - [EligibleVM](docs/EligibleVM.md)
  - [EligibleVMsResponse](docs/EligibleVMsResponse.md)
  - [EmailHistory](docs/EmailHistory.md)
+ - [EmailMessageList](docs/EmailMessageList.md)
+ - [EmailMessageSummary](docs/EmailMessageSummary.md)
+ - [EmailReputation](docs/EmailReputation.md)
+ - [EmailSendResponse](docs/EmailSendResponse.md)
+ - [EmailSendResponseStatusEnum](docs/EmailSendResponseStatusEnum.md)
  - [EmailService](docs/EmailService.md)
+ - [EmailStats](docs/EmailStats.md)
+ - [EncryptionModeEnum](docs/EncryptionModeEnum.md)
+ - [EncryptionReasonCodeEnum](docs/EncryptionReasonCodeEnum.md)
  - [FeatureUpgradeRequest](docs/FeatureUpgradeRequest.md)
  - [FeatureUpgradeResponse](docs/FeatureUpgradeResponse.md)
  - [FeaturesEnum](docs/FeaturesEnum.md)
  - [FirewallRule](docs/FirewallRule.md)
  - [FirewallRuleDirectionEnum](docs/FirewallRuleDirectionEnum.md)
+ - [FirewallRuleRequest](docs/FirewallRuleRequest.md)
  - [FirewallRulesSet](docs/FirewallRulesSet.md)
+ - [FirewallRulesSetRequest](docs/FirewallRulesSetRequest.md)
  - [FirewallRulesSetStatusEnum](docs/FirewallRulesSetStatusEnum.md)
  - [FloatingIPAuthorization](docs/FloatingIPAuthorization.md)
  - [FloatingIPAuthorizeRequest](docs/FloatingIPAuthorizeRequest.md)
  - [FloatingIPSummary](docs/FloatingIPSummary.md)
  - [FloatingIPv4](docs/FloatingIPv4.md)
  - [FloatingIPv4AuthorizeResponse](docs/FloatingIPv4AuthorizeResponse.md)
- - [FloatingIPv4Create](docs/FloatingIPv4Create.md)
+ - [FloatingIPv4CreateRequest](docs/FloatingIPv4CreateRequest.md)
  - [FloatingIPv4UnauthorizeResponse](docs/FloatingIPv4UnauthorizeResponse.md)
  - [FloatingIPv6](docs/FloatingIPv6.md)
  - [FloatingIPv6AuthorizeResponse](docs/FloatingIPv6AuthorizeResponse.md)
- - [FloatingIPv6Create](docs/FloatingIPv6Create.md)
+ - [FloatingIPv6CreateRequest](docs/FloatingIPv6CreateRequest.md)
  - [FloatingIPv6UnauthorizeResponse](docs/FloatingIPv6UnauthorizeResponse.md)
  - [FreeDNSDomain](docs/FreeDNSDomain.md)
  - [FundsBalanceResponse](docs/FundsBalanceResponse.md)
  - [FundsLog](docs/FundsLog.md)
  - [FwPolicyOutEnum](docs/FwPolicyOutEnum.md)
  - [HTTPRoute](docs/HTTPRoute.md)
+ - [HTTPRouteRequest](docs/HTTPRouteRequest.md)
  - [HardwareGeneration](docs/HardwareGeneration.md)
  - [HostingChangePasswordResponse](docs/HostingChangePasswordResponse.md)
  - [HostingService](docs/HostingService.md)
  - [InboundRoute](docs/InboundRoute.md)
+ - [InboundRouteCreateRequest](docs/InboundRouteCreateRequest.md)
+ - [InboundRouteWriteResponse](docs/InboundRouteWriteResponse.md)
  - [InvoiceDetail](docs/InvoiceDetail.md)
  - [InvoiceList](docs/InvoiceList.md)
+ - [InvoiceService](docs/InvoiceService.md)
  - [InvoiceStatusEnum](docs/InvoiceStatusEnum.md)
  - [IsoBootRequest](docs/IsoBootRequest.md)
  - [K8sPortForward](docs/K8sPortForward.md)
+ - [K8sPortForwardRequest](docs/K8sPortForwardRequest.md)
  - [KubeUpgradeResponse](docs/KubeUpgradeResponse.md)
  - [KubeVersionEnum](docs/KubeVersionEnum.md)
  - [LBFirewallRule](docs/LBFirewallRule.md)
  - [LBFirewallRuleActionEnum](docs/LBFirewallRuleActionEnum.md)
  - [LBFirewallRuleDirectionEnum](docs/LBFirewallRuleDirectionEnum.md)
- - [LowBalanceSettings](docs/LowBalanceSettings.md)
+ - [LBFirewallRuleRequest](docs/LBFirewallRuleRequest.md)
+ - [LBUpgradeDispatchResponse](docs/LBUpgradeDispatchResponse.md)
+ - [LBUpgradePlanResponse](docs/LBUpgradePlanResponse.md)
+ - [LBUpgradeRequest](docs/LBUpgradeRequest.md)
+ - [LowBalanceSettingsRequest](docs/LowBalanceSettingsRequest.md)
  - [ModeEnum](docs/ModeEnum.md)
- - [NameserversUpdate](docs/NameserversUpdate.md)
+ - [NameserversUpdateRequest](docs/NameserversUpdateRequest.md)
  - [NameserversUpdateResponse](docs/NameserversUpdateResponse.md)
  - [NodeMetricsResponse](docs/NodeMetricsResponse.md)
+ - [NodeOperation](docs/NodeOperation.md)
+ - [NodeOperationKindEnum](docs/NodeOperationKindEnum.md)
+ - [NodeOperationRebootRequest](docs/NodeOperationRebootRequest.md)
+ - [NodeOperationRetryRequest](docs/NodeOperationRetryRequest.md)
+ - [NodeOperationSourceEnum](docs/NodeOperationSourceEnum.md)
+ - [NodeOperationStatusEnum](docs/NodeOperationStatusEnum.md)
  - [NodeRRDResponse](docs/NodeRRDResponse.md)
  - [NotificationSettingsResponse](docs/NotificationSettingsResponse.md)
  - [OSImage](docs/OSImage.md)
  - [OperationEnum](docs/OperationEnum.md)
  - [PaginatedAPITokenListList](docs/PaginatedAPITokenListList.md)
  - [PaginatedApiCredentialList](docs/PaginatedApiCredentialList.md)
- - [PaginatedBootISOList](docs/PaginatedBootISOList.md)
  - [PaginatedClusterDetailList](docs/PaginatedClusterDetailList.md)
  - [PaginatedClusterTypeList](docs/PaginatedClusterTypeList.md)
  - [PaginatedCompanyList](docs/PaginatedCompanyList.md)
@@ -540,7 +601,9 @@ Class | Method | HTTP request | Description
  - [PaginatedInvoiceListList](docs/PaginatedInvoiceListList.md)
  - [PaginatedK8sPortForwardList](docs/PaginatedK8sPortForwardList.md)
  - [PaginatedLBFirewallRuleList](docs/PaginatedLBFirewallRuleList.md)
+ - [PaginatedNodeOperationList](docs/PaginatedNodeOperationList.md)
  - [PaginatedOSImageList](docs/PaginatedOSImageList.md)
+ - [PaginatedPoolRemovalJournalList](docs/PaginatedPoolRemovalJournalList.md)
  - [PaginatedPrivateNetworkList](docs/PaginatedPrivateNetworkList.md)
  - [PaginatedPublicIPv4List](docs/PaginatedPublicIPv4List.md)
  - [PaginatedPublicIPv6List](docs/PaginatedPublicIPv6List.md)
@@ -553,7 +616,6 @@ Class | Method | HTTP request | Description
  - [PaginatedServerProductList](docs/PaginatedServerProductList.md)
  - [PaginatedServiceListList](docs/PaginatedServiceListList.md)
  - [PaginatedSmtpCredentialList](docs/PaginatedSmtpCredentialList.md)
- - [PaginatedSnapshotList](docs/PaginatedSnapshotList.md)
  - [PaginatedStorageProductList](docs/PaginatedStorageProductList.md)
  - [PaginatedSubscriptionList](docs/PaginatedSubscriptionList.md)
  - [PaginatedSuppressionEntryList](docs/PaginatedSuppressionEntryList.md)
@@ -561,68 +623,87 @@ Class | Method | HTTP request | Description
  - [PaginatedTLDList](docs/PaginatedTLDList.md)
  - [PaginatedTicketListList](docs/PaginatedTicketListList.md)
  - [PaginatedUDPRouteList](docs/PaginatedUDPRouteList.md)
- - [PatchedClusterDetail](docs/PatchedClusterDetail.md)
- - [PatchedCompany](docs/PatchedCompany.md)
- - [PatchedDomain](docs/PatchedDomain.md)
- - [PatchedDomainRegistrant](docs/PatchedDomainRegistrant.md)
- - [PatchedEmailService](docs/PatchedEmailService.md)
- - [PatchedFirewallRule](docs/PatchedFirewallRule.md)
- - [PatchedFirewallRulesSet](docs/PatchedFirewallRulesSet.md)
- - [PatchedHTTPRoute](docs/PatchedHTTPRoute.md)
- - [PatchedInboundRoute](docs/PatchedInboundRoute.md)
- - [PatchedK8sPortForward](docs/PatchedK8sPortForward.md)
- - [PatchedLBFirewallRule](docs/PatchedLBFirewallRule.md)
- - [PatchedPrivateNetwork](docs/PatchedPrivateNetwork.md)
- - [PatchedProfile](docs/PatchedProfile.md)
- - [PatchedResourcePool](docs/PatchedResourcePool.md)
- - [PatchedSSHKey](docs/PatchedSSHKey.md)
- - [PatchedServerDetail](docs/PatchedServerDetail.md)
- - [PatchedSubscribe](docs/PatchedSubscribe.md)
- - [PatchedTCPRoute](docs/PatchedTCPRoute.md)
- - [PatchedUDPRoute](docs/PatchedUDPRoute.md)
- - [PatchedVolume](docs/PatchedVolume.md)
+ - [PatchedClusterDetailRequest](docs/PatchedClusterDetailRequest.md)
+ - [PatchedCompanyRequest](docs/PatchedCompanyRequest.md)
+ - [PatchedDomainRegistrantRequest](docs/PatchedDomainRegistrantRequest.md)
+ - [PatchedDomainRequest](docs/PatchedDomainRequest.md)
+ - [PatchedFirewallRuleRequest](docs/PatchedFirewallRuleRequest.md)
+ - [PatchedFirewallRulesSetRequest](docs/PatchedFirewallRulesSetRequest.md)
+ - [PatchedHTTPRouteRequest](docs/PatchedHTTPRouteRequest.md)
+ - [PatchedInboundRouteCreateRequest](docs/PatchedInboundRouteCreateRequest.md)
+ - [PatchedK8sPortForwardRequest](docs/PatchedK8sPortForwardRequest.md)
+ - [PatchedLBFirewallRuleRequest](docs/PatchedLBFirewallRuleRequest.md)
+ - [PatchedPrivateNetworkUpdateRequest](docs/PatchedPrivateNetworkUpdateRequest.md)
+ - [PatchedProfileRequest](docs/PatchedProfileRequest.md)
+ - [PatchedResourcePoolRequest](docs/PatchedResourcePoolRequest.md)
+ - [PatchedSSHKeyUpdateRequest](docs/PatchedSSHKeyUpdateRequest.md)
+ - [PatchedServerDetailRequest](docs/PatchedServerDetailRequest.md)
+ - [PatchedTCPRouteRequest](docs/PatchedTCPRouteRequest.md)
+ - [PatchedUDPRouteRequest](docs/PatchedUDPRouteRequest.md)
+ - [PatchedVolumeUpdateRequest](docs/PatchedVolumeUpdateRequest.md)
  - [PayWithFundsResponse](docs/PayWithFundsResponse.md)
- - [PowerAction](docs/PowerAction.md)
+ - [PoolRemovalItem](docs/PoolRemovalItem.md)
+ - [PoolRemovalJournal](docs/PoolRemovalJournal.md)
+ - [PoolRemovalJournalKindEnum](docs/PoolRemovalJournalKindEnum.md)
+ - [PoolRemovalJournalStatusEnum](docs/PoolRemovalJournalStatusEnum.md)
  - [PowerActionActionEnum](docs/PowerActionActionEnum.md)
+ - [PowerActionRequest](docs/PowerActionRequest.md)
  - [PowerActionResponse](docs/PowerActionResponse.md)
  - [PowerManagement](docs/PowerManagement.md)
  - [PowerManagementRequest](docs/PowerManagementRequest.md)
  - [PowerManagementRequestActionEnum](docs/PowerManagementRequestActionEnum.md)
  - [PrivateNetwork](docs/PrivateNetwork.md)
- - [PrivateNetworkAddHost](docs/PrivateNetworkAddHost.md)
- - [PrivateNetworkRemoveHost](docs/PrivateNetworkRemoveHost.md)
+ - [PrivateNetworkAddHostRequest](docs/PrivateNetworkAddHostRequest.md)
+ - [PrivateNetworkRemoveHostRequest](docs/PrivateNetworkRemoveHostRequest.md)
+ - [PrivateNetworkRequest](docs/PrivateNetworkRequest.md)
+ - [PrivateNetworkUpdateRequest](docs/PrivateNetworkUpdateRequest.md)
  - [Profile](docs/Profile.md)
+ - [ProfileRequest](docs/ProfileRequest.md)
  - [ProtocolEnum](docs/ProtocolEnum.md)
  - [PublicIPv4](docs/PublicIPv4.md)
  - [PublicIPv6](docs/PublicIPv6.md)
  - [PublicInterface](docs/PublicInterface.md)
+ - [PublicInterfaceRequest](docs/PublicInterfaceRequest.md)
  - [RDNSUpdateResponse](docs/RDNSUpdateResponse.md)
  - [ReasonEnum](docs/ReasonEnum.md)
- - [Reinstall](docs/Reinstall.md)
+ - [ReinstallRequest](docs/ReinstallRequest.md)
  - [ReinstallResponse](docs/ReinstallResponse.md)
  - [RemoveServerResponse](docs/RemoveServerResponse.md)
  - [RenewDomain](docs/RenewDomain.md)
+ - [RenewDomainRequest](docs/RenewDomainRequest.md)
  - [RescueEnterQueued](docs/RescueEnterQueued.md)
  - [RescueExitQueued](docs/RescueExitQueued.md)
  - [ResourcePool](docs/ResourcePool.md)
- - [ResourcePoolAdd](docs/ResourcePoolAdd.md)
+ - [ResourcePoolAddRequest](docs/ResourcePoolAddRequest.md)
  - [ResourcePoolAddResponse](docs/ResourcePoolAddResponse.md)
  - [ResourcePoolNode](docs/ResourcePoolNode.md)
+ - [ResourcePoolRequest](docs/ResourcePoolRequest.md)
  - [ResourceStatusEnum](docs/ResourceStatusEnum.md)
  - [RetryProvision](docs/RetryProvision.md)
  - [ReverseDNS](docs/ReverseDNS.md)
+ - [ReverseDNSRequest](docs/ReverseDNSRequest.md)
  - [SSHKey](docs/SSHKey.md)
+ - [SSHKeyRequest](docs/SSHKeyRequest.md)
+ - [SSHKeyUpdateRequest](docs/SSHKeyUpdateRequest.md)
  - [SandboxAddress](docs/SandboxAddress.md)
+ - [SandboxAddressRequest](docs/SandboxAddressRequest.md)
  - [ScopeEnum](docs/ScopeEnum.md)
+ - [SendRequest](docs/SendRequest.md)
  - [SendingDomain](docs/SendingDomain.md)
  - [SendingDomainStatusEnum](docs/SendingDomainStatusEnum.md)
  - [Server](docs/Server.md)
- - [ServerAdd](docs/ServerAdd.md)
+ - [ServerAddRequest](docs/ServerAddRequest.md)
  - [ServerAddResponse](docs/ServerAddResponse.md)
  - [ServerDetachIPv4Response](docs/ServerDetachIPv4Response.md)
  - [ServerDetail](docs/ServerDetail.md)
+ - [ServerDetailRequest](docs/ServerDetailRequest.md)
+ - [ServerNetworks](docs/ServerNetworks.md)
+ - [ServerPrivateInterface](docs/ServerPrivateInterface.md)
  - [ServerProduct](docs/ServerProduct.md)
- - [ServerProductUpgrade](docs/ServerProductUpgrade.md)
+ - [ServerProductUpgradeRequest](docs/ServerProductUpgradeRequest.md)
+ - [ServerPublicInterface](docs/ServerPublicInterface.md)
+ - [ServerPublicNetwork](docs/ServerPublicNetwork.md)
+ - [ServerTrafficResponse](docs/ServerTrafficResponse.md)
  - [ServerUpgradeResponse](docs/ServerUpgradeResponse.md)
  - [ServerUsageResponse](docs/ServerUsageResponse.md)
  - [Service](docs/Service.md)
@@ -630,39 +711,49 @@ Class | Method | HTTP request | Description
  - [ServiceList](docs/ServiceList.md)
  - [ServiceStatusEnum](docs/ServiceStatusEnum.md)
  - [SmtpCredential](docs/SmtpCredential.md)
+ - [SmtpCredentialCreated](docs/SmtpCredentialCreated.md)
  - [Snapshot](docs/Snapshot.md)
- - [SnapshotCreate](docs/SnapshotCreate.md)
  - [SnapshotCreateQueued](docs/SnapshotCreateQueued.md)
+ - [SnapshotCreateRequest](docs/SnapshotCreateRequest.md)
  - [SnapshotDeleteQueued](docs/SnapshotDeleteQueued.md)
  - [SnapshotRollbackQueued](docs/SnapshotRollbackQueued.md)
  - [SourceEnum](docs/SourceEnum.md)
+ - [StatsDay](docs/StatsDay.md)
+ - [StatsTotals](docs/StatsTotals.md)
  - [StorageProduct](docs/StorageProduct.md)
- - [Subscribe](docs/Subscribe.md)
+ - [SubscribeRequest](docs/SubscribeRequest.md)
  - [Subscription](docs/Subscription.md)
  - [SubscriptionStatusEnum](docs/SubscriptionStatusEnum.md)
+ - [SuppressionAddRequest](docs/SuppressionAddRequest.md)
  - [SuppressionEntry](docs/SuppressionEntry.md)
  - [TCPRoute](docs/TCPRoute.md)
+ - [TCPRouteRequest](docs/TCPRouteRequest.md)
  - [TLD](docs/TLD.md)
  - [TalosUpgradeResponse](docs/TalosUpgradeResponse.md)
  - [ThresholdTypeEnum](docs/ThresholdTypeEnum.md)
  - [TicketCloseResponse](docs/TicketCloseResponse.md)
- - [TicketCreate](docs/TicketCreate.md)
  - [TicketCreatePriorityEnum](docs/TicketCreatePriorityEnum.md)
+ - [TicketCreateRequest](docs/TicketCreateRequest.md)
  - [TicketDetail](docs/TicketDetail.md)
  - [TicketList](docs/TicketList.md)
  - [TicketMessage](docs/TicketMessage.md)
  - [TicketPriorityEnum](docs/TicketPriorityEnum.md)
  - [TicketReopenResponse](docs/TicketReopenResponse.md)
- - [TicketReply](docs/TicketReply.md)
+ - [TicketReplyRequest](docs/TicketReplyRequest.md)
  - [TicketReplyResponse](docs/TicketReplyResponse.md)
  - [TicketStatusEnum](docs/TicketStatusEnum.md)
  - [TierEnum](docs/TierEnum.md)
  - [ToggleAutoPaymentResponse](docs/ToggleAutoPaymentResponse.md)
  - [ToggleCloudVMAccessResponse](docs/ToggleCloudVMAccessResponse.md)
+ - [ToggleInboundRequest](docs/ToggleInboundRequest.md)
  - [TransferRoDomain](docs/TransferRoDomain.md)
+ - [TransferRoDomainRequest](docs/TransferRoDomainRequest.md)
  - [UDPRoute](docs/UDPRoute.md)
+ - [UDPRouteRequest](docs/UDPRouteRequest.md)
  - [VersionEnum](docs/VersionEnum.md)
  - [Volume](docs/Volume.md)
+ - [VolumeRequest](docs/VolumeRequest.md)
+ - [VolumeUpdateRequest](docs/VolumeUpdateRequest.md)
 
 
 <a id="documentation-for-authorization"></a>
@@ -676,6 +767,11 @@ Authentication schemes defined for the API:
 - **Type**: API key
 - **API key parameter name**: sessionid
 - **Location**: 
+
+<a id="emailApiKey"></a>
+### emailApiKey
+
+- **Type**: Bearer authentication (phme_<key>)
 
 <a id="tokenAuth"></a>
 ### tokenAuth

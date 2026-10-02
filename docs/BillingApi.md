@@ -24,7 +24,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**billingSubscriptionsRetrieve**](#billingsubscriptionsretrieve) | **GET** /api/billing/subscriptions/{id}/ | |
 
 # **billingDepositsCreate**
-> Deposit billingDepositsCreate(depositCreate)
+> Deposit billingDepositsCreate(depositCreateRequest)
 
 Create a new funds deposit.
 
@@ -34,16 +34,16 @@ Create a new funds deposit.
 import {
     BillingApi,
     Configuration,
-    DepositCreate
+    DepositCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new BillingApi(configuration);
 
-let depositCreate: DepositCreate; //
+let depositCreateRequest: DepositCreateRequest; //
 
 const { status, data } = await apiInstance.billingDepositsCreate(
-    depositCreate
+    depositCreateRequest
 );
 ```
 
@@ -51,7 +51,7 @@ const { status, data } = await apiInstance.billingDepositsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **depositCreate** | **DepositCreate**|  | |
+| **depositCreateRequest** | **DepositCreateRequest**|  | |
 
 
 ### Return type
@@ -273,7 +273,7 @@ const { status, data } = await apiInstance.billingFundsLogList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **billingFundsNotificationSettingsCreate**
-> NotificationSettingsResponse billingFundsNotificationSettingsCreate(lowBalanceSettings)
+> NotificationSettingsResponse billingFundsNotificationSettingsCreate(lowBalanceSettingsRequest)
 
 Update low-balance notification settings.
 
@@ -283,16 +283,16 @@ Update low-balance notification settings.
 import {
     BillingApi,
     Configuration,
-    LowBalanceSettings
+    LowBalanceSettingsRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new BillingApi(configuration);
 
-let lowBalanceSettings: LowBalanceSettings; //
+let lowBalanceSettingsRequest: LowBalanceSettingsRequest; //
 
 const { status, data } = await apiInstance.billingFundsNotificationSettingsCreate(
-    lowBalanceSettings
+    lowBalanceSettingsRequest
 );
 ```
 
@@ -300,7 +300,7 @@ const { status, data } = await apiInstance.billingFundsNotificationSettingsCreat
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **lowBalanceSettings** | **LowBalanceSettings**|  | |
+| **lowBalanceSettingsRequest** | **LowBalanceSettingsRequest**|  | |
 
 
 ### Return type
@@ -580,7 +580,7 @@ const { status, data } = await apiInstance.billingServicesCancelCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **billingServicesChangeBillingCycleCreate**
-> ChangeBillingCycleResponse billingServicesChangeBillingCycleCreate(changeBillingCycle)
+> ChangeBillingCycleResponse billingServicesChangeBillingCycleCreate(changeBillingCycleRequest)
 
 Change the billing cycle of a service.
 
@@ -590,18 +590,18 @@ Change the billing cycle of a service.
 import {
     BillingApi,
     Configuration,
-    ChangeBillingCycle
+    ChangeBillingCycleRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new BillingApi(configuration);
 
 let id: string; // (default to undefined)
-let changeBillingCycle: ChangeBillingCycle; //
+let changeBillingCycleRequest: ChangeBillingCycleRequest; //
 
 const { status, data } = await apiInstance.billingServicesChangeBillingCycleCreate(
     id,
-    changeBillingCycle
+    changeBillingCycleRequest
 );
 ```
 
@@ -609,7 +609,7 @@ const { status, data } = await apiInstance.billingServicesChangeBillingCycleCrea
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **changeBillingCycle** | **ChangeBillingCycle**|  | |
+| **changeBillingCycleRequest** | **ChangeBillingCycleRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 
@@ -645,18 +645,18 @@ Change the company associated with a service.
 import {
     BillingApi,
     Configuration,
-    ChangeCompany
+    ChangeCompanyRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new BillingApi(configuration);
 
 let id: string; // (default to undefined)
-let changeCompany: ChangeCompany; // (optional)
+let changeCompanyRequest: ChangeCompanyRequest; // (optional)
 
 const { status, data } = await apiInstance.billingServicesChangeCompanyCreate(
     id,
-    changeCompany
+    changeCompanyRequest
 );
 ```
 
@@ -664,7 +664,7 @@ const { status, data } = await apiInstance.billingServicesChangeCompanyCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **changeCompany** | **ChangeCompany**|  | |
+| **changeCompanyRequest** | **ChangeCompanyRequest**|  | |
 | **id** | [**string**] |  | defaults to undefined|
 
 

@@ -34,7 +34,6 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**emailServicesCreate**](#emailservicescreate) | **POST** /api/email/services/ | |
 |[**emailServicesDedicatedIpCreate**](#emailservicesdedicatedipcreate) | **POST** /api/email/services/{id}/dedicated_ip/ | |
 |[**emailServicesDedicatedIpDestroy**](#emailservicesdedicatedipdestroy) | **DELETE** /api/email/services/{id}/dedicated_ip/ | |
-|[**emailServicesDestroy**](#emailservicesdestroy) | **DELETE** /api/email/services/{id}/ | |
 |[**emailServicesDomainsCreate**](#emailservicesdomainscreate) | **POST** /api/email/services/{service_pk}/domains/ | |
 |[**emailServicesDomainsList**](#emailservicesdomainslist) | **GET** /api/email/services/{service_pk}/domains/ | |
 |[**emailServicesList**](#emailserviceslist) | **GET** /api/email/services/ | |
@@ -59,7 +58,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**emailSuppressionsRetrieve**](#emailsuppressionsretrieve) | **GET** /api/email/suppressions/{id}/ | |
 
 # **emailApiCredentialsCreate**
-> ApiCredential emailApiCredentialsCreate()
+> ApiCredentialCreated emailApiCredentialsCreate()
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -69,16 +68,16 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    ApiCredential
+    CredentialCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
-let apiCredential: ApiCredential; // (optional)
+let credentialCreateRequest: CredentialCreateRequest; // (optional)
 
 const { status, data } = await apiInstance.emailApiCredentialsCreate(
-    apiCredential
+    credentialCreateRequest
 );
 ```
 
@@ -86,12 +85,12 @@ const { status, data } = await apiInstance.emailApiCredentialsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **apiCredential** | **ApiCredential**|  | |
+| **credentialCreateRequest** | **CredentialCreateRequest**|  | |
 
 
 ### Return type
 
-**ApiCredential**
+**ApiCredentialCreated**
 
 ### Authorization
 
@@ -264,7 +263,7 @@ const { status, data } = await apiInstance.emailApiCredentialsRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailDomainsCreate**
-> SendingDomain emailDomainsCreate(domainAdd)
+> SendingDomain emailDomainsCreate(domainAddRequest)
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -274,16 +273,16 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    DomainAdd
+    DomainAddRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
-let domainAdd: DomainAdd; //
+let domainAddRequest: DomainAddRequest; //
 
 const { status, data } = await apiInstance.emailDomainsCreate(
-    domainAdd
+    domainAddRequest
 );
 ```
 
@@ -291,7 +290,7 @@ const { status, data } = await apiInstance.emailDomainsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **domainAdd** | **DomainAdd**|  | |
+| **domainAddRequest** | **DomainAddRequest**|  | |
 
 
 ### Return type
@@ -316,7 +315,7 @@ const { status, data } = await apiInstance.emailDomainsCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailDomainsInboundRoutesCreate**
-> InboundRoute emailDomainsInboundRoutesCreate(inboundRoute)
+> InboundRouteWriteResponse emailDomainsInboundRoutesCreate(inboundRouteCreateRequest)
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -326,18 +325,18 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    InboundRoute
+    InboundRouteCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let domainPk: number; // (default to undefined)
-let inboundRoute: InboundRoute; //
+let inboundRouteCreateRequest: InboundRouteCreateRequest; //
 
 const { status, data } = await apiInstance.emailDomainsInboundRoutesCreate(
     domainPk,
-    inboundRoute
+    inboundRouteCreateRequest
 );
 ```
 
@@ -345,13 +344,13 @@ const { status, data } = await apiInstance.emailDomainsInboundRoutesCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **inboundRoute** | **InboundRoute**|  | |
+| **inboundRouteCreateRequest** | **InboundRouteCreateRequest**|  | |
 | **domainPk** | [**number**] |  | defaults to undefined|
 
 
 ### Return type
 
-**InboundRoute**
+**InboundRouteWriteResponse**
 
 ### Authorization
 
@@ -536,19 +535,16 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 ```typescript
 import {
     EmailApi,
-    Configuration,
-    SendingDomain
+    Configuration
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let id: number; //A unique integer value identifying this sending domain. (default to undefined)
-let sendingDomain: SendingDomain; // (optional)
 
 const { status, data } = await apiInstance.emailDomainsRotateDkimCreate(
-    id,
-    sendingDomain
+    id
 );
 ```
 
@@ -556,7 +552,6 @@ const { status, data } = await apiInstance.emailDomainsRotateDkimCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **sendingDomain** | **SendingDomain**|  | |
 | **id** | [**number**] | A unique integer value identifying this sending domain. | defaults to undefined|
 
 
@@ -570,7 +565,7 @@ const { status, data } = await apiInstance.emailDomainsRotateDkimCreate(
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
@@ -592,18 +587,18 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    SendingDomain
+    ToggleInboundRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let id: number; //A unique integer value identifying this sending domain. (default to undefined)
-let sendingDomain: SendingDomain; // (optional)
+let toggleInboundRequest: ToggleInboundRequest; // (optional)
 
 const { status, data } = await apiInstance.emailDomainsToggleInboundCreate(
     id,
-    sendingDomain
+    toggleInboundRequest
 );
 ```
 
@@ -611,7 +606,7 @@ const { status, data } = await apiInstance.emailDomainsToggleInboundCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **sendingDomain** | **SendingDomain**|  | |
+| **toggleInboundRequest** | **ToggleInboundRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this sending domain. | defaults to undefined|
 
 
@@ -646,19 +641,16 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 ```typescript
 import {
     EmailApi,
-    Configuration,
-    SendingDomain
+    Configuration
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let id: number; //A unique integer value identifying this sending domain. (default to undefined)
-let sendingDomain: SendingDomain; // (optional)
 
 const { status, data } = await apiInstance.emailDomainsVerifyCreate(
-    id,
-    sendingDomain
+    id
 );
 ```
 
@@ -666,7 +658,6 @@ const { status, data } = await apiInstance.emailDomainsVerifyCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **sendingDomain** | **SendingDomain**|  | |
 | **id** | [**number**] | A unique integer value identifying this sending domain. | defaults to undefined|
 
 
@@ -680,7 +671,7 @@ const { status, data } = await apiInstance.emailDomainsVerifyCreate(
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
@@ -692,7 +683,7 @@ const { status, data } = await apiInstance.emailDomainsVerifyCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailInboundRoutesCreate**
-> InboundRoute emailInboundRoutesCreate(inboundRoute)
+> InboundRouteWriteResponse emailInboundRoutesCreate(inboundRouteCreateRequest)
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -702,16 +693,16 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    InboundRoute
+    InboundRouteCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
-let inboundRoute: InboundRoute; //
+let inboundRouteCreateRequest: InboundRouteCreateRequest; //
 
 const { status, data } = await apiInstance.emailInboundRoutesCreate(
-    inboundRoute
+    inboundRouteCreateRequest
 );
 ```
 
@@ -719,12 +710,12 @@ const { status, data } = await apiInstance.emailInboundRoutesCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **inboundRoute** | **InboundRoute**|  | |
+| **inboundRouteCreateRequest** | **InboundRouteCreateRequest**|  | |
 
 
 ### Return type
 
-**InboundRoute**
+**InboundRouteWriteResponse**
 
 ### Authorization
 
@@ -846,7 +837,7 @@ const { status, data } = await apiInstance.emailInboundRoutesList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailInboundRoutesPartialUpdate**
-> InboundRoute emailInboundRoutesPartialUpdate()
+> InboundRouteWriteResponse emailInboundRoutesPartialUpdate()
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -856,18 +847,18 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    PatchedInboundRoute
+    PatchedInboundRouteCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let id: number; //A unique integer value identifying this inbound route. (default to undefined)
-let patchedInboundRoute: PatchedInboundRoute; // (optional)
+let patchedInboundRouteCreateRequest: PatchedInboundRouteCreateRequest; // (optional)
 
 const { status, data } = await apiInstance.emailInboundRoutesPartialUpdate(
     id,
-    patchedInboundRoute
+    patchedInboundRouteCreateRequest
 );
 ```
 
@@ -875,13 +866,13 @@ const { status, data } = await apiInstance.emailInboundRoutesPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedInboundRoute** | **PatchedInboundRoute**|  | |
+| **patchedInboundRouteCreateRequest** | **PatchedInboundRouteCreateRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this inbound route. | defaults to undefined|
 
 
 ### Return type
 
-**InboundRoute**
+**InboundRouteWriteResponse**
 
 ### Authorization
 
@@ -952,7 +943,7 @@ const { status, data } = await apiInstance.emailInboundRoutesRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailMessagesRetrieve**
-> emailMessagesRetrieve()
+> { [key: string]: any; } emailMessagesRetrieve()
 
 Look up a single message via Postal v3 legacy API using the server\'s own token.
 
@@ -983,7 +974,7 @@ const { status, data } = await apiInstance.emailMessagesRetrieve(
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: any; }**
 
 ### Authorization
 
@@ -992,18 +983,18 @@ void (empty response body)
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | No response body |  -  |
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailSandboxAddressesCreate**
-> SandboxAddress emailSandboxAddressesCreate(sandboxAddress)
+> SandboxAddress emailSandboxAddressesCreate(sandboxAddressRequest)
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -1013,16 +1004,16 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    SandboxAddress
+    SandboxAddressRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
-let sandboxAddress: SandboxAddress; //
+let sandboxAddressRequest: SandboxAddressRequest; //
 
 const { status, data } = await apiInstance.emailSandboxAddressesCreate(
-    sandboxAddress
+    sandboxAddressRequest
 );
 ```
 
@@ -1030,7 +1021,7 @@ const { status, data } = await apiInstance.emailSandboxAddressesCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **sandboxAddress** | **SandboxAddress**|  | |
+| **sandboxAddressRequest** | **SandboxAddressRequest**|  | |
 
 
 ### Return type
@@ -1208,7 +1199,7 @@ const { status, data } = await apiInstance.emailSandboxAddressesRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailSendCreate**
-> emailSendCreate()
+> EmailSendResponse emailSendCreate(sendRequest)
 
 
 ### Example
@@ -1216,42 +1207,50 @@ const { status, data } = await apiInstance.emailSandboxAddressesRetrieve(
 ```typescript
 import {
     EmailApi,
-    Configuration
+    Configuration,
+    SendRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
-const { status, data } = await apiInstance.emailSendCreate();
+let sendRequest: SendRequest; //
+
+const { status, data } = await apiInstance.emailSendCreate(
+    sendRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **sendRequest** | **SendRequest**|  | |
 
 
 ### Return type
 
-void (empty response body)
+**EmailSendResponse**
 
 ### Authorization
 
-No authorization required
+[emailApiKey](../README.md#emailApiKey)
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Content-Type**: application/json
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | No response body |  -  |
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailServicesApiCredentialsCreate**
-> ApiCredential emailServicesApiCredentialsCreate()
+> ApiCredentialCreated emailServicesApiCredentialsCreate()
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -1261,18 +1260,18 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    ApiCredential
+    CredentialCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let servicePk: number; // (default to undefined)
-let apiCredential: ApiCredential; // (optional)
+let credentialCreateRequest: CredentialCreateRequest; // (optional)
 
 const { status, data } = await apiInstance.emailServicesApiCredentialsCreate(
     servicePk,
-    apiCredential
+    credentialCreateRequest
 );
 ```
 
@@ -1280,13 +1279,13 @@ const { status, data } = await apiInstance.emailServicesApiCredentialsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **apiCredential** | **ApiCredential**|  | |
+| **credentialCreateRequest** | **CredentialCreateRequest**|  | |
 | **servicePk** | [**number**] |  | defaults to undefined|
 
 
 ### Return type
 
-**ApiCredential**
+**ApiCredentialCreated**
 
 ### Authorization
 
@@ -1411,7 +1410,7 @@ const { status, data } = await apiInstance.emailServicesCancelCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailServicesChangeTierPartialUpdate**
-> EmailService emailServicesChangeTierPartialUpdate()
+> EmailService emailServicesChangeTierPartialUpdate(subscribeRequest)
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -1421,18 +1420,18 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    PatchedSubscribe
+    SubscribeRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let id: number; //A unique integer value identifying this email service. (default to undefined)
-let patchedSubscribe: PatchedSubscribe; // (optional)
+let subscribeRequest: SubscribeRequest; //
 
 const { status, data } = await apiInstance.emailServicesChangeTierPartialUpdate(
     id,
-    patchedSubscribe
+    subscribeRequest
 );
 ```
 
@@ -1440,7 +1439,7 @@ const { status, data } = await apiInstance.emailServicesChangeTierPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedSubscribe** | **PatchedSubscribe**|  | |
+| **subscribeRequest** | **SubscribeRequest**|  | |
 | **id** | [**number**] | A unique integer value identifying this email service. | defaults to undefined|
 
 
@@ -1466,7 +1465,7 @@ const { status, data } = await apiInstance.emailServicesChangeTierPartialUpdate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailServicesCreate**
-> EmailService emailServicesCreate(subscribe)
+> EmailService emailServicesCreate(subscribeRequest)
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -1476,16 +1475,16 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    Subscribe
+    SubscribeRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
-let subscribe: Subscribe; //
+let subscribeRequest: SubscribeRequest; //
 
 const { status, data } = await apiInstance.emailServicesCreate(
-    subscribe
+    subscribeRequest
 );
 ```
 
@@ -1493,7 +1492,7 @@ const { status, data } = await apiInstance.emailServicesCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **subscribe** | **Subscribe**|  | |
+| **subscribeRequest** | **SubscribeRequest**|  | |
 
 
 ### Return type
@@ -1569,7 +1568,7 @@ const { status, data } = await apiInstance.emailServicesDedicatedIpCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailServicesDedicatedIpDestroy**
-> emailServicesDedicatedIpDestroy()
+> EmailService emailServicesDedicatedIpDestroy()
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -1600,7 +1599,7 @@ const { status, data } = await apiInstance.emailServicesDedicatedIpDestroy(
 
 ### Return type
 
-void (empty response body)
+**EmailService**
 
 ### Authorization
 
@@ -1609,69 +1608,18 @@ void (empty response body)
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**204** | No response body |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **emailServicesDestroy**
-> emailServicesDestroy()
-
-Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-
-### Example
-
-```typescript
-import {
-    EmailApi,
-    Configuration
-} from '@pidginhost/sdk';
-
-const configuration = new Configuration();
-const apiInstance = new EmailApi(configuration);
-
-let id: number; //A unique integer value identifying this email service. (default to undefined)
-
-const { status, data } = await apiInstance.emailServicesDestroy(
-    id
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **id** | [**number**] | A unique integer value identifying this email service. | defaults to undefined|
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**204** | No response body |  -  |
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailServicesDomainsCreate**
-> SendingDomain emailServicesDomainsCreate(domainAdd)
+> SendingDomain emailServicesDomainsCreate(domainAddRequest)
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -1681,18 +1629,18 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    DomainAdd
+    DomainAddRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let servicePk: number; // (default to undefined)
-let domainAdd: DomainAdd; //
+let domainAddRequest: DomainAddRequest; //
 
 const { status, data } = await apiInstance.emailServicesDomainsCreate(
     servicePk,
-    domainAdd
+    domainAddRequest
 );
 ```
 
@@ -1700,7 +1648,7 @@ const { status, data } = await apiInstance.emailServicesDomainsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **domainAdd** | **DomainAdd**|  | |
+| **domainAddRequest** | **DomainAddRequest**|  | |
 | **servicePk** | [**number**] |  | defaults to undefined|
 
 
@@ -1831,7 +1779,7 @@ const { status, data } = await apiInstance.emailServicesList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailServicesMessagesRetrieve**
-> emailServicesMessagesRetrieve()
+> EmailMessageList emailServicesMessagesRetrieve()
 
 List recently observed messages for a customer\'s email service.  Postal v3 legacy API exposes per-message lookups only; phclient builds the list locally from webhook events. Each message_id is deduped, keeping the most recent event_type as the message status.
 
@@ -1847,9 +1795,13 @@ const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let servicePk: number; // (default to undefined)
+let page: number; //Page number, starting at 1. (optional) (default to undefined)
+let perPage: number; //Page size, capped at 200; defaults to 50. (optional) (default to undefined)
 
 const { status, data } = await apiInstance.emailServicesMessagesRetrieve(
-    servicePk
+    servicePk,
+    page,
+    perPage
 );
 ```
 
@@ -1858,11 +1810,13 @@ const { status, data } = await apiInstance.emailServicesMessagesRetrieve(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **servicePk** | [**number**] |  | defaults to undefined|
+| **page** | [**number**] | Page number, starting at 1. | (optional) defaults to undefined|
+| **perPage** | [**number**] | Page size, capped at 200; defaults to 50. | (optional) defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**EmailMessageList**
 
 ### Authorization
 
@@ -1871,13 +1825,13 @@ void (empty response body)
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | No response body |  -  |
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -1891,19 +1845,16 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 ```typescript
 import {
     EmailApi,
-    Configuration,
-    PatchedEmailService
+    Configuration
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let id: number; //A unique integer value identifying this email service. (default to undefined)
-let patchedEmailService: PatchedEmailService; // (optional)
 
 const { status, data } = await apiInstance.emailServicesPartialUpdate(
-    id,
-    patchedEmailService
+    id
 );
 ```
 
@@ -1911,7 +1862,6 @@ const { status, data } = await apiInstance.emailServicesPartialUpdate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **patchedEmailService** | **PatchedEmailService**|  | |
 | **id** | [**number**] | A unique integer value identifying this email service. | defaults to undefined|
 
 
@@ -1925,7 +1875,7 @@ const { status, data } = await apiInstance.emailServicesPartialUpdate(
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
@@ -2039,7 +1989,7 @@ const { status, data } = await apiInstance.emailServicesRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailServicesSandboxAddressesCreate**
-> SandboxAddress emailServicesSandboxAddressesCreate(sandboxAddress)
+> SandboxAddress emailServicesSandboxAddressesCreate(sandboxAddressRequest)
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -2049,18 +1999,18 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    SandboxAddress
+    SandboxAddressRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let servicePk: number; // (default to undefined)
-let sandboxAddress: SandboxAddress; //
+let sandboxAddressRequest: SandboxAddressRequest; //
 
 const { status, data } = await apiInstance.emailServicesSandboxAddressesCreate(
     servicePk,
-    sandboxAddress
+    sandboxAddressRequest
 );
 ```
 
@@ -2068,7 +2018,7 @@ const { status, data } = await apiInstance.emailServicesSandboxAddressesCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **sandboxAddress** | **SandboxAddress**|  | |
+| **sandboxAddressRequest** | **SandboxAddressRequest**|  | |
 | **servicePk** | [**number**] |  | defaults to undefined|
 
 
@@ -2148,7 +2098,7 @@ const { status, data } = await apiInstance.emailServicesSandboxAddressesList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailServicesSmtpCredentialsCreate**
-> SmtpCredential emailServicesSmtpCredentialsCreate()
+> SmtpCredentialCreated emailServicesSmtpCredentialsCreate()
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -2158,18 +2108,18 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    SmtpCredential
+    CredentialCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let servicePk: number; // (default to undefined)
-let smtpCredential: SmtpCredential; // (optional)
+let credentialCreateRequest: CredentialCreateRequest; // (optional)
 
 const { status, data } = await apiInstance.emailServicesSmtpCredentialsCreate(
     servicePk,
-    smtpCredential
+    credentialCreateRequest
 );
 ```
 
@@ -2177,13 +2127,13 @@ const { status, data } = await apiInstance.emailServicesSmtpCredentialsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **smtpCredential** | **SmtpCredential**|  | |
+| **credentialCreateRequest** | **CredentialCreateRequest**|  | |
 | **servicePk** | [**number**] |  | defaults to undefined|
 
 
 ### Return type
 
-**SmtpCredential**
+**SmtpCredentialCreated**
 
 ### Authorization
 
@@ -2257,7 +2207,7 @@ const { status, data } = await apiInstance.emailServicesSmtpCredentialsList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailServicesStatsRetrieve**
-> emailServicesStatsRetrieve()
+> EmailStats emailServicesStatsRetrieve()
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -2273,9 +2223,13 @@ const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let servicePk: number; // (default to undefined)
+let end: string; // (optional) (default to undefined)
+let start: string; // (optional) (default to undefined)
 
 const { status, data } = await apiInstance.emailServicesStatsRetrieve(
-    servicePk
+    servicePk,
+    end,
+    start
 );
 ```
 
@@ -2284,11 +2238,13 @@ const { status, data } = await apiInstance.emailServicesStatsRetrieve(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **servicePk** | [**number**] |  | defaults to undefined|
+| **end** | [**string**] |  | (optional) defaults to undefined|
+| **start** | [**string**] |  | (optional) defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**EmailStats**
 
 ### Authorization
 
@@ -2297,18 +2253,18 @@ void (empty response body)
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | No response body |  -  |
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailServicesSuppressionsCreate**
-> SuppressionEntry emailServicesSuppressionsCreate()
+> SuppressionEntry emailServicesSuppressionsCreate(suppressionAddRequest)
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -2318,18 +2274,18 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    SuppressionEntry
+    SuppressionAddRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
 let servicePk: number; // (default to undefined)
-let suppressionEntry: SuppressionEntry; // (optional)
+let suppressionAddRequest: SuppressionAddRequest; //
 
 const { status, data } = await apiInstance.emailServicesSuppressionsCreate(
     servicePk,
-    suppressionEntry
+    suppressionAddRequest
 );
 ```
 
@@ -2337,7 +2293,7 @@ const { status, data } = await apiInstance.emailServicesSuppressionsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **suppressionEntry** | **SuppressionEntry**|  | |
+| **suppressionAddRequest** | **SuppressionAddRequest**|  | |
 | **servicePk** | [**number**] |  | defaults to undefined|
 
 
@@ -2417,7 +2373,7 @@ const { status, data } = await apiInstance.emailServicesSuppressionsList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailSmtpCredentialsCreate**
-> SmtpCredential emailSmtpCredentialsCreate()
+> SmtpCredentialCreated emailSmtpCredentialsCreate()
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -2427,16 +2383,16 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    SmtpCredential
+    CredentialCreateRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
-let smtpCredential: SmtpCredential; // (optional)
+let credentialCreateRequest: CredentialCreateRequest; // (optional)
 
 const { status, data } = await apiInstance.emailSmtpCredentialsCreate(
-    smtpCredential
+    credentialCreateRequest
 );
 ```
 
@@ -2444,12 +2400,12 @@ const { status, data } = await apiInstance.emailSmtpCredentialsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **smtpCredential** | **SmtpCredential**|  | |
+| **credentialCreateRequest** | **CredentialCreateRequest**|  | |
 
 
 ### Return type
 
-**SmtpCredential**
+**SmtpCredentialCreated**
 
 ### Authorization
 
@@ -2622,7 +2578,7 @@ const { status, data } = await apiInstance.emailSmtpCredentialsRetrieve(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **emailSuppressionsCreate**
-> SuppressionEntry emailSuppressionsCreate()
+> SuppressionEntry emailSuppressionsCreate(suppressionAddRequest)
 
 Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
 
@@ -2632,16 +2588,16 @@ Intersect the beta gate and IAM with the configured API permissions.  Keeping th
 import {
     EmailApi,
     Configuration,
-    SuppressionEntry
+    SuppressionAddRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
 const apiInstance = new EmailApi(configuration);
 
-let suppressionEntry: SuppressionEntry; // (optional)
+let suppressionAddRequest: SuppressionAddRequest; //
 
 const { status, data } = await apiInstance.emailSuppressionsCreate(
-    suppressionEntry
+    suppressionAddRequest
 );
 ```
 
@@ -2649,7 +2605,7 @@ const { status, data } = await apiInstance.emailSuppressionsCreate(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **suppressionEntry** | **SuppressionEntry**|  | |
+| **suppressionAddRequest** | **SuppressionAddRequest**|  | |
 
 
 ### Return type

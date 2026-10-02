@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 **destroy_protection** | **boolean** | Prevents the server from being destroyed until disabled. | [readonly] [default to undefined]
 **ha_enabled** | **boolean** | Enables Proxmox HA — automatic restart and migration on node failure. | [readonly] [default to undefined]
 **custom_os** | **boolean** | Customer installed their own OS from an ISO; cloud-init features no longer apply | [readonly] [default to undefined]
-**networks** | **{ [key: string]: any; }** |  | [readonly] [default to undefined]
+**networks** | [**ServerNetworks**](ServerNetworks.md) |  | [readonly] [default to undefined]
 **rescue_mode** | **boolean** |  | [readonly] [default to undefined]
 **boot_iso** | **string** |  | [readonly] [default to undefined]
 **rescue_supported** | **boolean** |  | [readonly] [default to undefined]

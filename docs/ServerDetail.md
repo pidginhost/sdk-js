@@ -16,9 +16,8 @@ Name | Type | Description | Notes
 **generation** | **string** |  | [readonly] [default to undefined]
 **machine** | **{ [key: string]: any; }** |  | [readonly] [default to undefined]
 **volumes** | [**Array&lt;Volume&gt;**](Volume.md) |  | [readonly] [default to undefined]
-**networks** | **{ [key: string]: any; }** |  | [readonly] [default to undefined]
+**networks** | [**ServerNetworks**](ServerNetworks.md) |  | [readonly] [default to undefined]
 **floating_ips** | [**Array&lt;FloatingIPSummary&gt;**](FloatingIPSummary.md) |  | [readonly] [default to undefined]
-**password** | **string** |  | [optional] [default to undefined]
 **ssh_pub_key** | **string** | Public key to apply for SSH login. Applying a non-empty key regenerates cloud-init and reboots a running server. Clearing removes the key from future cloud-init data, but does not revoke keys already in the guest. | [optional] [default to undefined]
 **status** | [**ResourceStatusEnum**](ResourceStatusEnum.md) |  | [readonly] [default to undefined]
 **username** | **string** |  | [readonly] [default to undefined]
@@ -48,7 +47,6 @@ const instance: ServerDetail = {
     volumes,
     networks,
     floating_ips,
-    password,
     ssh_pub_key,
     status,
     username,

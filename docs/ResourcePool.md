@@ -8,9 +8,8 @@ Name | Type | Description | Notes
 **id** | **number** |  | [readonly] [default to undefined]
 **_package** | **string** |  | [readonly] [default to undefined]
 **generation** | **string** |  | [readonly] [default to undefined]
-**size** | **string** |  | [readonly] [default to undefined]
+**size** | **number** |  | [readonly] [default to undefined]
 **nodes** | [**Array&lt;ResourcePoolNode&gt;**](ResourcePoolNode.md) |  | [readonly] [default to undefined]
-**new_size** | **number** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -23,7 +22,6 @@ const instance: ResourcePool = {
     generation,
     size,
     nodes,
-    new_size,
 };
 ```
 

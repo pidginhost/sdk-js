@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **id** | **number** |  | [readonly] [default to undefined]
 **alias** | **string** |  | [optional] [default to undefined]
 **fingerprint** | **string** |  | [readonly] [default to undefined]
-**key** | **string** |  | [readonly] [default to undefined]
+**key** | **string** |  | [default to undefined]
 
 ## Example
 

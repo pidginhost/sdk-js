@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**vm** | **number** | Server ID | [default to undefined]
+**attached** | **boolean** |  | [default to undefined]
 
 ## Example
 
@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 import { AttachVolume } from '@pidginhost/sdk';
 
 const instance: AttachVolume = {
-    vm,
+    attached,
 };
 ```
 

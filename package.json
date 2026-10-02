@@ -1,6 +1,6 @@
 {
   "name": "@pidginhost/sdk",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "OpenAPI client for @pidginhost/sdk",
   "author": "OpenAPI-Generator Contributors",
   "repository": {

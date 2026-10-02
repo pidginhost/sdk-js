@@ -6,8 +6,8 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **_interface** | **string** |  | [readonly] [default to undefined]
-**ipv4** | **string** |  | [readonly] [default to undefined]
-**ipv6** | **string** |  | [readonly] [default to undefined]
+**ipv4** | **string** |  | [readonly] [default to '']
+**ipv6** | **string** |  | [readonly] [default to '']
 **fw_rules_set** | **string** | ID or slug | [optional] [default to undefined]
 **fw_policy_in** | [**FwPolicyOutEnum**](FwPolicyOutEnum.md) |  | [optional] [default to undefined]
 **fw_policy_out** | [**FwPolicyOutEnum**](FwPolicyOutEnum.md) |  | [optional] [default to undefined]
