@@ -1,4 +1,4 @@
-## @pidginhost/sdk@0.15.0
+## @pidginhost/sdk@0.16.0
 
 This generator creates TypeScript/JavaScript client that utilizes [axios](https://github.com/axios/axios). The generated Node module can be used in the following environments:
 
@@ -36,7 +36,7 @@ navigate to the folder of your consuming project and run one of the following co
 _published:_
 
 ```
-npm install @pidginhost/sdk@0.15.0 --save
+npm install @pidginhost/sdk@0.16.0 --save
 ```
 
 _unPublished (not recommended):_
@@ -296,7 +296,6 @@ Class | Method | HTTP request | Description
 *EmailApi* | [**emailServicesList**](docs/EmailApi.md#emailserviceslist) | **GET** /api/email/services/ | 
 *EmailApi* | [**emailServicesMessagesRetrieve**](docs/EmailApi.md#emailservicesmessagesretrieve) | **GET** /api/email/services/{service_pk}/messages/ | 
 *EmailApi* | [**emailServicesPartialUpdate**](docs/EmailApi.md#emailservicespartialupdate) | **PATCH** /api/email/services/{id}/ | 
-*EmailApi* | [**emailServicesRestoreCreate**](docs/EmailApi.md#emailservicesrestorecreate) | **POST** /api/email/services/{id}/restore/ | 
 *EmailApi* | [**emailServicesRetrieve**](docs/EmailApi.md#emailservicesretrieve) | **GET** /api/email/services/{id}/ | 
 *EmailApi* | [**emailServicesSandboxAddressesCreate**](docs/EmailApi.md#emailservicessandboxaddressescreate) | **POST** /api/email/services/{service_pk}/sandbox_addresses/ | 
 *EmailApi* | [**emailServicesSandboxAddressesList**](docs/EmailApi.md#emailservicessandboxaddresseslist) | **GET** /api/email/services/{service_pk}/sandbox_addresses/ | 
@@ -333,7 +332,6 @@ Class | Method | HTTP request | Description
 *KubernetesApi* | [**kubernetesClustersEligibleVmsRetrieve**](docs/KubernetesApi.md#kubernetesclusterseligiblevmsretrieve) | **GET** /api/kubernetes/clusters/{id}/eligible-vms/ | 
 *KubernetesApi* | [**kubernetesClustersEncryptionCreate**](docs/KubernetesApi.md#kubernetesclustersencryptioncreate) | **POST** /api/kubernetes/clusters/{id}/encryption/ | 
 *KubernetesApi* | [**kubernetesClustersEncryptionRecheckCreate**](docs/KubernetesApi.md#kubernetesclustersencryptionrecheckcreate) | **POST** /api/kubernetes/clusters/{id}/encryption/recheck/ | 
-*KubernetesApi* | [**kubernetesClustersEncryptionReconcileCreate**](docs/KubernetesApi.md#kubernetesclustersencryptionreconcilecreate) | **POST** /api/kubernetes/clusters/{id}/encryption/reconcile/ | 
 *KubernetesApi* | [**kubernetesClustersEncryptionRetrieve**](docs/KubernetesApi.md#kubernetesclustersencryptionretrieve) | **GET** /api/kubernetes/clusters/{id}/encryption/ | 
 *KubernetesApi* | [**kubernetesClustersHttproutesCreate**](docs/KubernetesApi.md#kubernetesclustershttproutescreate) | **POST** /api/kubernetes/clusters/{cluster_id}/httproutes/ | 
 *KubernetesApi* | [**kubernetesClustersHttproutesDestroy**](docs/KubernetesApi.md#kubernetesclustershttproutesdestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/httproutes/{id}/ | 
@@ -344,9 +342,6 @@ Class | Method | HTTP request | Description
 *KubernetesApi* | [**kubernetesClustersKubeVersionUpgradeCreate**](docs/KubernetesApi.md#kubernetesclusterskubeversionupgradecreate) | **POST** /api/kubernetes/clusters/{id}/kube-version-upgrade/ | 
 *KubernetesApi* | [**kubernetesClustersKubeconfigCreate**](docs/KubernetesApi.md#kubernetesclusterskubeconfigcreate) | **POST** /api/kubernetes/clusters/{id}/kubeconfig/ | 
 *KubernetesApi* | [**kubernetesClustersKubeconfigRetrieve**](docs/KubernetesApi.md#kubernetesclusterskubeconfigretrieve) | **GET** /api/kubernetes/clusters/{id}/kubeconfig/ | 
-*KubernetesApi* | [**kubernetesClustersL3CutoverCreate**](docs/KubernetesApi.md#kubernetesclustersl3cutovercreate) | **POST** /api/kubernetes/clusters/{id}/l3/cutover/ | 
-*KubernetesApi* | [**kubernetesClustersL3Retrieve**](docs/KubernetesApi.md#kubernetesclustersl3retrieve) | **GET** /api/kubernetes/clusters/{id}/l3/ | 
-*KubernetesApi* | [**kubernetesClustersL3RevertCreate**](docs/KubernetesApi.md#kubernetesclustersl3revertcreate) | **POST** /api/kubernetes/clusters/{id}/l3/revert/ | 
 *KubernetesApi* | [**kubernetesClustersLbFirewallCreate**](docs/KubernetesApi.md#kubernetesclusterslbfirewallcreate) | **POST** /api/kubernetes/clusters/{cluster_id}/lb-firewall/ | 
 *KubernetesApi* | [**kubernetesClustersLbFirewallDestroy**](docs/KubernetesApi.md#kubernetesclusterslbfirewalldestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersLbFirewallList**](docs/KubernetesApi.md#kubernetesclusterslbfirewalllist) | **GET** /api/kubernetes/clusters/{cluster_id}/lb-firewall/ | 
@@ -356,12 +351,10 @@ Class | Method | HTTP request | Description
 *KubernetesApi* | [**kubernetesClustersList**](docs/KubernetesApi.md#kubernetesclusterslist) | **GET** /api/kubernetes/clusters/ | 
 *KubernetesApi* | [**kubernetesClustersNodeOperationsCancelCreate**](docs/KubernetesApi.md#kubernetesclustersnodeoperationscancelcreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/cancel/ | 
 *KubernetesApi* | [**kubernetesClustersNodeOperationsList**](docs/KubernetesApi.md#kubernetesclustersnodeoperationslist) | **GET** /api/kubernetes/clusters/{cluster_id}/node-operations/ | 
-*KubernetesApi* | [**kubernetesClustersNodeOperationsResumeCreate**](docs/KubernetesApi.md#kubernetesclustersnodeoperationsresumecreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/resume/ | 
 *KubernetesApi* | [**kubernetesClustersNodeOperationsRetrieve**](docs/KubernetesApi.md#kubernetesclustersnodeoperationsretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersNodeOperationsRetryCreate**](docs/KubernetesApi.md#kubernetesclustersnodeoperationsretrycreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/retry/ | 
 *KubernetesApi* | [**kubernetesClustersPartialUpdate**](docs/KubernetesApi.md#kubernetesclusterspartialupdate) | **PATCH** /api/kubernetes/clusters/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersPoolRemovalJournalsList**](docs/KubernetesApi.md#kubernetesclusterspoolremovaljournalslist) | **GET** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/ | 
-*KubernetesApi* | [**kubernetesClustersPoolRemovalJournalsResumeCreate**](docs/KubernetesApi.md#kubernetesclusterspoolremovaljournalsresumecreate) | **POST** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/{id}/resume/ | 
 *KubernetesApi* | [**kubernetesClustersPoolRemovalJournalsRetrieve**](docs/KubernetesApi.md#kubernetesclusterspoolremovaljournalsretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersPortForwardsCreate**](docs/KubernetesApi.md#kubernetesclustersportforwardscreate) | **POST** /api/kubernetes/clusters/{cluster_id}/port-forwards/ | 
 *KubernetesApi* | [**kubernetesClustersPortForwardsDestroy**](docs/KubernetesApi.md#kubernetesclustersportforwardsdestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/port-forwards/{id}/ | 
@@ -399,9 +392,6 @@ Class | Method | HTTP request | Description
 *KubernetesApi* | [**kubernetesClustersUpdate**](docs/KubernetesApi.md#kubernetesclustersupdate) | **PUT** /api/kubernetes/clusters/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersUpgradeFeatureCreate**](docs/KubernetesApi.md#kubernetesclustersupgradefeaturecreate) | **POST** /api/kubernetes/clusters/{id}/upgrade-feature/ | 
 *KubernetesApi* | [**kubernetesClustersUpgradeLbCreate**](docs/KubernetesApi.md#kubernetesclustersupgradelbcreate) | **POST** /api/kubernetes/clusters/{id}/upgrade-lb/ | 
-*OApi* | [**oMobileDashboardRetrieve**](docs/OApi.md#omobiledashboardretrieve) | **GET** /o/mobile/dashboard/ | 
-*OApi* | [**oMobileSessionRetrieve**](docs/OApi.md#omobilesessionretrieve) | **GET** /o/mobile/session/ | 
-*OApi* | [**oRegisterCreate**](docs/OApi.md#oregistercreate) | **POST** /o/register | 
 *SchemaApi* | [**schemaRetrieve**](docs/SchemaApi.md#schemaretrieve) | **GET** /api/schema/ | 
 *SupportApi* | [**supportDepartmentsList**](docs/SupportApi.md#supportdepartmentslist) | **GET** /api/support/departments/ | 
 *SupportApi* | [**supportTicketsCloseCreate**](docs/SupportApi.md#supportticketsclosecreate) | **POST** /api/support/tickets/{id}/close/ | 
@@ -461,7 +451,6 @@ Class | Method | HTTP request | Description
  - [ClusterEncryption](docs/ClusterEncryption.md)
  - [ClusterEncryptionError](docs/ClusterEncryptionError.md)
  - [ClusterEncryptionOperation](docs/ClusterEncryptionOperation.md)
- - [ClusterEncryptionReconcileRequest](docs/ClusterEncryptionReconcileRequest.md)
  - [ClusterEncryptionRefusal](docs/ClusterEncryptionRefusal.md)
  - [ClusterEncryptionRequest](docs/ClusterEncryptionRequest.md)
  - [ClusterEncryptionStatusEnum](docs/ClusterEncryptionStatusEnum.md)
@@ -591,7 +580,6 @@ Class | Method | HTTP request | Description
  - [LBUpgradePlanResponse](docs/LBUpgradePlanResponse.md)
  - [LBUpgradeRequest](docs/LBUpgradeRequest.md)
  - [LowBalanceSettingsRequest](docs/LowBalanceSettingsRequest.md)
- - [MobileOAuthSession](docs/MobileOAuthSession.md)
  - [ModeEnum](docs/ModeEnum.md)
  - [NameserversUpdateRequest](docs/NameserversUpdateRequest.md)
  - [NameserversUpdateResponse](docs/NameserversUpdateResponse.md)

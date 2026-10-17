@@ -39,7 +39,6 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**emailServicesList**](#emailserviceslist) | **GET** /api/email/services/ | |
 |[**emailServicesMessagesRetrieve**](#emailservicesmessagesretrieve) | **GET** /api/email/services/{service_pk}/messages/ | |
 |[**emailServicesPartialUpdate**](#emailservicespartialupdate) | **PATCH** /api/email/services/{id}/ | |
-|[**emailServicesRestoreCreate**](#emailservicesrestorecreate) | **POST** /api/email/services/{id}/restore/ | |
 |[**emailServicesRetrieve**](#emailservicesretrieve) | **GET** /api/email/services/{id}/ | |
 |[**emailServicesSandboxAddressesCreate**](#emailservicessandboxaddressescreate) | **POST** /api/email/services/{service_pk}/sandbox_addresses/ | |
 |[**emailServicesSandboxAddressesList**](#emailservicessandboxaddresseslist) | **GET** /api/email/services/{service_pk}/sandbox_addresses/ | |
@@ -1854,57 +1853,6 @@ const apiInstance = new EmailApi(configuration);
 let id: number; //A unique integer value identifying this email service. (default to undefined)
 
 const { status, data } = await apiInstance.emailServicesPartialUpdate(
-    id
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **id** | [**number**] | A unique integer value identifying this email service. | defaults to undefined|
-
-
-### Return type
-
-**EmailService**
-
-### Authorization
-
-[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **emailServicesRestoreCreate**
-> EmailService emailServicesRestoreCreate()
-
-Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-
-### Example
-
-```typescript
-import {
-    EmailApi,
-    Configuration
-} from '@pidginhost/sdk';
-
-const configuration = new Configuration();
-const apiInstance = new EmailApi(configuration);
-
-let id: number; //A unique integer value identifying this email service. (default to undefined)
-
-const { status, data } = await apiInstance.emailServicesRestoreCreate(
     id
 );
 ```

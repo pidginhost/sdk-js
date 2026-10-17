@@ -13,7 +13,6 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**kubernetesClustersEligibleVmsRetrieve**](#kubernetesclusterseligiblevmsretrieve) | **GET** /api/kubernetes/clusters/{id}/eligible-vms/ | |
 |[**kubernetesClustersEncryptionCreate**](#kubernetesclustersencryptioncreate) | **POST** /api/kubernetes/clusters/{id}/encryption/ | |
 |[**kubernetesClustersEncryptionRecheckCreate**](#kubernetesclustersencryptionrecheckcreate) | **POST** /api/kubernetes/clusters/{id}/encryption/recheck/ | |
-|[**kubernetesClustersEncryptionReconcileCreate**](#kubernetesclustersencryptionreconcilecreate) | **POST** /api/kubernetes/clusters/{id}/encryption/reconcile/ | |
 |[**kubernetesClustersEncryptionRetrieve**](#kubernetesclustersencryptionretrieve) | **GET** /api/kubernetes/clusters/{id}/encryption/ | |
 |[**kubernetesClustersHttproutesCreate**](#kubernetesclustershttproutescreate) | **POST** /api/kubernetes/clusters/{cluster_id}/httproutes/ | |
 |[**kubernetesClustersHttproutesDestroy**](#kubernetesclustershttproutesdestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/httproutes/{id}/ | |
@@ -24,9 +23,6 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**kubernetesClustersKubeVersionUpgradeCreate**](#kubernetesclusterskubeversionupgradecreate) | **POST** /api/kubernetes/clusters/{id}/kube-version-upgrade/ | |
 |[**kubernetesClustersKubeconfigCreate**](#kubernetesclusterskubeconfigcreate) | **POST** /api/kubernetes/clusters/{id}/kubeconfig/ | |
 |[**kubernetesClustersKubeconfigRetrieve**](#kubernetesclusterskubeconfigretrieve) | **GET** /api/kubernetes/clusters/{id}/kubeconfig/ | |
-|[**kubernetesClustersL3CutoverCreate**](#kubernetesclustersl3cutovercreate) | **POST** /api/kubernetes/clusters/{id}/l3/cutover/ | |
-|[**kubernetesClustersL3Retrieve**](#kubernetesclustersl3retrieve) | **GET** /api/kubernetes/clusters/{id}/l3/ | |
-|[**kubernetesClustersL3RevertCreate**](#kubernetesclustersl3revertcreate) | **POST** /api/kubernetes/clusters/{id}/l3/revert/ | |
 |[**kubernetesClustersLbFirewallCreate**](#kubernetesclusterslbfirewallcreate) | **POST** /api/kubernetes/clusters/{cluster_id}/lb-firewall/ | |
 |[**kubernetesClustersLbFirewallDestroy**](#kubernetesclusterslbfirewalldestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | |
 |[**kubernetesClustersLbFirewallList**](#kubernetesclusterslbfirewalllist) | **GET** /api/kubernetes/clusters/{cluster_id}/lb-firewall/ | |
@@ -36,12 +32,10 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**kubernetesClustersList**](#kubernetesclusterslist) | **GET** /api/kubernetes/clusters/ | |
 |[**kubernetesClustersNodeOperationsCancelCreate**](#kubernetesclustersnodeoperationscancelcreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/cancel/ | |
 |[**kubernetesClustersNodeOperationsList**](#kubernetesclustersnodeoperationslist) | **GET** /api/kubernetes/clusters/{cluster_id}/node-operations/ | |
-|[**kubernetesClustersNodeOperationsResumeCreate**](#kubernetesclustersnodeoperationsresumecreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/resume/ | |
 |[**kubernetesClustersNodeOperationsRetrieve**](#kubernetesclustersnodeoperationsretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/ | |
 |[**kubernetesClustersNodeOperationsRetryCreate**](#kubernetesclustersnodeoperationsretrycreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/retry/ | |
 |[**kubernetesClustersPartialUpdate**](#kubernetesclusterspartialupdate) | **PATCH** /api/kubernetes/clusters/{id}/ | |
 |[**kubernetesClustersPoolRemovalJournalsList**](#kubernetesclusterspoolremovaljournalslist) | **GET** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/ | |
-|[**kubernetesClustersPoolRemovalJournalsResumeCreate**](#kubernetesclusterspoolremovaljournalsresumecreate) | **POST** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/{id}/resume/ | |
 |[**kubernetesClustersPoolRemovalJournalsRetrieve**](#kubernetesclusterspoolremovaljournalsretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/pool-removal-journals/{id}/ | |
 |[**kubernetesClustersPortForwardsCreate**](#kubernetesclustersportforwardscreate) | **POST** /api/kubernetes/clusters/{cluster_id}/port-forwards/ | |
 |[**kubernetesClustersPortForwardsDestroy**](#kubernetesclustersportforwardsdestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/port-forwards/{id}/ | |
@@ -559,65 +553,6 @@ const { status, data } = await apiInstance.kubernetesClustersEncryptionRecheckCr
 |**409** |  |  -  |
 |**429** |  |  -  |
 |**503** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **kubernetesClustersEncryptionReconcileCreate**
-> ClusterEncryptionOperation kubernetesClustersEncryptionReconcileCreate(clusterEncryptionReconcileRequest)
-
-Staff only: resolve a cluster whose encryption state is unknown.
-
-### Example
-
-```typescript
-import {
-    KubernetesApi,
-    Configuration,
-    ClusterEncryptionReconcileRequest
-} from '@pidginhost/sdk';
-
-const configuration = new Configuration();
-const apiInstance = new KubernetesApi(configuration);
-
-let id: string; // (default to undefined)
-let clusterEncryptionReconcileRequest: ClusterEncryptionReconcileRequest; //
-
-const { status, data } = await apiInstance.kubernetesClustersEncryptionReconcileCreate(
-    id,
-    clusterEncryptionReconcileRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **clusterEncryptionReconcileRequest** | **ClusterEncryptionReconcileRequest**|  | |
-| **id** | [**string**] |  | defaults to undefined|
-
-
-### Return type
-
-**ClusterEncryptionOperation**
-
-### Authorization
-
-[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
-|**400** |  |  -  |
-|**403** |  |  -  |
-|**404** |  |  -  |
-|**409** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -1161,167 +1096,6 @@ const { status, data } = await apiInstance.kubernetesClustersKubeconfigRetrieve(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **kubernetesClustersL3CutoverCreate**
-> ClusterDetail kubernetesClustersL3CutoverCreate()
-
-Start one staff L3 cutover. Only the plan, the confirmation and the attended window are read from the request.
-
-### Example
-
-```typescript
-import {
-    KubernetesApi,
-    Configuration,
-    ClusterDetailRequest
-} from '@pidginhost/sdk';
-
-const configuration = new Configuration();
-const apiInstance = new KubernetesApi(configuration);
-
-let id: string; // (default to undefined)
-let clusterDetailRequest: ClusterDetailRequest; // (optional)
-
-const { status, data } = await apiInstance.kubernetesClustersL3CutoverCreate(
-    id,
-    clusterDetailRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **clusterDetailRequest** | **ClusterDetailRequest**|  | |
-| **id** | [**string**] |  | defaults to undefined|
-
-
-### Return type
-
-**ClusterDetail**
-
-### Authorization
-
-[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **kubernetesClustersL3Retrieve**
-> ClusterDetail kubernetesClustersL3Retrieve()
-
-The staff L3 plan for this cluster; read-only.
-
-### Example
-
-```typescript
-import {
-    KubernetesApi,
-    Configuration
-} from '@pidginhost/sdk';
-
-const configuration = new Configuration();
-const apiInstance = new KubernetesApi(configuration);
-
-let id: string; // (default to undefined)
-
-const { status, data } = await apiInstance.kubernetesClustersL3Retrieve(
-    id
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] |  | defaults to undefined|
-
-
-### Return type
-
-**ClusterDetail**
-
-### Authorization
-
-[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **kubernetesClustersL3RevertCreate**
-> ClusterDetail kubernetesClustersL3RevertCreate()
-
-Request one staff revert of a committed L3 operation.
-
-### Example
-
-```typescript
-import {
-    KubernetesApi,
-    Configuration,
-    ClusterDetailRequest
-} from '@pidginhost/sdk';
-
-const configuration = new Configuration();
-const apiInstance = new KubernetesApi(configuration);
-
-let id: string; // (default to undefined)
-let clusterDetailRequest: ClusterDetailRequest; // (optional)
-
-const { status, data } = await apiInstance.kubernetesClustersL3RevertCreate(
-    id,
-    clusterDetailRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **clusterDetailRequest** | **ClusterDetailRequest**|  | |
-| **id** | [**string**] |  | defaults to undefined|
-
-
-### Return type
-
-**ClusterDetail**
-
-### Authorization
-
-[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
 # **kubernetesClustersLbFirewallCreate**
 > LBFirewallRule kubernetesClustersLbFirewallCreate()
 
@@ -1814,60 +1588,6 @@ const { status, data } = await apiInstance.kubernetesClustersNodeOperationsList(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **kubernetesClustersNodeOperationsResumeCreate**
-> NodeOperation kubernetesClustersNodeOperationsResumeCreate()
-
-Staff-only resume of an operation waiting for support.
-
-### Example
-
-```typescript
-import {
-    KubernetesApi,
-    Configuration
-} from '@pidginhost/sdk';
-
-const configuration = new Configuration();
-const apiInstance = new KubernetesApi(configuration);
-
-let clusterId: number; // (default to undefined)
-let id: string; // (default to undefined)
-
-const { status, data } = await apiInstance.kubernetesClustersNodeOperationsResumeCreate(
-    clusterId,
-    id
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **clusterId** | [**number**] |  | defaults to undefined|
-| **id** | [**string**] |  | defaults to undefined|
-
-
-### Return type
-
-**NodeOperation**
-
-### Authorization
-
-[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**202** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
 # **kubernetesClustersNodeOperationsRetrieve**
 > NodeOperation kubernetesClustersNodeOperationsRetrieve()
 
@@ -2086,60 +1806,6 @@ const { status, data } = await apiInstance.kubernetesClustersPoolRemovalJournals
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **kubernetesClustersPoolRemovalJournalsResumeCreate**
-> PoolRemovalJournal kubernetesClustersPoolRemovalJournalsResumeCreate()
-
-Staff-only resume of a pool removal waiting for support.
-
-### Example
-
-```typescript
-import {
-    KubernetesApi,
-    Configuration
-} from '@pidginhost/sdk';
-
-const configuration = new Configuration();
-const apiInstance = new KubernetesApi(configuration);
-
-let clusterId: number; // (default to undefined)
-let id: string; // (default to undefined)
-
-const { status, data } = await apiInstance.kubernetesClustersPoolRemovalJournalsResumeCreate(
-    clusterId,
-    id
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **clusterId** | [**number**] |  | defaults to undefined|
-| **id** | [**string**] |  | defaults to undefined|
-
-
-### Return type
-
-**PoolRemovalJournal**
-
-### Authorization
-
-[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**202** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

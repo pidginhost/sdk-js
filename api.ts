@@ -503,25 +503,6 @@ export const ClusterEncryptionOperationReasonEnum = {
 
 export type ClusterEncryptionOperationReasonEnum = typeof ClusterEncryptionOperationReasonEnum[keyof typeof ClusterEncryptionOperationReasonEnum];
 
-/**
- * The staff reconcile body, which alone may carry the override.  A SEPARATE component rather than an optional field on the shared one. The toggle route ignores the flag entirely, so declaring it in one body would hand a generated client an argument that silently does nothing on half the routes carrying it -- the same class of published untruth the rest of this feature\'s schema work exists to prevent.
- */
-export interface ClusterEncryptionReconcileRequest {
-    /**
-     * Target encryption mode: no encryption, or WireGuard.  * `none` - none * `wireguard` - wireguard
-     */
-    'mode': EncryptionModeEnum;
-    /**
-     * Confirms the caller accepts that workloads must be restarted after the change.
-     */
-    'acknowledge_workload_restart'?: boolean;
-    /**
-     * Record this mode even if verification refuses, together with what was observed. Only the unencrypted mode can be asserted this way: an encrypted state always requires positive per-node evidence.
-     */
-    'override_unverifiable'?: boolean;
-}
-
-
 export interface ClusterEncryptionRefusal {
     'reason': EncryptionReasonCodeEnum;
     'message': string;
@@ -2139,15 +2120,6 @@ export interface LowBalanceSettingsRequest {
 }
 
 
-export interface MobileOAuthSession {
-    'actor_email': string;
-    'account_email': string;
-    'role': string;
-    'token_id': number | null;
-    'token_scope': string;
-    'currency': string;
-    'capabilities': { [key: string]: boolean; };
-}
 /**
  * * `webhook` - HTTP webhook * `forward` - Forward
  */
@@ -18535,44 +18507,6 @@ export const EmailApiAxiosParamCreator = function (configuration?: Configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesRestoreCreate: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('emailServicesRestoreCreate', 'id', id)
-            const localVarPath = `/api/email/services/{id}/restore/`
-                .replace('{id}', encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication tokenAuth required
-            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
-
-            // authentication cookieAuth required
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {number} id A unique integer value identifying this email service.
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
         emailServicesRetrieve: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('emailServicesRetrieve', 'id', id)
@@ -19663,18 +19597,6 @@ export const EmailApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async emailServicesRestoreCreate(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailService>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesRestoreCreate(id, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['EmailApi.emailServicesRestoreCreate']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {number} id A unique integer value identifying this email service.
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
         async emailServicesRetrieve(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmailService>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.emailServicesRetrieve(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
@@ -20210,15 +20132,6 @@ export const EmailApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        emailServicesRestoreCreate(id: number, options?: RawAxiosRequestConfig): AxiosPromise<EmailService> {
-            return localVarFp.emailServicesRestoreCreate(id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-         * @param {number} id A unique integer value identifying this email service.
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
         emailServicesRetrieve(id: number, options?: RawAxiosRequestConfig): AxiosPromise<EmailService> {
             return localVarFp.emailServicesRetrieve(id, options).then((request) => request(axios, basePath));
         },
@@ -20731,16 +20644,6 @@ export class EmailApi extends BaseAPI {
      */
     public emailServicesPartialUpdate(id: number, options?: RawAxiosRequestConfig) {
         return EmailApiFp(this.configuration).emailServicesPartialUpdate(id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Intersect the beta gate and IAM with the configured API permissions.  Keeping the gate additive preserves authentication, custom-token scope, and OAuth scope checks when the customer-facing feature flag is open. Per-action permission overrides (the staff-only restore action) remain in the same intersection.
-     * @param {number} id A unique integer value identifying this email service.
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public emailServicesRestoreCreate(id: number, options?: RawAxiosRequestConfig) {
-        return EmailApiFp(this.configuration).emailServicesRestoreCreate(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -22162,49 +22065,6 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             };
         },
         /**
-         * Staff only: resolve a cluster whose encryption state is unknown.
-         * @param {string} id 
-         * @param {ClusterEncryptionReconcileRequest} clusterEncryptionReconcileRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersEncryptionReconcileCreate: async (id: string, clusterEncryptionReconcileRequest: ClusterEncryptionReconcileRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('kubernetesClustersEncryptionReconcileCreate', 'id', id)
-            // verify required parameter 'clusterEncryptionReconcileRequest' is not null or undefined
-            assertParamExists('kubernetesClustersEncryptionReconcileCreate', 'clusterEncryptionReconcileRequest', clusterEncryptionReconcileRequest)
-            const localVarPath = `/api/kubernetes/clusters/{id}/encryption/reconcile/`
-                .replace('{id}', encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication tokenAuth required
-            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
-
-            // authentication cookieAuth required
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(clusterEncryptionReconcileRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
          * Read the cluster\'s encryption state, restart gate and per-node verification evidence.
          * @param {string} id 
          * @param {*} [options] Override http request option.
@@ -22618,126 +22478,6 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             };
         },
         /**
-         * Start one staff L3 cutover. Only the plan, the confirmation and the attended window are read from the request.
-         * @param {string} id 
-         * @param {ClusterDetailRequest} [clusterDetailRequest] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersL3CutoverCreate: async (id: string, clusterDetailRequest?: ClusterDetailRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('kubernetesClustersL3CutoverCreate', 'id', id)
-            const localVarPath = `/api/kubernetes/clusters/{id}/l3/cutover/`
-                .replace('{id}', encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication tokenAuth required
-            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
-
-            // authentication cookieAuth required
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(clusterDetailRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * The staff L3 plan for this cluster; read-only.
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersL3Retrieve: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('kubernetesClustersL3Retrieve', 'id', id)
-            const localVarPath = `/api/kubernetes/clusters/{id}/l3/`
-                .replace('{id}', encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication tokenAuth required
-            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
-
-            // authentication cookieAuth required
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Request one staff revert of a committed L3 operation.
-         * @param {string} id 
-         * @param {ClusterDetailRequest} [clusterDetailRequest] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersL3RevertCreate: async (id: string, clusterDetailRequest?: ClusterDetailRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('kubernetesClustersL3RevertCreate', 'id', id)
-            const localVarPath = `/api/kubernetes/clusters/{id}/l3/revert/`
-                .replace('{id}', encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication tokenAuth required
-            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
-
-            // authentication cookieAuth required
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(clusterDetailRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
@@ -23119,48 +22859,6 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             };
         },
         /**
-         * Staff-only resume of an operation waiting for support.
-         * @param {number} clusterId 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersNodeOperationsResumeCreate: async (clusterId: number, id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'clusterId' is not null or undefined
-            assertParamExists('kubernetesClustersNodeOperationsResumeCreate', 'clusterId', clusterId)
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('kubernetesClustersNodeOperationsResumeCreate', 'id', id)
-            const localVarPath = `/api/kubernetes/clusters/{cluster_id}/node-operations/{id}/resume/`
-                .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
-                .replace('{id}', encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication tokenAuth required
-            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
-
-            // authentication cookieAuth required
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
          * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
          * @param {number} clusterId 
          * @param {string} id 
@@ -23319,48 +23017,6 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             if (page !== undefined) {
                 localVarQueryParameter['page'] = page;
             }
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Staff-only resume of a pool removal waiting for support.
-         * @param {number} clusterId 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersPoolRemovalJournalsResumeCreate: async (clusterId: number, id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'clusterId' is not null or undefined
-            assertParamExists('kubernetesClustersPoolRemovalJournalsResumeCreate', 'clusterId', clusterId)
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('kubernetesClustersPoolRemovalJournalsResumeCreate', 'id', id)
-            const localVarPath = `/api/kubernetes/clusters/{cluster_id}/pool-removal-journals/{id}/resume/`
-                .replace('{cluster_id}', encodeURIComponent(String(clusterId)))
-                .replace('{id}', encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication tokenAuth required
-            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
-
-            // authentication cookieAuth required
 
             localVarHeaderParameter['Accept'] = 'application/json';
 
@@ -25108,19 +24764,6 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Staff only: resolve a cluster whose encryption state is unknown.
-         * @param {string} id 
-         * @param {ClusterEncryptionReconcileRequest} clusterEncryptionReconcileRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async kubernetesClustersEncryptionReconcileCreate(id: string, clusterEncryptionReconcileRequest: ClusterEncryptionReconcileRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterEncryptionOperation>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersEncryptionReconcileCreate(id, clusterEncryptionReconcileRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersEncryptionReconcileCreate']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
          * Read the cluster\'s encryption state, restart gate and per-node verification evidence.
          * @param {string} id 
          * @param {*} [options] Override http request option.
@@ -25249,44 +24892,6 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Start one staff L3 cutover. Only the plan, the confirmation and the attended window are read from the request.
-         * @param {string} id 
-         * @param {ClusterDetailRequest} [clusterDetailRequest] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async kubernetesClustersL3CutoverCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersL3CutoverCreate(id, clusterDetailRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersL3CutoverCreate']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * The staff L3 plan for this cluster; read-only.
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async kubernetesClustersL3Retrieve(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersL3Retrieve(id, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersL3Retrieve']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Request one staff revert of a committed L3 operation.
-         * @param {string} id 
-         * @param {ClusterDetailRequest} [clusterDetailRequest] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async kubernetesClustersL3RevertCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersL3RevertCreate(id, clusterDetailRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersL3RevertCreate']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
@@ -25405,19 +25010,6 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Staff-only resume of an operation waiting for support.
-         * @param {number} clusterId 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async kubernetesClustersNodeOperationsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NodeOperation>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersNodeOperationsResumeCreate(clusterId, id, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersNodeOperationsResumeCreate']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
          * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
          * @param {number} clusterId 
          * @param {string} id 
@@ -25468,19 +25060,6 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPoolRemovalJournalsList(clusterId, page, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersPoolRemovalJournalsList']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Staff-only resume of a pool removal waiting for support.
-         * @param {number} clusterId 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PoolRemovalJournal>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId, id, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersPoolRemovalJournalsResumeCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -26073,16 +25652,6 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
             return localVarFp.kubernetesClustersEncryptionRecheckCreate(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * Staff only: resolve a cluster whose encryption state is unknown.
-         * @param {string} id 
-         * @param {ClusterEncryptionReconcileRequest} clusterEncryptionReconcileRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersEncryptionReconcileCreate(id: string, clusterEncryptionReconcileRequest: ClusterEncryptionReconcileRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterEncryptionOperation> {
-            return localVarFp.kubernetesClustersEncryptionReconcileCreate(id, clusterEncryptionReconcileRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
          * Read the cluster\'s encryption state, restart gate and per-node verification evidence.
          * @param {string} id 
          * @param {*} [options] Override http request option.
@@ -26181,35 +25750,6 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
             return localVarFp.kubernetesClustersKubeconfigRetrieve(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * Start one staff L3 cutover. Only the plan, the confirmation and the attended window are read from the request.
-         * @param {string} id 
-         * @param {ClusterDetailRequest} [clusterDetailRequest] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersL3CutoverCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
-            return localVarFp.kubernetesClustersL3CutoverCreate(id, clusterDetailRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * The staff L3 plan for this cluster; read-only.
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersL3Retrieve(id: string, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
-            return localVarFp.kubernetesClustersL3Retrieve(id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Request one staff revert of a committed L3 operation.
-         * @param {string} id 
-         * @param {ClusterDetailRequest} [clusterDetailRequest] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersL3RevertCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
-            return localVarFp.kubernetesClustersL3RevertCreate(id, clusterDetailRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
@@ -26301,16 +25841,6 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
             return localVarFp.kubernetesClustersNodeOperationsList(clusterId, page, options).then((request) => request(axios, basePath));
         },
         /**
-         * Staff-only resume of an operation waiting for support.
-         * @param {number} clusterId 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersNodeOperationsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig): AxiosPromise<NodeOperation> {
-            return localVarFp.kubernetesClustersNodeOperationsResumeCreate(clusterId, id, options).then((request) => request(axios, basePath));
-        },
-        /**
          * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
          * @param {number} clusterId 
          * @param {string} id 
@@ -26350,16 +25880,6 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          */
         kubernetesClustersPoolRemovalJournalsList(clusterId: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedPoolRemovalJournalList> {
             return localVarFp.kubernetesClustersPoolRemovalJournalsList(clusterId, page, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Staff-only resume of a pool removal waiting for support.
-         * @param {number} clusterId 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig): AxiosPromise<PoolRemovalJournal> {
-            return localVarFp.kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId, id, options).then((request) => request(axios, basePath));
         },
         /**
          * A downsize or pool deletion, its milestones, and its staff resume.  The list route is not in the spec\'s table and is here anyway: with retrieve as the only route, a customer whose downsize parked has no way to learn the journal id, and the panel\'s poll would be the sole path to a published REST resource.
@@ -26847,17 +26367,6 @@ export class KubernetesApi extends BaseAPI {
     }
 
     /**
-     * Staff only: resolve a cluster whose encryption state is unknown.
-     * @param {string} id 
-     * @param {ClusterEncryptionReconcileRequest} clusterEncryptionReconcileRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public kubernetesClustersEncryptionReconcileCreate(id: string, clusterEncryptionReconcileRequest: ClusterEncryptionReconcileRequest, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersEncryptionReconcileCreate(id, clusterEncryptionReconcileRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
      * Read the cluster\'s encryption state, restart gate and per-node verification evidence.
      * @param {string} id 
      * @param {*} [options] Override http request option.
@@ -26966,38 +26475,6 @@ export class KubernetesApi extends BaseAPI {
     }
 
     /**
-     * Start one staff L3 cutover. Only the plan, the confirmation and the attended window are read from the request.
-     * @param {string} id 
-     * @param {ClusterDetailRequest} [clusterDetailRequest] 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public kubernetesClustersL3CutoverCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersL3CutoverCreate(id, clusterDetailRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * The staff L3 plan for this cluster; read-only.
-     * @param {string} id 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public kubernetesClustersL3Retrieve(id: string, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersL3Retrieve(id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Request one staff revert of a committed L3 operation.
-     * @param {string} id 
-     * @param {ClusterDetailRequest} [clusterDetailRequest] 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public kubernetesClustersL3RevertCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersL3RevertCreate(id, clusterDetailRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {number} clusterId 
      * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
@@ -27098,17 +26575,6 @@ export class KubernetesApi extends BaseAPI {
     }
 
     /**
-     * Staff-only resume of an operation waiting for support.
-     * @param {number} clusterId 
-     * @param {string} id 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public kubernetesClustersNodeOperationsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersNodeOperationsResumeCreate(clusterId, id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
      * Operation history, status, and the three recovery actions.  Cluster-level rather than node-level on purpose: a successful delete removes the VM row, so an operation addressable only through its node would stop being readable exactly when the customer wants to see how it ended.  None of these routes is gated on `K8S_NODE_OPERATIONS_ENABLED`. Turning new starts off must never strand an operation that is already running -- a cluster with a blocked operation and no way to answer it is a cluster nobody can mutate at all.
      * @param {number} clusterId 
      * @param {string} id 
@@ -27151,17 +26617,6 @@ export class KubernetesApi extends BaseAPI {
      */
     public kubernetesClustersPoolRemovalJournalsList(clusterId: number, page?: number, options?: RawAxiosRequestConfig) {
         return KubernetesApiFp(this.configuration).kubernetesClustersPoolRemovalJournalsList(clusterId, page, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Staff-only resume of a pool removal waiting for support.
-     * @param {number} clusterId 
-     * @param {string} id 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId: number, id: string, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersPoolRemovalJournalsResumeCreate(clusterId, id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -27595,209 +27050,6 @@ export const KubernetesClustersResourcePoolsNodesRrdRetrieveTimeframeEnum = {
     Year: 'year',
 } as const;
 export type KubernetesClustersResourcePoolsNodesRrdRetrieveTimeframeEnum = typeof KubernetesClustersResourcePoolsNodesRrdRetrieveTimeframeEnum[keyof typeof KubernetesClustersResourcePoolsNodesRrdRetrieveTimeframeEnum];
-
-
-/**
- * OApi - axios parameter creator
- */
-export const OApiAxiosParamCreator = function (configuration?: Configuration) {
-    return {
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        oMobileDashboardRetrieve: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/o/mobile/dashboard/`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        oMobileSessionRetrieve: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/o/mobile/session/`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Accept'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * RFC 7591 dynamic client registration (open, throttled).
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        oRegisterCreate: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/o/register`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-    }
-};
-
-/**
- * OApi - functional programming interface
- */
-export const OApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = OApiAxiosParamCreator(configuration)
-    return {
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async oMobileDashboardRetrieve(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Dashboard>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.oMobileDashboardRetrieve(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['OApi.oMobileDashboardRetrieve']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async oMobileSessionRetrieve(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MobileOAuthSession>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.oMobileSessionRetrieve(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['OApi.oMobileSessionRetrieve']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * RFC 7591 dynamic client registration (open, throttled).
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async oRegisterCreate(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.oRegisterCreate(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['OApi.oRegisterCreate']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-    }
-};
-
-/**
- * OApi - factory interface
- */
-export const OApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = OApiFp(configuration)
-    return {
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        oMobileDashboardRetrieve(options?: RawAxiosRequestConfig): AxiosPromise<Dashboard> {
-            return localVarFp.oMobileDashboardRetrieve(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        oMobileSessionRetrieve(options?: RawAxiosRequestConfig): AxiosPromise<MobileOAuthSession> {
-            return localVarFp.oMobileSessionRetrieve(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * RFC 7591 dynamic client registration (open, throttled).
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        oRegisterCreate(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.oRegisterCreate(options).then((request) => request(axios, basePath));
-        },
-    };
-};
-
-/**
- * OApi - object-oriented interface
- */
-export class OApi extends BaseAPI {
-    /**
-     * 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public oMobileDashboardRetrieve(options?: RawAxiosRequestConfig) {
-        return OApiFp(this.configuration).oMobileDashboardRetrieve(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public oMobileSessionRetrieve(options?: RawAxiosRequestConfig) {
-        return OApiFp(this.configuration).oMobileSessionRetrieve(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * RFC 7591 dynamic client registration (open, throttled).
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public oRegisterCreate(options?: RawAxiosRequestConfig) {
-        return OApiFp(this.configuration).oRegisterCreate(options).then((request) => request(this.axios, this.basePath));
-    }
-}
-
 
 
 /**
