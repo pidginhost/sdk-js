@@ -24,6 +24,9 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**kubernetesClustersKubeVersionUpgradeCreate**](#kubernetesclusterskubeversionupgradecreate) | **POST** /api/kubernetes/clusters/{id}/kube-version-upgrade/ | |
 |[**kubernetesClustersKubeconfigCreate**](#kubernetesclusterskubeconfigcreate) | **POST** /api/kubernetes/clusters/{id}/kubeconfig/ | |
 |[**kubernetesClustersKubeconfigRetrieve**](#kubernetesclusterskubeconfigretrieve) | **GET** /api/kubernetes/clusters/{id}/kubeconfig/ | |
+|[**kubernetesClustersL3CutoverCreate**](#kubernetesclustersl3cutovercreate) | **POST** /api/kubernetes/clusters/{id}/l3/cutover/ | |
+|[**kubernetesClustersL3Retrieve**](#kubernetesclustersl3retrieve) | **GET** /api/kubernetes/clusters/{id}/l3/ | |
+|[**kubernetesClustersL3RevertCreate**](#kubernetesclustersl3revertcreate) | **POST** /api/kubernetes/clusters/{id}/l3/revert/ | |
 |[**kubernetesClustersLbFirewallCreate**](#kubernetesclusterslbfirewallcreate) | **POST** /api/kubernetes/clusters/{cluster_id}/lb-firewall/ | |
 |[**kubernetesClustersLbFirewallDestroy**](#kubernetesclusterslbfirewalldestroy) | **DELETE** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | |
 |[**kubernetesClustersLbFirewallList**](#kubernetesclusterslbfirewalllist) | **GET** /api/kubernetes/clusters/{cluster_id}/lb-firewall/ | |
@@ -1149,6 +1152,167 @@ const { status, data } = await apiInstance.kubernetesClustersKubeconfigRetrieve(
 
  - **Content-Type**: Not defined
  - **Accept**: text/plain
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersL3CutoverCreate**
+> ClusterDetail kubernetesClustersL3CutoverCreate()
+
+Start one staff L3 cutover. Only the plan, the confirmation and the attended window are read from the request.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration,
+    ClusterDetailRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let id: string; // (default to undefined)
+let clusterDetailRequest: ClusterDetailRequest; // (optional)
+
+const { status, data } = await apiInstance.kubernetesClustersL3CutoverCreate(
+    id,
+    clusterDetailRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **clusterDetailRequest** | **ClusterDetailRequest**|  | |
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**ClusterDetail**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersL3Retrieve**
+> ClusterDetail kubernetesClustersL3Retrieve()
+
+The staff L3 plan for this cluster; read-only.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.kubernetesClustersL3Retrieve(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**ClusterDetail**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersL3RevertCreate**
+> ClusterDetail kubernetesClustersL3RevertCreate()
+
+Request one staff revert of a committed L3 operation.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration,
+    ClusterDetailRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let id: string; // (default to undefined)
+let clusterDetailRequest: ClusterDetailRequest; // (optional)
+
+const { status, data } = await apiInstance.kubernetesClustersL3RevertCreate(
+    id,
+    clusterDetailRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **clusterDetailRequest** | **ClusterDetailRequest**|  | |
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**ClusterDetail**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
 
 
 ### HTTP response details
@@ -2424,14 +2588,15 @@ const { status, data } = await apiInstance.kubernetesClustersResourcePoolsCreate
 # **kubernetesClustersResourcePoolsDestroy**
 > kubernetesClustersResourcePoolsDestroy()
 
-Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+Delete a resource pool and every node in it.
 
 ### Example
 
 ```typescript
 import {
     KubernetesApi,
-    Configuration
+    Configuration,
+    ResourcePoolDeleteRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -2439,10 +2604,12 @@ const apiInstance = new KubernetesApi(configuration);
 
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
+let resourcePoolDeleteRequest: ResourcePoolDeleteRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersResourcePoolsDestroy(
     clusterId,
-    id
+    id,
+    resourcePoolDeleteRequest
 );
 ```
 
@@ -2450,6 +2617,7 @@ const { status, data } = await apiInstance.kubernetesClustersResourcePoolsDestro
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **resourcePoolDeleteRequest** | **ResourcePoolDeleteRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 
@@ -2464,7 +2632,7 @@ void (empty response body)
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: Not defined
 
 
@@ -2539,7 +2707,8 @@ Start a safe delete of one worker node.
 ```typescript
 import {
     KubernetesApi,
-    Configuration
+    Configuration,
+    NodeOperationDeleteRequest
 } from '@pidginhost/sdk';
 
 const configuration = new Configuration();
@@ -2548,11 +2717,13 @@ const apiInstance = new KubernetesApi(configuration);
 let clusterId: number; // (default to undefined)
 let id: string; // (default to undefined)
 let poolId: number; // (default to undefined)
+let nodeOperationDeleteRequest: NodeOperationDeleteRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersResourcePoolsNodesDestroy(
     clusterId,
     id,
-    poolId
+    poolId,
+    nodeOperationDeleteRequest
 );
 ```
 
@@ -2560,6 +2731,7 @@ const { status, data } = await apiInstance.kubernetesClustersResourcePoolsNodesD
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **nodeOperationDeleteRequest** | **NodeOperationDeleteRequest**|  | |
 | **clusterId** | [**number**] |  | defaults to undefined|
 | **id** | [**string**] |  | defaults to undefined|
 | **poolId** | [**number**] |  | defaults to undefined|
@@ -2575,7 +2747,7 @@ const { status, data } = await apiInstance.kubernetesClustersResourcePoolsNodesD
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -3868,7 +4040,7 @@ const { status, data } = await apiInstance.kubernetesClustersUdproutesUpdate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **kubernetesClustersUpdate**
-> ClusterDetail kubernetesClustersUpdate(clusterDetailRequest)
+> ClusterDetail kubernetesClustersUpdate()
 
 Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
 
@@ -3885,7 +4057,7 @@ const configuration = new Configuration();
 const apiInstance = new KubernetesApi(configuration);
 
 let id: string; // (default to undefined)
-let clusterDetailRequest: ClusterDetailRequest; //
+let clusterDetailRequest: ClusterDetailRequest; // (optional)
 
 const { status, data } = await apiInstance.kubernetesClustersUpdate(
     id,

@@ -6,6 +6,7 @@ Read-only serializer for dedicated server services.
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**billing** | [**ResourceBilling**](ResourceBilling.md) |  | [readonly] [default to undefined]
 **id** | **number** |  | [readonly] [default to undefined]
 **hostname** | **string** |  | [readonly] [default to undefined]
 **status** | [**ServiceStatusEnum**](ServiceStatusEnum.md) |  | [readonly] [default to undefined]
@@ -16,6 +17,7 @@ Name | Type | Description | Notes
 **server_status** | [**DedicatedServerStatus**](DedicatedServerStatus.md) |  | [readonly] [default to undefined]
 **ips** | [**Array&lt;DedicatedServerIP&gt;**](DedicatedServerIP.md) |  | [readonly] [default to undefined]
 **os_name** | **string** |  | [readonly] [default to undefined]
+**hardware** | [**DedicatedHardware**](DedicatedHardware.md) |  | [readonly] [default to undefined]
 
 ## Example
 
@@ -23,6 +25,7 @@ Name | Type | Description | Notes
 import { DedicatedServer } from '@pidginhost/sdk';
 
 const instance: DedicatedServer = {
+    billing,
     id,
     hostname,
     status,
@@ -33,6 +36,7 @@ const instance: DedicatedServer = {
     server_status,
     ips,
     os_name,
+    hardware,
 };
 ```
 

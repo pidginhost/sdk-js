@@ -7,6 +7,8 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**hostingHostingChangePasswordCreate**](#hostinghostingchangepasswordcreate) | **POST** /api/hosting/hosting/{id}/change-password/ | |
 |[**hostingHostingList**](#hostinghostinglist) | **GET** /api/hosting/hosting/ | |
 |[**hostingHostingRetrieve**](#hostinghostingretrieve) | **GET** /api/hosting/hosting/{id}/ | |
+|[**hostingHostingUpgradeOptionsRetrieve**](#hostinghostingupgradeoptionsretrieve) | **GET** /api/hosting/hosting/{id}/upgrade-options/ | |
+|[**hostingHostingUsageRetrieve**](#hostinghostingusageretrieve) | **GET** /api/hosting/hosting/{id}/usage/ | |
 
 # **hostingHostingChangePasswordCreate**
 > HostingChangePasswordResponse hostingHostingChangePasswordCreate(changePasswordRequest)
@@ -147,6 +149,108 @@ const { status, data } = await apiInstance.hostingHostingRetrieve(
 ### Return type
 
 **HostingService**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **hostingHostingUpgradeOptionsRetrieve**
+> HostingUpgradeOptions hostingHostingUpgradeOptionsRetrieve()
+
+List and manage cPanel/shared hosting services.
+
+### Example
+
+```typescript
+import {
+    HostingApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new HostingApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.hostingHostingUpgradeOptionsRetrieve(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**HostingUpgradeOptions**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **hostingHostingUsageRetrieve**
+> HostingUsage hostingHostingUsageRetrieve()
+
+List and manage cPanel/shared hosting services.
+
+### Example
+
+```typescript
+import {
+    HostingApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new HostingApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.hostingHostingUsageRetrieve(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**HostingUsage**
 
 ### Authorization
 

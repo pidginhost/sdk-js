@@ -5,6 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**billing** | [**ResourceBilling**](ResourceBilling.md) |  | [readonly] [default to undefined]
 **id** | **number** |  | [readonly] [default to undefined]
 **company** | **number** |  | [optional] [default to undefined]
 **billing_cycle** | **number** |  | [readonly] [default to undefined]
@@ -23,6 +24,7 @@ Name | Type | Description | Notes
 import { Service } from '@pidginhost/sdk';
 
 const instance: Service = {
+    billing,
     id,
     company,
     billing_cycle,

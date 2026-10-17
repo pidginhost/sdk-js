@@ -12,6 +12,8 @@ Name | Type | Description | Notes
 **product** | **string** | ID or slug | [default to undefined]
 **attached** | **boolean** |  | [readonly] [default to undefined]
 **server** | **string** |  | [readonly] [default to '']
+**status** | [**ResourceStatusEnum**](ResourceStatusEnum.md) |  | [readonly] [default to undefined]
+**billing** | [**ResourceBilling**](ResourceBilling.md) |  | [readonly] [default to undefined]
 
 ## Example
 
@@ -26,6 +28,8 @@ const instance: Volume = {
     product,
     attached,
     server,
+    status,
+    billing,
 };
 ```
 

@@ -6,7 +6,6 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **name** | **string** |  | [optional] [default to undefined]
-**price_per_month** | **string** |  | [default to undefined]
 **features** | [**Array&lt;FeaturesEnum&gt;**](FeaturesEnum.md) |  | [optional] [default to undefined]
 **_protected** | **boolean** |  | [optional] [default to undefined]
 
@@ -17,7 +16,6 @@ import { ClusterDetailRequest } from '@pidginhost/sdk';
 
 const instance: ClusterDetailRequest = {
     name,
-    price_per_month,
     features,
     _protected,
 };

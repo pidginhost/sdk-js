@@ -65,6 +65,15 @@ export interface APITokenList {
 }
 
 
+export interface AccountSessionResponse {
+    'actor_email': string;
+    'account_email': string;
+    'role': string;
+    'token_id': number | null;
+    'token_scope': string | null;
+    'capabilities': { [key: string]: boolean; };
+    'currency': string;
+}
 export interface ActivateFreeDNSRequest {
     /**
      * Domain name or primary key of the domain to activate.
@@ -206,6 +215,7 @@ export interface BootISO {
 
 
 export interface Bucket {
+    'billing': ResourceBilling | null;
     'id': number;
     'name': string;
     'full_name': string;
@@ -319,12 +329,6 @@ export interface ChangeCompanyResponse {
 export interface ChangePasswordRequest {
     'password': string;
 }
-export interface CheckAvailability {
-    /**
-     * Domain with tld, ex: example.com
-     */
-    'domain': string;
-}
 export interface CheckAvailabilityRequest {
     /**
      * Domain with tld, ex: example.com
@@ -380,7 +384,6 @@ export interface ClusterDetail {
 
 export interface ClusterDetailRequest {
     'name'?: string;
-    'price_per_month': string;
     'features'?: Array<FeaturesEnum>;
     'protected'?: boolean;
 }
@@ -922,6 +925,17 @@ export interface CredentialCreateRequest {
     'label'?: string;
 }
 /**
+ * * `RON` - RON
+ */
+
+export const CurrencyEnum = {
+    Ron: 'RON',
+} as const;
+
+export type CurrencyEnum = typeof CurrencyEnum[keyof typeof CurrencyEnum];
+
+
+/**
  * A glue / \"personal DNS\" record: registers a child nameserver host at the registry as ``<name>.<domain>`` pointing at ``ip`` (and optional ``ip2``). Required before another domain can delegate to that nameserver.
  */
 export interface DNSGlue {
@@ -951,19 +965,19 @@ export interface DNSRecord {
     'name': string;
     'ttl': number;
     'type': string;
-    'address': string;
-    'cname': string;
-    'exchange': string;
-    'preference': number;
-    'txtdata': string;
-    'unencoded': string;
-    'target': string;
-    'priority': number;
-    'weight': number;
-    'port': number;
-    'flag': number;
-    'tag': string;
-    'value': string;
+    'address'?: string;
+    'cname'?: string;
+    'exchange'?: string;
+    'preference'?: number;
+    'txtdata'?: string;
+    'unencoded'?: string;
+    'target'?: string;
+    'priority'?: number;
+    'weight'?: number;
+    'port'?: number;
+    'flag'?: number;
+    'tag'?: string;
+    'value'?: string;
 }
 /**
  * Validate input for creating or editing a DNS record.
@@ -1061,6 +1075,32 @@ export interface DNSRecordMutateResponse {
     'message': string;
     'record'?: DNSRecord;
 }
+export interface Dashboard {
+    'currency': string;
+    'billing': DashboardBilling | null;
+    'resources': DashboardResources | null;
+}
+export interface DashboardBilling {
+    'balance': string;
+    'unpaid_count': number;
+    'unpaid_total': string;
+    'invoices': Array<InvoiceList>;
+}
+export interface DashboardResources {
+    'server_count': number;
+    'hosting_count': number;
+    'servers': Array<DashboardServer>;
+    'hosting': Array<HostingService>;
+    'expiring_domains': Array<ExpiringDomain>;
+}
+export interface DashboardServer {
+    'id': number;
+    'hostname': string;
+    'status': string;
+    'project': string;
+    'cpus': number | null;
+    'memory': number | null;
+}
 export interface DeactivateFreeDNSRequest {
     /**
      * Domain name or primary key of the domain to deactivate.
@@ -1073,6 +1113,19 @@ export interface DeactivateFreeDNSRequest {
 export interface DeactivateFreeDNSResponse {
     'message': string;
 }
+export interface DedicatedHardware {
+    'title': string;
+    'processor': string;
+    'processor_count': number;
+    'memory_gb': number;
+    'disks': string;
+    'raid': string;
+    'network': string;
+    'traffic': string;
+    'gpu': string;
+    'extra_hardware': Array<string>;
+    'software': string;
+}
 export interface DedicatedRDNSRequest {
     'ip_id': number;
     'reverse_dns': string;
@@ -1081,6 +1134,7 @@ export interface DedicatedRDNSRequest {
  * Read-only serializer for dedicated server services.
  */
 export interface DedicatedServer {
+    'billing': ResourceBilling | null;
     'id': number;
     'hostname': string;
     'status': ServiceStatusEnum;
@@ -1094,6 +1148,7 @@ export interface DedicatedServer {
     'server_status': DedicatedServerStatus | null;
     'ips': Array<DedicatedServerIP>;
     'os_name': string | null;
+    'hardware': DedicatedHardware | null;
 }
 
 
@@ -1230,6 +1285,10 @@ export interface DomainAddRequest {
 }
 
 
+export interface DomainAvailability {
+    'available': boolean;
+    'supported': boolean;
+}
 export interface DomainCancelResponse {
     'message': string;
     'status': string;
@@ -1419,6 +1478,10 @@ export const EncryptionReasonCodeEnum = {
 export type EncryptionReasonCodeEnum = typeof EncryptionReasonCodeEnum[keyof typeof EncryptionReasonCodeEnum];
 
 
+export interface ExpiringDomain {
+    'name': string;
+    'expiration_date': string;
+}
 export interface FeatureUpgradeRequest {
     /**
      * Name of the feature to upgrade (e.g. cert-manager)
@@ -1735,10 +1798,15 @@ export interface HardwareGeneration {
 export interface HostingChangePasswordResponse {
     'message': string;
 }
+export interface HostingLVEPeriod {
+    'from': string | null;
+    'to': string | null;
+}
 /**
  * Read-only serializer for shared/cPanel hosting services.
  */
 export interface HostingService {
+    'billing': ResourceBilling | null;
     'id': number;
     'hostname': string;
     'status': ServiceStatusEnum;
@@ -1755,6 +1823,42 @@ export interface HostingService {
 }
 
 
+export interface HostingUpgradeOption {
+    'id': number;
+    'name': string;
+    'base_price': number;
+    'currency': string;
+    'tax_included': boolean;
+    /**
+     * Package display limits; disk_quota and traffic are in GB.
+     */
+    'limits': { [key: string]: any; };
+    'review_url': string;
+}
+export interface HostingUpgradeOptions {
+    'results': Array<HostingUpgradeOption>;
+}
+export interface HostingUsage {
+    'fetched_at': string;
+    'package': string;
+    'metrics': Array<HostingUsageMetric>;
+    'live_available': boolean;
+    'lve_available': boolean;
+    'lve_period': Array<HostingLVEPeriod>;
+    'package_limits': { [key: string]: number; };
+    'pressure_detected': boolean;
+}
+export interface HostingUsageMetric {
+    'key': string;
+    'label': string;
+    'used': number | null;
+    'limit': number | null;
+    'unit': string;
+    'percentage': number | null;
+    'faults'?: number | null;
+    'source': string;
+    'near_limit': boolean;
+}
 export interface InboundRoute {
     'id': number;
     'domain': number;
@@ -1793,10 +1897,13 @@ export interface InvoiceDetail {
     'number_proforma': string;
     'number_fiscal': string;
     'status': InvoiceStatusEnum;
+    'invoice_type': InvoiceTypeEnum;
+    'can_pay_with_funds': boolean;
     'subtotal': string;
     'vat_value': string;
     'vat_percentage': number;
     'total': string;
+    'local_amounts': InvoiceLocalAmounts | null;
     'invoice_date': string;
     'due_date': string | null;
     'payment_date': string | null;
@@ -1814,13 +1921,28 @@ export interface InvoiceList {
     'number_proforma': string;
     'number_fiscal': string;
     'status': InvoiceStatusEnum;
+    'invoice_type': InvoiceTypeEnum;
+    'can_pay_with_funds': boolean;
     'subtotal': string;
     'vat_value': string;
     'vat_percentage': number;
     'total': string;
+    'local_amounts': InvoiceLocalAmounts | null;
     'invoice_date': string;
     'due_date': string | null;
     'payment_date': string | null;
+}
+
+
+export interface InvoiceLocalAmounts {
+    'currency': CurrencyEnum;
+    'subtotal': string;
+    'vat_value': string;
+    'total': string;
+    /**
+     * True for a Romanian beneficiary (the rule that picks the PDF language); show RON first.
+     */
+    'primary': boolean;
 }
 
 
@@ -1844,6 +1966,18 @@ export const InvoiceStatusEnum = {
 } as const;
 
 export type InvoiceStatusEnum = typeof InvoiceStatusEnum[keyof typeof InvoiceStatusEnum];
+
+
+/**
+ * * `standard` - Standard * `usage` - Usage
+ */
+
+export const InvoiceTypeEnum = {
+    Standard: 'standard',
+    Usage: 'usage',
+} as const;
+
+export type InvoiceTypeEnum = typeof InvoiceTypeEnum[keyof typeof InvoiceTypeEnum];
 
 
 export interface IsoBootRequest {
@@ -2005,6 +2139,15 @@ export interface LowBalanceSettingsRequest {
 }
 
 
+export interface MobileOAuthSession {
+    'actor_email': string;
+    'account_email': string;
+    'role': string;
+    'token_id': number | null;
+    'token_scope': string;
+    'currency': string;
+    'capabilities': { [key: string]: boolean; };
+}
 /**
  * * `webhook` - HTTP webhook * `forward` - Forward
  */
@@ -2064,6 +2207,19 @@ export interface NodeOperation {
 }
 
 
+/**
+ * A delete additionally requires the hostname typed back.  Checked here rather than in the service on purpose: it is a confirmation that a human typed the right name, which a `source=\"system\"` caller cannot satisfy and must not be asked to. The panel form asks the same question in the same words.
+ */
+export interface NodeOperationDeleteRequest {
+    /**
+     * Acknowledge that data kept on the node itself is destroyed. The drain always deletes emptyDir.
+     */
+    'local_data_loss_accepted'?: boolean;
+    /**
+     * The node\'s hostname, typed back exactly.
+     */
+    'confirm_hostname'?: string;
+}
 /**
  * * `delete` - Delete * `reboot` - Reboot
  */
@@ -2442,7 +2598,6 @@ export interface PaginatedUDPRouteList {
 }
 export interface PatchedClusterDetailRequest {
     'name'?: string;
-    'price_per_month'?: string;
     'features'?: Array<FeaturesEnum>;
     'protected'?: boolean;
 }
@@ -2788,6 +2943,7 @@ export interface PrivateNetwork {
     'gateway'?: string | null;
     'provisioned': boolean;
     'servers': Array<{ [key: string]: string; }>;
+    'billing': ResourceBilling | null;
 }
 export interface PrivateNetworkAddHostRequest {
     /**
@@ -2928,6 +3084,24 @@ export interface RescueEnterQueued {
 export interface RescueExitQueued {
     'queued': boolean;
 }
+export interface ResourceBilling {
+    'amount': string;
+    'currency': string;
+    'tax_included': boolean;
+    'cycle_months': number;
+    'cycle_label': string;
+    'next_invoice': string | null;
+    'profile': ResourceBillingProfile | null;
+    'metered': boolean;
+    'included': boolean;
+    'hourly_amount'?: string;
+    'monthly_total'?: string;
+    'components'?: { [key: string]: string; };
+}
+export interface ResourceBillingProfile {
+    'id': number | null;
+    'name': string;
+}
 export interface ResourcePool {
     'id': number;
     'package': string;
@@ -2945,6 +3119,12 @@ export interface ResourcePoolAddRequest {
 }
 export interface ResourcePoolAddResponse {
     'id': number;
+}
+export interface ResourcePoolDeleteRequest {
+    /**
+     * Acknowledge that data kept on the pool\'s nodes is destroyed. Not needed for an empty pool.
+     */
+    'local_data_loss_accepted'?: boolean;
 }
 export interface ResourcePoolNode {
     'id': number;
@@ -3072,6 +3252,7 @@ export type SendingDomainStatusEnum = typeof SendingDomainStatusEnum[keyof typeo
 
 
 export interface Server {
+    'billing': ResourceBilling | null;
     'id': number;
     'hostname'?: string;
     'project'?: string;
@@ -3173,6 +3354,7 @@ export interface ServerDetachIPv4Response {
     'detached': boolean;
 }
 export interface ServerDetail {
+    'billing': ResourceBilling | null;
     'id': number;
     'hostname': string;
     'project'?: string;
@@ -3305,6 +3487,7 @@ export interface ServerUsageResponse {
     'memory': { [key: string]: any; };
 }
 export interface Service {
+    'billing': ResourceBilling | null;
     'id': number;
     'company'?: number | null;
     'billing_cycle': number;
@@ -3558,6 +3741,19 @@ export interface TLD {
     'idna_support'?: boolean;
     'wg_support'?: boolean;
     'reactivate_max_days'?: number;
+    /**
+     * Smallest registration term the registry accepts (e.g. 2 for .ai).
+     */
+    'min_years'?: number;
+    /**
+     * Allowed step between registration terms (e.g. 2 for .ai → 2, 4, 6 years).
+     */
+    'year_step'?: number;
+}
+export interface TLDCatalog {
+    'tlds': Array<TLD>;
+    'default_nameservers': string;
+    'currency': string;
 }
 export interface TalosUpgradeResponse {
     'status': string;
@@ -3792,6 +3988,14 @@ export interface Volume {
     'product': string;
     'attached': boolean;
     'server': string;
+    'status': ResourceStatusEnum;
+    'billing': ResourceBilling | null;
+}
+
+
+export interface VolumeBusy {
+    'message': string;
+    'extra': { [key: string]: any; };
 }
 export interface VolumeRequest {
     'project'?: string;
@@ -4172,6 +4376,40 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
+         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        accountDashboardRetrieve: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/account/dashboard/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * List email history for the authenticated user.
          * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
@@ -4314,6 +4552,40 @@ export const AccountApiAxiosParamCreator = function (configuration?: Configurati
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(profileRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Resolved account and role/scope intersection without owner-only profile access.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        accountSessionRetrieve: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/account/session/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4675,6 +4947,17 @@ export const AccountApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async accountDashboardRetrieve(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Dashboard>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.accountDashboardRetrieve(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AccountApi.accountDashboardRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * List email history for the authenticated user.
          * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
@@ -4719,6 +5002,17 @@ export const AccountApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.accountProfileUpdate(profileRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AccountApi.accountProfileUpdate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Resolved account and role/scope intersection without owner-only profile access.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async accountSessionRetrieve(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AccountSessionResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.accountSessionRetrieve(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AccountApi.accountSessionRetrieve']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -4888,6 +5182,14 @@ export const AccountApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.accountCompaniesUpdate(id, companyRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        accountDashboardRetrieve(options?: RawAxiosRequestConfig): AxiosPromise<Dashboard> {
+            return localVarFp.accountDashboardRetrieve(options).then((request) => request(axios, basePath));
+        },
+        /**
          * List email history for the authenticated user.
          * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
@@ -4921,6 +5223,14 @@ export const AccountApiFactory = function (configuration?: Configuration, basePa
          */
         accountProfileUpdate(profileRequest: ProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<Profile> {
             return localVarFp.accountProfileUpdate(profileRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Resolved account and role/scope intersection without owner-only profile access.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        accountSessionRetrieve(options?: RawAxiosRequestConfig): AxiosPromise<AccountSessionResponse> {
+            return localVarFp.accountSessionRetrieve(options).then((request) => request(axios, basePath));
         },
         /**
          * Account context + IAM role enforcement for the account residue: billing identity (profile/companies/email history) is owner-only account state, SSH keys are account infra, tokens stay actor-owned.
@@ -5078,6 +5388,15 @@ export class AccountApi extends BaseAPI {
     }
 
     /**
+     * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public accountDashboardRetrieve(options?: RawAxiosRequestConfig) {
+        return AccountApiFp(this.configuration).accountDashboardRetrieve(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * List email history for the authenticated user.
      * @param {number} [page] A page number within the paginated result set.
      * @param {*} [options] Override http request option.
@@ -5114,6 +5433,15 @@ export class AccountApi extends BaseAPI {
      */
     public accountProfileUpdate(profileRequest: ProfileRequest, options?: RawAxiosRequestConfig) {
         return AccountApiFp(this.configuration).accountProfileUpdate(profileRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Resolved account and role/scope intersection without owner-only profile access.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public accountSessionRetrieve(options?: RawAxiosRequestConfig) {
+        return AccountApiFp(this.configuration).accountSessionRetrieve(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -15119,6 +15447,47 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             };
         },
         /**
+         * Manage your domains
+         * @param {string} domain Domain with tld, ex: example.com
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        domainDomainCheckAvailabilityRetrieve: async (domain: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'domain' is not null or undefined
+            assertParamExists('domainDomainCheckAvailabilityRetrieve', 'domain', domain)
+            const localVarPath = `/api/domain/domain/check-availability/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (domain !== undefined) {
+                localVarQueryParameter['domain'] = domain;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Update a contact on this domain using a saved DomainRegistrant.
          * @param {string} domain 
          * @param {ContactsUpdateRequest} contactsUpdateRequest 
@@ -15330,10 +15699,11 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * Manage your domains
          * @param {number} [page] A page number within the paginated result set.
+         * @param {DomainDomainListStatusGroupEnum} [statusGroup] Filter by the account service status before pagination; ordered by expiry, then ID.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainList: async (page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        domainDomainList: async (page?: number, statusGroup?: DomainDomainListStatusGroupEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/domain/domain/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -15353,6 +15723,10 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
 
             if (page !== undefined) {
                 localVarQueryParameter['page'] = page;
+            }
+
+            if (statusGroup !== undefined) {
+                localVarQueryParameter['status_group'] = statusGroup;
             }
 
             localVarHeaderParameter['Accept'] = 'application/json';
@@ -15849,6 +16223,40 @@ export const DomainApiAxiosParamCreator = function (configuration?: Configuratio
             };
         },
         /**
+         * Registration catalog uses exactly the registrar/prices used by create.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        domainTldCatalogRetrieve: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/domain/tld/catalog/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Manage your TLDs
          * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
@@ -15952,10 +16360,22 @@ export const DomainApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainDomainCheckAvailabilityCreate(checkAvailabilityRequest: CheckAvailabilityRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CheckAvailability>> {
+        async domainDomainCheckAvailabilityCreate(checkAvailabilityRequest: CheckAvailabilityRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainAvailability>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainCheckAvailabilityCreate(checkAvailabilityRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainCheckAvailabilityCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Manage your domains
+         * @param {string} domain Domain with tld, ex: example.com
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async domainDomainCheckAvailabilityRetrieve(domain: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DomainAvailability>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainCheckAvailabilityRetrieve(domain, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainCheckAvailabilityRetrieve']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -16025,11 +16445,12 @@ export const DomainApiFp = function(configuration?: Configuration) {
         /**
          * Manage your domains
          * @param {number} [page] A page number within the paginated result set.
+         * @param {DomainDomainListStatusGroupEnum} [statusGroup] Filter by the account service status before pagination; ordered by expiry, then ID.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async domainDomainList(page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedDomainList>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainList(page, options);
+        async domainDomainList(page?: number, statusGroup?: DomainDomainListStatusGroupEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedDomainList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainDomainList(page, statusGroup, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainApi.domainDomainList']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -16185,6 +16606,17 @@ export const DomainApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Registration catalog uses exactly the registrar/prices used by create.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async domainTldCatalogRetrieve(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TLDCatalog>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.domainTldCatalogRetrieve(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DomainApi.domainTldCatalogRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Manage your TLDs
          * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
@@ -16232,8 +16664,17 @@ export const DomainApiFactory = function (configuration?: Configuration, basePat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainCheckAvailabilityCreate(checkAvailabilityRequest: CheckAvailabilityRequest, options?: RawAxiosRequestConfig): AxiosPromise<CheckAvailability> {
+        domainDomainCheckAvailabilityCreate(checkAvailabilityRequest: CheckAvailabilityRequest, options?: RawAxiosRequestConfig): AxiosPromise<DomainAvailability> {
             return localVarFp.domainDomainCheckAvailabilityCreate(checkAvailabilityRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Manage your domains
+         * @param {string} domain Domain with tld, ex: example.com
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        domainDomainCheckAvailabilityRetrieve(domain: string, options?: RawAxiosRequestConfig): AxiosPromise<DomainAvailability> {
+            return localVarFp.domainDomainCheckAvailabilityRetrieve(domain, options).then((request) => request(axios, basePath));
         },
         /**
          * Update a contact on this domain using a saved DomainRegistrant.
@@ -16287,11 +16728,12 @@ export const DomainApiFactory = function (configuration?: Configuration, basePat
         /**
          * Manage your domains
          * @param {number} [page] A page number within the paginated result set.
+         * @param {DomainDomainListStatusGroupEnum} [statusGroup] Filter by the account service status before pagination; ordered by expiry, then ID.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        domainDomainList(page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedDomainList> {
-            return localVarFp.domainDomainList(page, options).then((request) => request(axios, basePath));
+        domainDomainList(page?: number, statusGroup?: DomainDomainListStatusGroupEnum, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedDomainList> {
+            return localVarFp.domainDomainList(page, statusGroup, options).then((request) => request(axios, basePath));
         },
         /**
          * Update nameservers for this domain.
@@ -16408,6 +16850,14 @@ export const DomainApiFactory = function (configuration?: Configuration, basePat
             return localVarFp.domainRegistrantsUpdate(id, domainRegistrantRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * Registration catalog uses exactly the registrar/prices used by create.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        domainTldCatalogRetrieve(options?: RawAxiosRequestConfig): AxiosPromise<TLDCatalog> {
+            return localVarFp.domainTldCatalogRetrieve(options).then((request) => request(axios, basePath));
+        },
+        /**
          * Manage your TLDs
          * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
@@ -16450,6 +16900,16 @@ export class DomainApi extends BaseAPI {
      */
     public domainDomainCheckAvailabilityCreate(checkAvailabilityRequest: CheckAvailabilityRequest, options?: RawAxiosRequestConfig) {
         return DomainApiFp(this.configuration).domainDomainCheckAvailabilityCreate(checkAvailabilityRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Manage your domains
+     * @param {string} domain Domain with tld, ex: example.com
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public domainDomainCheckAvailabilityRetrieve(domain: string, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainDomainCheckAvailabilityRetrieve(domain, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -16509,11 +16969,12 @@ export class DomainApi extends BaseAPI {
     /**
      * Manage your domains
      * @param {number} [page] A page number within the paginated result set.
+     * @param {DomainDomainListStatusGroupEnum} [statusGroup] Filter by the account service status before pagination; ordered by expiry, then ID.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public domainDomainList(page?: number, options?: RawAxiosRequestConfig) {
-        return DomainApiFp(this.configuration).domainDomainList(page, options).then((request) => request(this.axios, this.basePath));
+    public domainDomainList(page?: number, statusGroup?: DomainDomainListStatusGroupEnum, options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainDomainList(page, statusGroup, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -16643,6 +17104,15 @@ export class DomainApi extends BaseAPI {
     }
 
     /**
+     * Registration catalog uses exactly the registrar/prices used by create.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public domainTldCatalogRetrieve(options?: RawAxiosRequestConfig) {
+        return DomainApiFp(this.configuration).domainTldCatalogRetrieve(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * Manage your TLDs
      * @param {number} [page] A page number within the paginated result set.
      * @param {*} [options] Override http request option.
@@ -16663,6 +17133,11 @@ export class DomainApi extends BaseAPI {
     }
 }
 
+export const DomainDomainListStatusGroupEnum = {
+    Closed: 'closed',
+    Current: 'current',
+} as const;
+export type DomainDomainListStatusGroupEnum = typeof DomainDomainListStatusGroupEnum[keyof typeof DomainDomainListStatusGroupEnum];
 
 
 /**
@@ -21061,6 +21536,82 @@ export const HostingApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * List and manage cPanel/shared hosting services.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        hostingHostingUpgradeOptionsRetrieve: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('hostingHostingUpgradeOptionsRetrieve', 'id', id)
+            const localVarPath = `/api/hosting/hosting/{id}/upgrade-options/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * List and manage cPanel/shared hosting services.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        hostingHostingUsageRetrieve: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('hostingHostingUsageRetrieve', 'id', id)
+            const localVarPath = `/api/hosting/hosting/{id}/usage/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -21107,6 +21658,30 @@ export const HostingApiFp = function(configuration?: Configuration) {
             const localVarOperationServerBasePath = operationServerMap['HostingApi.hostingHostingRetrieve']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
+        /**
+         * List and manage cPanel/shared hosting services.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async hostingHostingUpgradeOptionsRetrieve(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HostingUpgradeOptions>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.hostingHostingUpgradeOptionsRetrieve(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['HostingApi.hostingHostingUpgradeOptionsRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * List and manage cPanel/shared hosting services.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async hostingHostingUsageRetrieve(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HostingUsage>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.hostingHostingUsageRetrieve(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['HostingApi.hostingHostingUsageRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
     }
 };
 
@@ -21144,6 +21719,24 @@ export const HostingApiFactory = function (configuration?: Configuration, basePa
         hostingHostingRetrieve(id: string, options?: RawAxiosRequestConfig): AxiosPromise<HostingService> {
             return localVarFp.hostingHostingRetrieve(id, options).then((request) => request(axios, basePath));
         },
+        /**
+         * List and manage cPanel/shared hosting services.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        hostingHostingUpgradeOptionsRetrieve(id: string, options?: RawAxiosRequestConfig): AxiosPromise<HostingUpgradeOptions> {
+            return localVarFp.hostingHostingUpgradeOptionsRetrieve(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * List and manage cPanel/shared hosting services.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        hostingHostingUsageRetrieve(id: string, options?: RawAxiosRequestConfig): AxiosPromise<HostingUsage> {
+            return localVarFp.hostingHostingUsageRetrieve(id, options).then((request) => request(axios, basePath));
+        },
     };
 };
 
@@ -21180,6 +21773,26 @@ export class HostingApi extends BaseAPI {
      */
     public hostingHostingRetrieve(id: string, options?: RawAxiosRequestConfig) {
         return HostingApiFp(this.configuration).hostingHostingRetrieve(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * List and manage cPanel/shared hosting services.
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public hostingHostingUpgradeOptionsRetrieve(id: string, options?: RawAxiosRequestConfig) {
+        return HostingApiFp(this.configuration).hostingHostingUpgradeOptionsRetrieve(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * List and manage cPanel/shared hosting services.
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public hostingHostingUsageRetrieve(id: string, options?: RawAxiosRequestConfig) {
+        return HostingApiFp(this.configuration).hostingHostingUsageRetrieve(id, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -21998,6 +22611,126 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Start one staff L3 cutover. Only the plan, the confirmation and the attended window are read from the request.
+         * @param {string} id 
+         * @param {ClusterDetailRequest} [clusterDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersL3CutoverCreate: async (id: string, clusterDetailRequest?: ClusterDetailRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersL3CutoverCreate', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{id}/l3/cutover/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(clusterDetailRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * The staff L3 plan for this cluster; read-only.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersL3Retrieve: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersL3Retrieve', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{id}/l3/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Request one staff revert of a committed L3 operation.
+         * @param {string} id 
+         * @param {ClusterDetailRequest} [clusterDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersL3RevertCreate: async (id: string, clusterDetailRequest?: ClusterDetailRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersL3RevertCreate', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{id}/l3/revert/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(clusterDetailRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -22987,13 +23720,14 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             };
         },
         /**
-         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * Delete a resource pool and every node in it.
          * @param {number} clusterId 
          * @param {string} id 
+         * @param {ResourcePoolDeleteRequest} [resourcePoolDeleteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersResourcePoolsDestroy: async (clusterId: number, id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersResourcePoolsDestroy: async (clusterId: number, id: string, resourcePoolDeleteRequest?: ResourcePoolDeleteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersResourcePoolsDestroy', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
@@ -23017,10 +23751,12 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
 
             // authentication cookieAuth required
 
+            localVarHeaderParameter['Content-Type'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(resourcePoolDeleteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -23075,10 +23811,11 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
          * @param {number} clusterId 
          * @param {string} id 
          * @param {number} poolId 
+         * @param {NodeOperationDeleteRequest} [nodeOperationDeleteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersResourcePoolsNodesDestroy: async (clusterId: number, id: string, poolId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersResourcePoolsNodesDestroy: async (clusterId: number, id: string, poolId: number, nodeOperationDeleteRequest?: NodeOperationDeleteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'clusterId' is not null or undefined
             assertParamExists('kubernetesClustersResourcePoolsNodesDestroy', 'clusterId', clusterId)
             // verify required parameter 'id' is not null or undefined
@@ -23105,11 +23842,13 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
 
             // authentication cookieAuth required
 
+            localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(nodeOperationDeleteRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -24126,15 +24865,13 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} id 
-         * @param {ClusterDetailRequest} clusterDetailRequest 
+         * @param {ClusterDetailRequest} [clusterDetailRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersUpdate: async (id: string, clusterDetailRequest: ClusterDetailRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        kubernetesClustersUpdate: async (id: string, clusterDetailRequest?: ClusterDetailRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('kubernetesClustersUpdate', 'id', id)
-            // verify required parameter 'clusterDetailRequest' is not null or undefined
-            assertParamExists('kubernetesClustersUpdate', 'clusterDetailRequest', clusterDetailRequest)
             const localVarPath = `/api/kubernetes/clusters/{id}/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -24512,6 +25249,44 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Start one staff L3 cutover. Only the plan, the confirmation and the attended window are read from the request.
+         * @param {string} id 
+         * @param {ClusterDetailRequest} [clusterDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersL3CutoverCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersL3CutoverCreate(id, clusterDetailRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersL3CutoverCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * The staff L3 plan for this cluster; read-only.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersL3Retrieve(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersL3Retrieve(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersL3Retrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Request one staff revert of a committed L3 operation.
+         * @param {string} id 
+         * @param {ClusterDetailRequest} [clusterDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersL3RevertCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersL3RevertCreate(id, clusterDetailRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersL3RevertCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} clusterId 
          * @param {LBFirewallRuleRequest} [lBFirewallRuleRequest] 
@@ -24815,14 +25590,15 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * Delete a resource pool and every node in it.
          * @param {number} clusterId 
          * @param {string} id 
+         * @param {ResourcePoolDeleteRequest} [resourcePoolDeleteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersResourcePoolsDestroy(clusterId: number, id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsDestroy(clusterId, id, options);
+        async kubernetesClustersResourcePoolsDestroy(clusterId: number, id: string, resourcePoolDeleteRequest?: ResourcePoolDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsDestroy(clusterId, id, resourcePoolDeleteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersResourcePoolsDestroy']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -24845,11 +25621,12 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
          * @param {number} clusterId 
          * @param {string} id 
          * @param {number} poolId 
+         * @param {NodeOperationDeleteRequest} [nodeOperationDeleteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersResourcePoolsNodesDestroy(clusterId: number, id: string, poolId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NodeOperation>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsNodesDestroy(clusterId, id, poolId, options);
+        async kubernetesClustersResourcePoolsNodesDestroy(clusterId: number, id: string, poolId: number, nodeOperationDeleteRequest?: NodeOperationDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<NodeOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersResourcePoolsNodesDestroy(clusterId, id, poolId, nodeOperationDeleteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersResourcePoolsNodesDestroy']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -25166,11 +25943,11 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} id 
-         * @param {ClusterDetailRequest} clusterDetailRequest 
+         * @param {ClusterDetailRequest} [clusterDetailRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async kubernetesClustersUpdate(id: string, clusterDetailRequest: ClusterDetailRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
+        async kubernetesClustersUpdate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ClusterDetail>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersUpdate(id, clusterDetailRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersUpdate']?.[localVarOperationServerIndex]?.url;
@@ -25402,6 +26179,35 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          */
         kubernetesClustersKubeconfigRetrieve(id: string, options?: RawAxiosRequestConfig): AxiosPromise<string> {
             return localVarFp.kubernetesClustersKubeconfigRetrieve(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Start one staff L3 cutover. Only the plan, the confirmation and the attended window are read from the request.
+         * @param {string} id 
+         * @param {ClusterDetailRequest} [clusterDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersL3CutoverCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
+            return localVarFp.kubernetesClustersL3CutoverCreate(id, clusterDetailRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * The staff L3 plan for this cluster; read-only.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersL3Retrieve(id: string, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
+            return localVarFp.kubernetesClustersL3Retrieve(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Request one staff revert of a committed L3 operation.
+         * @param {string} id 
+         * @param {ClusterDetailRequest} [clusterDetailRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersL3RevertCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
+            return localVarFp.kubernetesClustersL3RevertCreate(id, clusterDetailRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -25638,14 +26444,15 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
             return localVarFp.kubernetesClustersResourcePoolsCreate(clusterId, resourcePoolAddRequest, options).then((request) => request(axios, basePath));
         },
         /**
-         * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+         * Delete a resource pool and every node in it.
          * @param {number} clusterId 
          * @param {string} id 
+         * @param {ResourcePoolDeleteRequest} [resourcePoolDeleteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersResourcePoolsDestroy(clusterId: number, id: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.kubernetesClustersResourcePoolsDestroy(clusterId, id, options).then((request) => request(axios, basePath));
+        kubernetesClustersResourcePoolsDestroy(clusterId: number, id: string, resourcePoolDeleteRequest?: ResourcePoolDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.kubernetesClustersResourcePoolsDestroy(clusterId, id, resourcePoolDeleteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -25662,11 +26469,12 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
          * @param {number} clusterId 
          * @param {string} id 
          * @param {number} poolId 
+         * @param {NodeOperationDeleteRequest} [nodeOperationDeleteRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersResourcePoolsNodesDestroy(clusterId: number, id: string, poolId: number, options?: RawAxiosRequestConfig): AxiosPromise<NodeOperation> {
-            return localVarFp.kubernetesClustersResourcePoolsNodesDestroy(clusterId, id, poolId, options).then((request) => request(axios, basePath));
+        kubernetesClustersResourcePoolsNodesDestroy(clusterId: number, id: string, poolId: number, nodeOperationDeleteRequest?: NodeOperationDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<NodeOperation> {
+            return localVarFp.kubernetesClustersResourcePoolsNodesDestroy(clusterId, id, poolId, nodeOperationDeleteRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -25911,11 +26719,11 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {string} id 
-         * @param {ClusterDetailRequest} clusterDetailRequest 
+         * @param {ClusterDetailRequest} [clusterDetailRequest] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        kubernetesClustersUpdate(id: string, clusterDetailRequest: ClusterDetailRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
+        kubernetesClustersUpdate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig): AxiosPromise<ClusterDetail> {
             return localVarFp.kubernetesClustersUpdate(id, clusterDetailRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -26155,6 +26963,38 @@ export class KubernetesApi extends BaseAPI {
      */
     public kubernetesClustersKubeconfigRetrieve(id: string, options?: RawAxiosRequestConfig) {
         return KubernetesApiFp(this.configuration).kubernetesClustersKubeconfigRetrieve(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Start one staff L3 cutover. Only the plan, the confirmation and the attended window are read from the request.
+     * @param {string} id 
+     * @param {ClusterDetailRequest} [clusterDetailRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersL3CutoverCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersL3CutoverCreate(id, clusterDetailRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * The staff L3 plan for this cluster; read-only.
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersL3Retrieve(id: string, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersL3Retrieve(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Request one staff revert of a committed L3 operation.
+     * @param {string} id 
+     * @param {ClusterDetailRequest} [clusterDetailRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersL3RevertCreate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersL3RevertCreate(id, clusterDetailRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -26415,14 +27255,15 @@ export class KubernetesApi extends BaseAPI {
     }
 
     /**
-     * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+     * Delete a resource pool and every node in it.
      * @param {number} clusterId 
      * @param {string} id 
+     * @param {ResourcePoolDeleteRequest} [resourcePoolDeleteRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersResourcePoolsDestroy(clusterId: number, id: string, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersResourcePoolsDestroy(clusterId, id, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersResourcePoolsDestroy(clusterId: number, id: string, resourcePoolDeleteRequest?: ResourcePoolDeleteRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersResourcePoolsDestroy(clusterId, id, resourcePoolDeleteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -26441,11 +27282,12 @@ export class KubernetesApi extends BaseAPI {
      * @param {number} clusterId 
      * @param {string} id 
      * @param {number} poolId 
+     * @param {NodeOperationDeleteRequest} [nodeOperationDeleteRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersResourcePoolsNodesDestroy(clusterId: number, id: string, poolId: number, options?: RawAxiosRequestConfig) {
-        return KubernetesApiFp(this.configuration).kubernetesClustersResourcePoolsNodesDestroy(clusterId, id, poolId, options).then((request) => request(this.axios, this.basePath));
+    public kubernetesClustersResourcePoolsNodesDestroy(clusterId: number, id: string, poolId: number, nodeOperationDeleteRequest?: NodeOperationDeleteRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersResourcePoolsNodesDestroy(clusterId, id, poolId, nodeOperationDeleteRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -26714,11 +27556,11 @@ export class KubernetesApi extends BaseAPI {
     /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @param {string} id 
-     * @param {ClusterDetailRequest} clusterDetailRequest 
+     * @param {ClusterDetailRequest} [clusterDetailRequest] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public kubernetesClustersUpdate(id: string, clusterDetailRequest: ClusterDetailRequest, options?: RawAxiosRequestConfig) {
+    public kubernetesClustersUpdate(id: string, clusterDetailRequest?: ClusterDetailRequest, options?: RawAxiosRequestConfig) {
         return KubernetesApiFp(this.configuration).kubernetesClustersUpdate(id, clusterDetailRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -26761,6 +27603,64 @@ export type KubernetesClustersResourcePoolsNodesRrdRetrieveTimeframeEnum = typeo
 export const OApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        oMobileDashboardRetrieve: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/o/mobile/dashboard/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        oMobileSessionRetrieve: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/o/mobile/session/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * RFC 7591 dynamic client registration (open, throttled).
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -26798,6 +27698,28 @@ export const OApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = OApiAxiosParamCreator(configuration)
     return {
         /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async oMobileDashboardRetrieve(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Dashboard>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.oMobileDashboardRetrieve(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['OApi.oMobileDashboardRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async oMobileSessionRetrieve(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MobileOAuthSession>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.oMobileSessionRetrieve(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['OApi.oMobileSessionRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * RFC 7591 dynamic client registration (open, throttled).
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -26818,6 +27740,22 @@ export const OApiFactory = function (configuration?: Configuration, basePath?: s
     const localVarFp = OApiFp(configuration)
     return {
         /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        oMobileDashboardRetrieve(options?: RawAxiosRequestConfig): AxiosPromise<Dashboard> {
+            return localVarFp.oMobileDashboardRetrieve(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        oMobileSessionRetrieve(options?: RawAxiosRequestConfig): AxiosPromise<MobileOAuthSession> {
+            return localVarFp.oMobileSessionRetrieve(options).then((request) => request(axios, basePath));
+        },
+        /**
          * RFC 7591 dynamic client registration (open, throttled).
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -26832,6 +27770,24 @@ export const OApiFactory = function (configuration?: Configuration, basePath?: s
  * OApi - object-oriented interface
  */
 export class OApi extends BaseAPI {
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public oMobileDashboardRetrieve(options?: RawAxiosRequestConfig) {
+        return OApiFp(this.configuration).oMobileDashboardRetrieve(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public oMobileSessionRetrieve(options?: RawAxiosRequestConfig) {
+        return OApiFp(this.configuration).oMobileSessionRetrieve(options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * RFC 7591 dynamic client registration (open, throttled).
      * @param {*} [options] Override http request option.

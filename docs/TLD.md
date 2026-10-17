@@ -15,6 +15,8 @@ Name | Type | Description | Notes
 **idna_support** | **boolean** |  | [optional] [default to undefined]
 **wg_support** | **boolean** |  | [optional] [default to undefined]
 **reactivate_max_days** | **number** |  | [optional] [default to undefined]
+**min_years** | **number** | Smallest registration term the registry accepts (e.g. 2 for .ai). | [optional] [default to undefined]
+**year_step** | **number** | Allowed step between registration terms (e.g. 2 for .ai → 2, 4, 6 years). | [optional] [default to undefined]
 
 ## Example
 
@@ -32,6 +34,8 @@ const instance: TLD = {
     idna_support,
     wg_support,
     reactivate_max_days,
+    min_years,
+    year_step,
 };
 ```
 

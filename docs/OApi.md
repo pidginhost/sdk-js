@@ -4,7 +4,95 @@ All URIs are relative to *https://www.pidginhost.com*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
+|[**oMobileDashboardRetrieve**](#omobiledashboardretrieve) | **GET** /o/mobile/dashboard/ | |
+|[**oMobileSessionRetrieve**](#omobilesessionretrieve) | **GET** /o/mobile/session/ | |
 |[**oRegisterCreate**](#oregistercreate) | **POST** /o/register | |
+
+# **oMobileDashboardRetrieve**
+> Dashboard oMobileDashboardRetrieve()
+
+
+### Example
+
+```typescript
+import {
+    OApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new OApi(configuration);
+
+const { status, data } = await apiInstance.oMobileDashboardRetrieve();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**Dashboard**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **oMobileSessionRetrieve**
+> MobileOAuthSession oMobileSessionRetrieve()
+
+
+### Example
+
+```typescript
+import {
+    OApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new OApi(configuration);
+
+const { status, data } = await apiInstance.oMobileSessionRetrieve();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**MobileOAuthSession**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **oRegisterCreate**
 > oRegisterCreate()

@@ -13,10 +13,12 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**accountCompaniesPartialUpdate**](#accountcompaniespartialupdate) | **PATCH** /api/account/companies/{id}/ | |
 |[**accountCompaniesRetrieve**](#accountcompaniesretrieve) | **GET** /api/account/companies/{id}/ | |
 |[**accountCompaniesUpdate**](#accountcompaniesupdate) | **PUT** /api/account/companies/{id}/ | |
+|[**accountDashboardRetrieve**](#accountdashboardretrieve) | **GET** /api/account/dashboard/ | |
 |[**accountEmailsList**](#accountemailslist) | **GET** /api/account/emails/ | |
 |[**accountProfilePartialUpdate**](#accountprofilepartialupdate) | **PATCH** /api/account/profile | |
 |[**accountProfileRetrieve**](#accountprofileretrieve) | **GET** /api/account/profile | |
 |[**accountProfileUpdate**](#accountprofileupdate) | **PUT** /api/account/profile | |
+|[**accountSessionRetrieve**](#accountsessionretrieve) | **GET** /api/account/session/ | |
 |[**accountSshKeysCreate**](#accountsshkeyscreate) | **POST** /api/account/ssh-keys/ | |
 |[**accountSshKeysDestroy**](#accountsshkeysdestroy) | **DELETE** /api/account/ssh-keys/{id}/ | |
 |[**accountSshKeysList**](#accountsshkeyslist) | **GET** /api/account/ssh-keys/ | |
@@ -493,6 +495,50 @@ const { status, data } = await apiInstance.accountCompaniesUpdate(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **accountDashboardRetrieve**
+> Dashboard accountDashboardRetrieve()
+
+Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
+
+### Example
+
+```typescript
+import {
+    AccountApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new AccountApi(configuration);
+
+const { status, data } = await apiInstance.accountDashboardRetrieve();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**Dashboard**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **accountEmailsList**
 > PaginatedEmailHistoryList accountEmailsList()
 
@@ -682,6 +728,50 @@ const { status, data } = await apiInstance.accountProfileUpdate(
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **accountSessionRetrieve**
+> AccountSessionResponse accountSessionRetrieve()
+
+Resolved account and role/scope intersection without owner-only profile access.
+
+### Example
+
+```typescript
+import {
+    AccountApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new AccountApi(configuration);
+
+const { status, data } = await apiInstance.accountSessionRetrieve();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**AccountSessionResponse**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 

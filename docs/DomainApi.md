@@ -6,6 +6,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |------------- | ------------- | -------------|
 |[**domainDomainCancelCreate**](#domaindomaincancelcreate) | **POST** /api/domain/domain/{domain}/cancel/ | |
 |[**domainDomainCheckAvailabilityCreate**](#domaindomaincheckavailabilitycreate) | **POST** /api/domain/domain/check-availability/ | |
+|[**domainDomainCheckAvailabilityRetrieve**](#domaindomaincheckavailabilityretrieve) | **GET** /api/domain/domain/check-availability/ | |
 |[**domainDomainContactsCreate**](#domaindomaincontactscreate) | **POST** /api/domain/domain/{domain}/contacts/ | |
 |[**domainDomainCreate**](#domaindomaincreate) | **POST** /api/domain/domain/ | |
 |[**domainDomainDnsCreate**](#domaindomaindnscreate) | **POST** /api/domain/domain/{domain}/dns/ | |
@@ -24,6 +25,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**domainRegistrantsPartialUpdate**](#domainregistrantspartialupdate) | **PATCH** /api/domain/registrants/{id}/ | |
 |[**domainRegistrantsRetrieve**](#domainregistrantsretrieve) | **GET** /api/domain/registrants/{id}/ | |
 |[**domainRegistrantsUpdate**](#domainregistrantsupdate) | **PUT** /api/domain/registrants/{id}/ | |
+|[**domainTldCatalogRetrieve**](#domaintldcatalogretrieve) | **GET** /api/domain/tld/catalog/ | |
 |[**domainTldList**](#domaintldlist) | **GET** /api/domain/tld/ | |
 |[**domainTldRetrieve**](#domaintldretrieve) | **GET** /api/domain/tld/{id}/ | |
 
@@ -79,7 +81,7 @@ const { status, data } = await apiInstance.domainDomainCancelCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **domainDomainCheckAvailabilityCreate**
-> CheckAvailability domainDomainCheckAvailabilityCreate(checkAvailabilityRequest)
+> DomainAvailability domainDomainCheckAvailabilityCreate(checkAvailabilityRequest)
 
 Manage your domains
 
@@ -111,7 +113,7 @@ const { status, data } = await apiInstance.domainDomainCheckAvailabilityCreate(
 
 ### Return type
 
-**CheckAvailability**
+**DomainAvailability**
 
 ### Authorization
 
@@ -120,6 +122,57 @@ const { status, data } = await apiInstance.domainDomainCheckAvailabilityCreate(
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **domainDomainCheckAvailabilityRetrieve**
+> DomainAvailability domainDomainCheckAvailabilityRetrieve()
+
+Manage your domains
+
+### Example
+
+```typescript
+import {
+    DomainApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new DomainApi(configuration);
+
+let domain: string; //Domain with tld, ex: example.com (default to undefined)
+
+const { status, data } = await apiInstance.domainDomainCheckAvailabilityRetrieve(
+    domain
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **domain** | [**string**] | Domain with tld, ex: example.com | defaults to undefined|
+
+
+### Return type
+
+**DomainAvailability**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
@@ -417,9 +470,11 @@ const configuration = new Configuration();
 const apiInstance = new DomainApi(configuration);
 
 let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+let statusGroup: 'closed' | 'current'; //Filter by the account service status before pagination; ordered by expiry, then ID. (optional) (default to undefined)
 
 const { status, data } = await apiInstance.domainDomainList(
-    page
+    page,
+    statusGroup
 );
 ```
 
@@ -428,6 +483,7 @@ const { status, data } = await apiInstance.domainDomainList(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+| **statusGroup** | [**&#39;closed&#39; | &#39;current&#39;**]**Array<&#39;closed&#39; &#124; &#39;current&#39;>** | Filter by the account service status before pagination; ordered by expiry, then ID. | (optional) defaults to undefined|
 
 
 ### Return type
@@ -1079,6 +1135,50 @@ const { status, data } = await apiInstance.domainRegistrantsUpdate(
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **domainTldCatalogRetrieve**
+> TLDCatalog domainTldCatalogRetrieve()
+
+Registration catalog uses exactly the registrar/prices used by create.
+
+### Example
+
+```typescript
+import {
+    DomainApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new DomainApi(configuration);
+
+const { status, data } = await apiInstance.domainTldCatalogRetrieve();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**TLDCatalog**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 

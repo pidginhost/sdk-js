@@ -5,6 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**billing** | [**ResourceBilling**](ResourceBilling.md) |  | [readonly] [default to undefined]
 **id** | **number** |  | [readonly] [default to undefined]
 **name** | **string** |  | [readonly] [default to undefined]
 **full_name** | **string** |  | [readonly] [default to undefined]
@@ -23,6 +24,7 @@ Name | Type | Description | Notes
 import { Bucket } from '@pidginhost/sdk';
 
 const instance: Bucket = {
+    billing,
     id,
     name,
     full_name,

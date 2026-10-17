@@ -1,19 +1,21 @@
-# CheckAvailability
+# ResourceBillingProfile
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**domain** | **string** | Domain with tld, ex: example.com | [default to undefined]
+**id** | **number** |  | [default to undefined]
+**name** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { CheckAvailability } from '@pidginhost/sdk';
+import { ResourceBillingProfile } from '@pidginhost/sdk';
 
-const instance: CheckAvailability = {
-    domain,
+const instance: ResourceBillingProfile = {
+    id,
+    name,
 };
 ```
 

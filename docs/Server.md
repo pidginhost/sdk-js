@@ -5,6 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**billing** | [**ResourceBilling**](ResourceBilling.md) |  | [readonly] [default to undefined]
 **id** | **number** |  | [readonly] [default to undefined]
 **hostname** | **string** |  | [optional] [default to undefined]
 **project** | **string** |  | [optional] [default to undefined]
@@ -29,6 +30,7 @@ Name | Type | Description | Notes
 import { Server } from '@pidginhost/sdk';
 
 const instance: Server = {
+    billing,
     id,
     hostname,
     project,

@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 **generation** | **string** |  | [readonly] [default to undefined]
 **cluster_type** | **string** |  | [readonly] [default to undefined]
 **kube_version** | **string** |  | [readonly] [default to undefined]
-**price_per_month** | **string** |  | [default to undefined]
+**price_per_month** | **string** |  | [readonly] [default to undefined]
 **price_per_hour** | **number** |  | [readonly] [default to undefined]
 **features** | [**Array&lt;FeaturesEnum&gt;**](FeaturesEnum.md) |  | [optional] [default to undefined]
 **features_ready** | **boolean** |  | [readonly] [default to undefined]

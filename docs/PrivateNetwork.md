@@ -11,6 +11,7 @@ Name | Type | Description | Notes
 **gateway** | **string** |  | [optional] [default to undefined]
 **provisioned** | **boolean** |  | [readonly] [default to undefined]
 **servers** | **Array&lt;{ [key: string]: string; }&gt;** |  | [readonly] [default to undefined]
+**billing** | [**ResourceBilling**](ResourceBilling.md) |  | [readonly] [default to undefined]
 
 ## Example
 
@@ -24,6 +25,7 @@ const instance: PrivateNetwork = {
     gateway,
     provisioned,
     servers,
+    billing,
 };
 ```
 
