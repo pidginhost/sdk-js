@@ -29,6 +29,8 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**kubernetesClustersLbFirewallPartialUpdate**](#kubernetesclusterslbfirewallpartialupdate) | **PATCH** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | |
 |[**kubernetesClustersLbFirewallRetrieve**](#kubernetesclusterslbfirewallretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | |
 |[**kubernetesClustersLbFirewallUpdate**](#kubernetesclusterslbfirewallupdate) | **PUT** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | |
+|[**kubernetesClustersLbReimageCreate**](#kubernetesclusterslbreimagecreate) | **POST** /api/kubernetes/clusters/{id}/lb-reimage/ | |
+|[**kubernetesClustersLbReimageRetrieve**](#kubernetesclusterslbreimageretrieve) | **GET** /api/kubernetes/clusters/{id}/lb-reimage/ | |
 |[**kubernetesClustersList**](#kubernetesclusterslist) | **GET** /api/kubernetes/clusters/ | |
 |[**kubernetesClustersNodeOperationsCancelCreate**](#kubernetesclustersnodeoperationscancelcreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/cancel/ | |
 |[**kubernetesClustersNodeOperationsList**](#kubernetesclustersnodeoperationslist) | **GET** /api/kubernetes/clusters/{cluster_id}/node-operations/ | |
@@ -1419,6 +1421,113 @@ const { status, data } = await apiInstance.kubernetesClustersLbFirewallUpdate(
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersLbReimageCreate**
+> LBReimageStarted kubernetesClustersLbReimageCreate(lBReimageRequest)
+
+Start a load-balancer replacement now. Traffic through the load balancer stops while it is switched over. Support can roll back for 24 hours after it completes. OAuth access tokens cannot start one.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration,
+    LBReimageRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let id: string; // (default to undefined)
+let lBReimageRequest: LBReimageRequest; //
+
+const { status, data } = await apiInstance.kubernetesClustersLbReimageCreate(
+    id,
+    lBReimageRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **lBReimageRequest** | **LBReimageRequest**|  | |
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**LBReimageStarted**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **kubernetesClustersLbReimageRetrieve**
+> LBReimageStatus kubernetesClustersLbReimageRetrieve()
+
+Show the latest load-balancer replacement on this cluster and whether one can start now.
+
+### Example
+
+```typescript
+import {
+    KubernetesApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new KubernetesApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.kubernetesClustersLbReimageRetrieve(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**LBReimageStatus**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 

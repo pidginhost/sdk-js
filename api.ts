@@ -84,9 +84,9 @@ export interface ActivateFreeDNSRequest {
      */
     'source': SourceEnum;
     /**
-     * IPv4 address to use as the default A record for the zone.
+     * IPv4 address for the zone\'s default records. Leave it out to start with an empty zone.
      */
-    'ip': string;
+    'ip'?: string | null;
 }
 
 
@@ -140,6 +140,12 @@ export interface ApiCredential {
 export interface ApiCredentialCreated {
     'credential': ApiCredential;
     'key': string;
+}
+export interface ApplyRouteRequest {
+    /**
+     * The servers to re-render and reboot; each one listed reboots.
+     */
+    'servers': Array<number>;
 }
 export interface AttachIPv4Request {
     /**
@@ -1689,6 +1695,751 @@ export const FwPolicyOutEnum = {
 export type FwPolicyOutEnum = typeof FwPolicyOutEnum[keyof typeof FwPolicyOutEnum];
 
 
+export interface Gateway {
+    'id': number;
+    'name': string;
+    'state': GatewayStateEnum;
+    'state_reason': string;
+    'status': ResourceStatusEnum;
+    'desired_revision': number;
+    'applied_revision': number | null;
+    'ipv4': string | null;
+    'ipv6': string | null;
+    'maintenance_weekday': number;
+    'maintenance_hour': number;
+    'ha_enabled': boolean;
+    'current_operation': string | null;
+    'created': string;
+}
+
+
+export interface GatewayApplyError {
+    /**
+     * The kind of the object the agent refused, or null.
+     */
+    'kind': string | null;
+    'id': number | null;
+    'message': string;
+    /**
+     * not_needed, pending, succeeded or failed.
+     */
+    'rollback': string;
+}
+/**
+ * A pool\'s server (spec 5.5) with its health as the gateway last reported it (spec 6.8).  The view passes the health map in the context, read once per request.
+ */
+export interface GatewayBackend {
+    'id': number;
+    /**
+     * An attached private network\'s id.
+     */
+    'network': number;
+    'address': string;
+    'port': number;
+    'weight': number;
+    'enabled': boolean;
+    'health': GatewayBackendHealthEnum;
+    'health_changed': string | null;
+    'changed_revision': number;
+    'pending': boolean;
+}
+
+
+/**
+ * * `healthy` - healthy * `unhealthy` - unhealthy * `unknown` - unknown
+ */
+
+export const GatewayBackendHealthEnum = {
+    Healthy: 'healthy',
+    Unhealthy: 'unhealthy',
+    Unknown: 'unknown',
+} as const;
+
+export type GatewayBackendHealthEnum = typeof GatewayBackendHealthEnum[keyof typeof GatewayBackendHealthEnum];
+
+
+/**
+ * A backend pool (spec 5.5): the servers a listener or route sends to; pending until applied.
+ */
+export interface GatewayBackendPool {
+    'id': number;
+    'name': string;
+    'policy': GatewayBackendPoolPolicyEnum;
+    'proxy_protocol': boolean;
+    'health_check': GatewayHealthCheck;
+    'changed_revision': number;
+    'pending': boolean;
+}
+
+
+/**
+ * * `round_robin` - round_robin * `least_request` - least_request
+ */
+
+export const GatewayBackendPoolPolicyEnum = {
+    RoundRobin: 'round_robin',
+    LeastRequest: 'least_request',
+} as const;
+
+export type GatewayBackendPoolPolicyEnum = typeof GatewayBackendPoolPolicyEnum[keyof typeof GatewayBackendPoolPolicyEnum];
+
+
+/**
+ * The fields a customer writes; gateway.backend_pools.clean_pool decides what they may hold.
+ */
+export interface GatewayBackendPoolWriteRequest {
+    'name'?: string;
+    'policy'?: GatewayBackendPoolPolicyEnum;
+    /**
+     * PROXY protocol v2 to the servers; tcp only.
+     */
+    'proxy_protocol'?: boolean;
+    'health_check'?: GatewayHealthCheckWriteRequest;
+}
+
+
+/**
+ * The fields a customer writes; gateway.backend_pools.clean_backend decides what they may hold.
+ */
+export interface GatewayBackendWriteRequest {
+    /**
+     * An attached private network\'s id.
+     */
+    'network'?: number;
+    /**
+     * A host of that network, other than the gateway.
+     */
+    'address'?: string;
+    'port'?: number;
+    'weight'?: number;
+    'enabled'?: boolean;
+}
+/**
+ * A 409 answer: the conflict, and for a destructive action a fresh preview to confirm.
+ */
+export interface GatewayConflict {
+    'message': string;
+    'extra': GatewayConflictExtra;
+}
+export interface GatewayConflictExtra {
+    'fields': { [key: string]: Array<string>; };
+    /**
+     * Present when the confirmation is stale.
+     */
+    'preview'?: GatewayPreview;
+}
+export interface GatewayConntrack {
+    'count': number | null;
+    'max': number | null;
+    /**
+     * An unsigned 64-bit decimal string.
+     */
+    'insert_failures': string | null;
+}
+export interface GatewayCreateRequest {
+    'name': string;
+    'ipv4'?: string | null;
+    'ipv6'?: boolean;
+}
+/**
+ * A delete\'s 409 answer: the conflict, and a fresh preview of what the delete takes away.
+ */
+export interface GatewayDeleteConflict {
+    'message': string;
+    'extra': GatewayDeleteConflictExtra;
+}
+export interface GatewayDeleteConflictExtra {
+    'fields': { [key: string]: Array<string>; };
+    /**
+     * Present when the confirmation is stale.
+     */
+    'preview'?: GatewayDeletePreview;
+}
+export interface GatewayDeletePreview {
+    'revision': number;
+    'servers': Array<GatewayPreviewServer>;
+    'networks': Array<GatewayPreviewNetwork>;
+}
+export interface GatewayEgressProbe {
+    'ok': boolean | null;
+    'latency_ms': number | null;
+    'at': string | null;
+}
+/**
+ * Exactly one of network, cidr and internet.
+ */
+export interface GatewayFirewallDestination {
+    /**
+     * A private network the gateway is attached to.
+     */
+    'network'?: number;
+    /**
+     * An IPv4 network, such as 10.0.0.0/24.
+     */
+    'cidr'?: string;
+    /**
+     * True: egress by the gateway\'s WAN.
+     */
+    'internet'?: boolean;
+}
+/**
+ * Exactly one of network, cidr and internet.
+ */
+export interface GatewayFirewallDestinationRequest {
+    /**
+     * A private network the gateway is attached to.
+     */
+    'network'?: number;
+    /**
+     * An IPv4 network, such as 10.0.0.0/24.
+     */
+    'cidr'?: string;
+    /**
+     * True: egress by the gateway\'s WAN.
+     */
+    'internet'?: boolean;
+}
+export interface GatewayFirewallMoveRequest {
+    /**
+     * The position to move the rule to, from 0.
+     */
+    'position': number;
+}
+/**
+ * * `tcp` - tcp * `udp` - udp * `icmp` - icmp * `any` - any
+ */
+
+export const GatewayFirewallProtocolEnum = {
+    Tcp: 'tcp',
+    Udp: 'udp',
+    Icmp: 'icmp',
+    Any: 'any',
+} as const;
+
+export type GatewayFirewallProtocolEnum = typeof GatewayFirewallProtocolEnum[keyof typeof GatewayFirewallProtocolEnum];
+
+
+/**
+ * A firewall rule (spec 5.7): first match wins in position order; a change is pending until applied.
+ */
+export interface GatewayFirewallRule {
+    'id': number;
+    'position': number;
+    'action': FwPolicyOutEnum;
+    'source': GatewayFirewallSource;
+    'destination': GatewayFirewallDestination;
+    'protocol': GatewayFirewallProtocolEnum;
+    'ports': Array<GatewayPortRange>;
+    'enabled': boolean;
+    'comment': string;
+    'changed_revision': number;
+    'pending': boolean;
+}
+
+
+/**
+ * The fields a customer writes; gateway.firewall.clean_rule decides what they may hold.
+ */
+export interface GatewayFirewallRuleWriteRequest {
+    'action': FwPolicyOutEnum;
+    'source': GatewayFirewallSourceRequest;
+    'destination': GatewayFirewallDestinationRequest;
+    'protocol': GatewayFirewallProtocolEnum;
+    'ports'?: Array<GatewayPortRangeRequest>;
+    'enabled'?: boolean;
+    'comment'?: string;
+}
+
+
+/**
+ * Exactly one of network and cidr.
+ */
+export interface GatewayFirewallSource {
+    /**
+     * A private network the gateway is attached to.
+     */
+    'network'?: number;
+    /**
+     * An IPv4 network, such as 10.0.0.0/24.
+     */
+    'cidr'?: string;
+}
+/**
+ * Exactly one of network and cidr.
+ */
+export interface GatewayFirewallSourceRequest {
+    /**
+     * A private network the gateway is attached to.
+     */
+    'network'?: number;
+    /**
+     * An IPv4 network, such as 10.0.0.0/24.
+     */
+    'cidr'?: string;
+}
+/**
+ * A port forward (spec 6.7): public ports to one host of an attached network; pending until applied.
+ */
+export interface GatewayForward {
+    'id': number;
+    'protocol': GatewayForwardProtocolEnum;
+    'public_ports': GatewayPortRange;
+    'allowed_sources': any;
+    'target': GatewayForwardTarget;
+    /**
+     * Always false: the target sees the gateway\'s address.
+     */
+    'preserve_client_ip': boolean;
+    'enabled': boolean;
+    'comment': string;
+    'changed_revision': number;
+    'pending': boolean;
+}
+
+
+/**
+ * * `tcp` - tcp * `udp` - udp
+ */
+
+export const GatewayForwardProtocolEnum = {
+    Tcp: 'tcp',
+    Udp: 'udp',
+} as const;
+
+export type GatewayForwardProtocolEnum = typeof GatewayForwardProtocolEnum[keyof typeof GatewayForwardProtocolEnum];
+
+
+export interface GatewayForwardTarget {
+    /**
+     * An attached private network\'s id.
+     */
+    'network': number;
+    /**
+     * A host of that network, other than the gateway.
+     */
+    'address': string;
+    /**
+     * The first public port goes here, the next ones follow in order.
+     */
+    'port_start': number;
+}
+export interface GatewayForwardTargetRequest {
+    /**
+     * An attached private network\'s id.
+     */
+    'network': number;
+    /**
+     * A host of that network, other than the gateway.
+     */
+    'address': string;
+    /**
+     * The first public port goes here, the next ones follow in order.
+     */
+    'port_start': number;
+}
+/**
+ * The fields a customer writes; gateway.forwards.clean_forward decides what they may hold.
+ */
+export interface GatewayForwardWriteRequest {
+    'protocol': GatewayForwardProtocolEnum;
+    'public_ports': GatewayPortRangeRequest;
+    'target': GatewayForwardTargetRequest;
+    /**
+     * IPv4 networks; empty means any source.
+     */
+    'allowed_sources'?: Array<string>;
+    /**
+     * Only false is accepted for now.
+     */
+    'preserve_client_ip'?: boolean;
+    'enabled'?: boolean;
+    'comment'?: string;
+}
+
+
+/**
+ * A pool\'s health check (spec 5.5); the fields its type does not have are null.
+ */
+export interface GatewayHealthCheck {
+    'type': GatewayHealthCheckTypeEnum;
+    'path': string | null;
+    'status_min': number | null;
+    'status_max': number | null;
+    'interval_s': number | null;
+    'timeout_s': number | null;
+    'healthy_threshold': number | null;
+    'unhealthy_threshold': number | null;
+    /**
+     * Null checks each server\'s own port.
+     */
+    'port': number | null;
+}
+
+
+/**
+ * * `none` - none * `tcp` - tcp * `http` - http
+ */
+
+export const GatewayHealthCheckTypeEnum = {
+    None: 'none',
+    Tcp: 'tcp',
+    Http: 'http',
+} as const;
+
+export type GatewayHealthCheckTypeEnum = typeof GatewayHealthCheckTypeEnum[keyof typeof GatewayHealthCheckTypeEnum];
+
+
+/**
+ * The check fields a customer writes; a missing one keeps its value, and a type takes only its own fields.
+ */
+export interface GatewayHealthCheckWriteRequest {
+    'type'?: GatewayHealthCheckTypeEnum;
+    /**
+     * http only.
+     */
+    'path'?: string;
+    /**
+     * http only.
+     */
+    'status_min'?: number;
+    /**
+     * http only.
+     */
+    'status_max'?: number;
+    'interval_s'?: number;
+    /**
+     * Below interval_s.
+     */
+    'timeout_s'?: number;
+    'healthy_threshold'?: number;
+    'unhealthy_threshold'?: number;
+    /**
+     * Null checks each server\'s own port.
+     */
+    'port'?: number | null;
+}
+
+
+export interface GatewayInterface {
+    'slot': number;
+    'name': string;
+    /**
+     * up, down or unknown.
+     */
+    'state': string;
+    'addresses': Array<string>;
+}
+/**
+ * A load balancer listener (spec 6.8): one public port with a mode; pending until applied.
+ */
+export interface GatewayLBListener {
+    'id': number;
+    'protocol': GatewayForwardProtocolEnum;
+    'port': number;
+    'mode': GatewayLBListenerModeEnum;
+    /**
+     * The backend pool of a tcp or udp listener; null for http.
+     */
+    'pool': number | null;
+    /**
+     * Empty means any source.
+     */
+    'allowed_sources': Array<string>;
+    'enabled': boolean;
+    'comment': string;
+    'changed_revision': number;
+    'pending': boolean;
+}
+
+
+/**
+ * * `tcp` - tcp * `udp` - udp * `http` - http * `https` - https
+ */
+
+export const GatewayLBListenerModeEnum = {
+    Tcp: 'tcp',
+    Udp: 'udp',
+    Http: 'http',
+    Https: 'https',
+} as const;
+
+export type GatewayLBListenerModeEnum = typeof GatewayLBListenerModeEnum[keyof typeof GatewayLBListenerModeEnum];
+
+
+/**
+ * The fields a customer writes; gateway.lb_listeners.clean_listener decides what they may hold.  protocol, port and mode are set at creation and cannot change.
+ */
+export interface GatewayLBListenerWriteRequest {
+    'protocol'?: GatewayForwardProtocolEnum;
+    'port'?: number;
+    /**
+     * tcp, udp or http; https is not available yet.  * `tcp` - tcp * `udp` - udp * `http` - http * `https` - https
+     */
+    'mode'?: GatewayLBListenerModeEnum;
+    /**
+     * A backend pool\'s id; tcp and udp only.
+     */
+    'pool'?: number | null;
+    /**
+     * IPv4 and IPv6 networks; empty means any source.
+     */
+    'allowed_sources'?: Array<string>;
+    'enabled'?: boolean;
+    'comment'?: string;
+}
+
+
+/**
+ * One network the gateway is attached to (spec 5.3). A change is pending until the agent applies its revision (spec 11.2); a failure shows a reason, never its text. The NIC\'s MAC stays internal.
+ */
+export interface GatewayNetwork {
+    'network': number;
+    'role': GatewayNetworkRoleEnum;
+    'snat': boolean;
+    'state': GatewayNetworkStateEnum;
+    'slot': number;
+    'address': string;
+    'changed_revision': number;
+    'pending': boolean;
+    /**
+     * Why the last network change failed, or empty.
+     */
+    'reason': string;
+}
+
+
+export interface GatewayNetworkCreateRequest {
+    /**
+     * A private network of the service.
+     */
+    'network': number;
+    'role': GatewayNetworkRoleEnum;
+}
+
+
+/**
+ * * `router` - router * `member` - member
+ */
+
+export const GatewayNetworkRoleEnum = {
+    Router: 'router',
+    Member: 'member',
+} as const;
+
+export type GatewayNetworkRoleEnum = typeof GatewayNetworkRoleEnum[keyof typeof GatewayNetworkRoleEnum];
+
+
+/**
+ * * `attaching` - attaching * `attached` - attached * `detaching` - detaching * `error` - error
+ */
+
+export const GatewayNetworkStateEnum = {
+    Attaching: 'attaching',
+    Attached: 'attached',
+    Detaching: 'detaching',
+    Error: 'error',
+} as const;
+
+export type GatewayNetworkStateEnum = typeof GatewayNetworkStateEnum[keyof typeof GatewayNetworkStateEnum];
+
+
+/**
+ * An operation\'s progress (spec 5.11). A route apply\'s per-server evidence (node, QEMU process, guest boot, config) stays internal: each server shows its status. Error text is never published, as it can be a Proxmox exception\'s text, which names nodes: a failure shows a reason from the fixed vocabulary in gateway.reasons.
+ */
+export interface GatewayOperation {
+    'id': string;
+    'kind': GatewayOperationKindEnum;
+    'status': GatewayOperationStatusEnum;
+    'network': number | null;
+    'revision': number | null;
+    'started_at': string;
+    'deadline_at': string | null;
+    'completed_at': string | null;
+    'servers': Array<number>;
+    'outcomes': { [key: string]: GatewayRouteOutcome; };
+    /**
+     * Why the operation failed; empty unless it did.
+     */
+    'reason': string;
+}
+
+
+/**
+ * * `provision` - Provision * `attach` - Attach * `detach` - Detach * `reenroll` - Reenroll * `cancel` - Cancel * `route_apply` - Route Apply * `config_delete` - Config Delete * `maintenance` - Maintenance * `rescue` - Rescue
+ */
+
+export const GatewayOperationKindEnum = {
+    Provision: 'provision',
+    Attach: 'attach',
+    Detach: 'detach',
+    Reenroll: 'reenroll',
+    Cancel: 'cancel',
+    RouteApply: 'route_apply',
+    ConfigDelete: 'config_delete',
+    Maintenance: 'maintenance',
+    Rescue: 'rescue',
+} as const;
+
+export type GatewayOperationKindEnum = typeof GatewayOperationKindEnum[keyof typeof GatewayOperationKindEnum];
+
+
+/**
+ * * `queued` - Queued * `running` - Running * `applied` - Applied * `failed` - Failed
+ */
+
+export const GatewayOperationStatusEnum = {
+    Queued: 'queued',
+    Running: 'running',
+    Applied: 'applied',
+    Failed: 'failed',
+} as const;
+
+export type GatewayOperationStatusEnum = typeof GatewayOperationStatusEnum[keyof typeof GatewayOperationStatusEnum];
+
+
+export interface GatewayPortRange {
+    'start': number;
+    'end': number;
+}
+export interface GatewayPortRangeRequest {
+    'start': number;
+    'end': number;
+}
+export interface GatewayPreview {
+    'revision': number;
+    'servers': Array<GatewayPreviewServer>;
+}
+export interface GatewayPreviewNetwork {
+    'id': number;
+    'name': string;
+}
+export interface GatewayPreviewServer {
+    'id': number;
+    'hostname': string;
+}
+/**
+ * A re-enrollment\'s 409 answer: the conflict, and a fresh preview of what the restart takes away.
+ */
+export interface GatewayReenrollConflict {
+    'message': string;
+    'extra': GatewayDeleteConflictExtra;
+}
+/**
+ * The body of a re-enrollment (spec 8.1 step 6, 13.1): the preview\'s revision, the networks the gateway routes for and the servers that lose internet while it restarts.
+ */
+export interface GatewayReenrollRequest {
+    /**
+     * The gateway\'s desired revision from the preview; without it, a preview.
+     */
+    'revision'?: number;
+    /**
+     * The preview\'s server ids.
+     */
+    'servers'?: Array<number>;
+    /**
+     * The preview\'s network ids.
+     */
+    'networks'?: Array<number>;
+}
+/**
+ * An http listener\'s route (spec 5.6): a host and path prefix to a backend pool; pending until applied.
+ */
+export interface GatewayRoute {
+    'id': number;
+    /**
+     * Empty matches every host.
+     */
+    'hostnames': Array<string>;
+    'path_prefix': string;
+    'pool': number;
+    /**
+     * Always false: HTTPS redirects are not available yet.
+     */
+    'redirect_https': boolean;
+    'enabled': boolean;
+    'changed_revision': number;
+    'pending': boolean;
+}
+export interface GatewayRouteOutcome {
+    /**
+     * queued, running, applied or failed.
+     */
+    'status': string;
+    'completed_at': string | null;
+    /**
+     * Why the server failed, or why its applied route is not acknowledged.
+     */
+    'reason': string;
+}
+/**
+ * The fields a customer writes; gateway.lb_routes.clean_route decides what they may hold.
+ */
+export interface GatewayRouteWriteRequest {
+    /**
+     * Up to 16 names; empty matches every host.
+     */
+    'hostnames'?: Array<string>;
+    /**
+     * Literal and case-sensitive.
+     */
+    'path_prefix'?: string;
+    /**
+     * A backend pool\'s id.
+     */
+    'pool'?: number;
+    /**
+     * Only false is accepted for now.
+     */
+    'redirect_https'?: boolean;
+    'enabled'?: boolean;
+}
+/**
+ * * `provisioning` - Provisioning * `enrolling` - Enrolling * `active` - Active * `config_error` - Configuration error * `unreachable` - Unreachable * `enrollment_conflict` - Enrollment conflict * `failed` - Failed * `suspended` - Suspended * `maintenance` - Maintenance * `terminating` - Terminating * `terminated` - Terminated
+ */
+
+export const GatewayStateEnum = {
+    Provisioning: 'provisioning',
+    Enrolling: 'enrolling',
+    Active: 'active',
+    ConfigError: 'config_error',
+    Unreachable: 'unreachable',
+    EnrollmentConflict: 'enrollment_conflict',
+    Failed: 'failed',
+    Suspended: 'suspended',
+    Maintenance: 'maintenance',
+    Terminating: 'terminating',
+    Terminated: 'terminated',
+} as const;
+
+export type GatewayStateEnum = typeof GatewayStateEnum[keyof typeof GatewayStateEnum];
+
+
+/**
+ * A gateway\'s state and the customer part of its last status report; unknown values are null.
+ */
+export interface GatewayStatus {
+    'state': GatewayStateEnum;
+    'state_reason': string;
+    'state_changed_at': string | null;
+    'desired_revision': number;
+    'applied_revision': number | null;
+    'last_status_at': string | null;
+    'agent_version': string | null;
+    'envoy_version': string | null;
+    'image_version': string | null;
+    'attempted_revision': number | null;
+    'local_ready': boolean | null;
+    'clock_synchronized': boolean | null;
+    'apply_error': GatewayApplyError | null;
+    'interfaces': Array<GatewayInterface> | null;
+    'conntrack': GatewayConntrack | null;
+    'egress_probe': GatewayEgressProbe | null;
+    'security_updates': number | null;
+    'reboot_required': boolean | null;
+    'uptime_s': number | null;
+}
+
+
 /**
  * Serializer for HTTPRoute resources with automatic certificate issuance.
  */
@@ -1986,14 +2737,12 @@ export interface KubeUpgradeResponse {
     'status': string;
 }
 /**
- * * `1.33.13` - 1.33.13 * `1.34.10` - 1.34.10 * `1.35.7` - 1.35.7 * `1.36.3` - 1.36.3
+ * * `1.35.10` - 1.35.10 * `1.36.6` - 1.36.6
  */
 
 export const KubeVersionEnum = {
-    _13313: '1.33.13',
-    _13410: '1.34.10',
-    _1357: '1.35.7',
-    _1363: '1.36.3',
+    _13510: '1.35.10',
+    _1366: '1.36.6',
 } as const;
 
 export type KubeVersionEnum = typeof KubeVersionEnum[keyof typeof KubeVersionEnum];
@@ -2091,6 +2840,75 @@ export interface LBFirewallRuleRequest {
 }
 
 
+/**
+ * * `busy` - busy * `unavailable` - unavailable
+ */
+
+export const LBReimageAvailabilityEnum = {
+    Busy: 'busy',
+    Unavailable: 'unavailable',
+} as const;
+
+export type LBReimageAvailabilityEnum = typeof LBReimageAvailabilityEnum[keyof typeof LBReimageAvailabilityEnum];
+
+
+export interface LBReimageOperation {
+    'operation_id': string;
+    'state': LBReimageOperationStateEnum;
+    'rollback_until': string | null;
+}
+
+
+/**
+ * * `preparing` - preparing * `switching` - switching * `restoring` - restoring * `cancelling` - cancelling * `paused` - paused * `done` - done * `rolled_back` - rolled_back * `failed` - failed
+ */
+
+export const LBReimageOperationStateEnum = {
+    Preparing: 'preparing',
+    Switching: 'switching',
+    Restoring: 'restoring',
+    Cancelling: 'cancelling',
+    Paused: 'paused',
+    Done: 'done',
+    RolledBack: 'rolled_back',
+    Failed: 'failed',
+} as const;
+
+export type LBReimageOperationStateEnum = typeof LBReimageOperationStateEnum[keyof typeof LBReimageOperationStateEnum];
+
+
+export interface LBReimageRefused {
+    'refusal': RefusalEnum;
+}
+
+
+export interface LBReimageRequest {
+    /**
+     * The plan_id returned by GET
+     */
+    'plan_id': string;
+    /**
+     * The cluster\'s name, typed to confirm
+     */
+    'confirmation': string;
+}
+export interface LBReimageStart {
+    'eligible': boolean;
+    /**
+     * Why no start is possible now: busy (try later) or unavailable  * `busy` - busy * `unavailable` - unavailable
+     */
+    'reason': LBReimageAvailabilityEnum | null;
+    'plan_id': string;
+}
+
+
+export interface LBReimageStarted {
+    'operation_id': string;
+}
+export interface LBReimageStatus {
+    'operation': LBReimageOperation | null;
+    'start': LBReimageStart | null;
+}
 export interface LBUpgradeDispatchResponse {
     'operation_id': string;
     'status': string;
@@ -2400,6 +3218,60 @@ export interface PaginatedFundsLogList {
     'previous'?: string | null;
     'results': Array<FundsLog>;
 }
+export interface PaginatedGatewayBackendList {
+    'count': number;
+    'next'?: string | null;
+    'previous'?: string | null;
+    'results': Array<GatewayBackend>;
+}
+export interface PaginatedGatewayBackendPoolList {
+    'count': number;
+    'next'?: string | null;
+    'previous'?: string | null;
+    'results': Array<GatewayBackendPool>;
+}
+export interface PaginatedGatewayFirewallRuleList {
+    'count': number;
+    'next'?: string | null;
+    'previous'?: string | null;
+    'results': Array<GatewayFirewallRule>;
+}
+export interface PaginatedGatewayForwardList {
+    'count': number;
+    'next'?: string | null;
+    'previous'?: string | null;
+    'results': Array<GatewayForward>;
+}
+export interface PaginatedGatewayLBListenerList {
+    'count': number;
+    'next'?: string | null;
+    'previous'?: string | null;
+    'results': Array<GatewayLBListener>;
+}
+export interface PaginatedGatewayList {
+    'count': number;
+    'next'?: string | null;
+    'previous'?: string | null;
+    'results': Array<Gateway>;
+}
+export interface PaginatedGatewayNetworkList {
+    'count': number;
+    'next'?: string | null;
+    'previous'?: string | null;
+    'results': Array<GatewayNetwork>;
+}
+export interface PaginatedGatewayOperationList {
+    'count': number;
+    'next'?: string | null;
+    'previous'?: string | null;
+    'results': Array<GatewayOperation>;
+}
+export interface PaginatedGatewayRouteList {
+    'count': number;
+    'next'?: string | null;
+    'previous'?: string | null;
+    'results': Array<GatewayRoute>;
+}
 export interface PaginatedHTTPRouteList {
     'count': number;
     'next'?: string | null;
@@ -2634,6 +3506,129 @@ export interface PatchedFirewallRulesSetRequest {
     'name'?: string;
 }
 /**
+ * The fields a customer writes; gateway.backend_pools.clean_pool decides what they may hold.
+ */
+export interface PatchedGatewayBackendPoolWriteRequest {
+    'name'?: string;
+    'policy'?: GatewayBackendPoolPolicyEnum;
+    /**
+     * PROXY protocol v2 to the servers; tcp only.
+     */
+    'proxy_protocol'?: boolean;
+    'health_check'?: GatewayHealthCheckWriteRequest;
+}
+
+
+/**
+ * The fields a customer writes; gateway.backend_pools.clean_backend decides what they may hold.
+ */
+export interface PatchedGatewayBackendWriteRequest {
+    /**
+     * An attached private network\'s id.
+     */
+    'network'?: number;
+    /**
+     * A host of that network, other than the gateway.
+     */
+    'address'?: string;
+    'port'?: number;
+    'weight'?: number;
+    'enabled'?: boolean;
+}
+/**
+ * The fields a customer writes; gateway.firewall.clean_rule decides what they may hold.
+ */
+export interface PatchedGatewayFirewallRuleWriteRequest {
+    'action'?: FwPolicyOutEnum;
+    'source'?: GatewayFirewallSourceRequest;
+    'destination'?: GatewayFirewallDestinationRequest;
+    'protocol'?: GatewayFirewallProtocolEnum;
+    'ports'?: Array<GatewayPortRangeRequest>;
+    'enabled'?: boolean;
+    'comment'?: string;
+}
+
+
+/**
+ * The fields a customer writes; gateway.forwards.clean_forward decides what they may hold.
+ */
+export interface PatchedGatewayForwardWriteRequest {
+    'protocol'?: GatewayForwardProtocolEnum;
+    'public_ports'?: GatewayPortRangeRequest;
+    'target'?: GatewayForwardTargetRequest;
+    /**
+     * IPv4 networks; empty means any source.
+     */
+    'allowed_sources'?: Array<string>;
+    /**
+     * Only false is accepted for now.
+     */
+    'preserve_client_ip'?: boolean;
+    'enabled'?: boolean;
+    'comment'?: string;
+}
+
+
+/**
+ * The fields a customer writes; gateway.lb_listeners.clean_listener decides what they may hold.  protocol, port and mode are set at creation and cannot change.
+ */
+export interface PatchedGatewayLBListenerWriteRequest {
+    'protocol'?: GatewayForwardProtocolEnum;
+    'port'?: number;
+    /**
+     * tcp, udp or http; https is not available yet.  * `tcp` - tcp * `udp` - udp * `http` - http * `https` - https
+     */
+    'mode'?: GatewayLBListenerModeEnum;
+    /**
+     * A backend pool\'s id; tcp and udp only.
+     */
+    'pool'?: number | null;
+    /**
+     * IPv4 and IPv6 networks; empty means any source.
+     */
+    'allowed_sources'?: Array<string>;
+    'enabled'?: boolean;
+    'comment'?: string;
+}
+
+
+export interface PatchedGatewayNetworkUpdateRequest {
+    /**
+     * A router network\'s internet egress through the gateway.
+     */
+    'snat'?: boolean;
+}
+/**
+ * The fields a customer writes; gateway.lb_routes.clean_route decides what they may hold.
+ */
+export interface PatchedGatewayRouteWriteRequest {
+    /**
+     * Up to 16 names; empty matches every host.
+     */
+    'hostnames'?: Array<string>;
+    /**
+     * Literal and case-sensitive.
+     */
+    'path_prefix'?: string;
+    /**
+     * A backend pool\'s id.
+     */
+    'pool'?: number;
+    /**
+     * Only false is accepted for now.
+     */
+    'redirect_https'?: boolean;
+    'enabled'?: boolean;
+}
+/**
+ * The name, and the maintenance window: weekday 0 (Monday) to 6 (Sunday), hour 0 to 23, Bucharest time.
+ */
+export interface PatchedGatewayUpdateRequest {
+    'name'?: string;
+    'maintenance_weekday'?: number;
+    'maintenance_hour'?: number;
+}
+/**
  * Serializer for HTTPRoute resources with automatic certificate issuance.
  */
 export interface PatchedHTTPRouteRequest {
@@ -2727,6 +3722,10 @@ export interface PatchedSSHKeyUpdateRequest {
     'alias'?: string;
 }
 export interface PatchedServerDetailRequest {
+    /**
+     * Renaming also moves reverse DNS still on the old name. The server takes the new name at its next reboot from the panel or API, which also creates new SSH host keys and resets the login password and SSH keys to the ones saved here.
+     */
+    'hostname'?: string;
     'project'?: string;
     'password'?: string;
     /**
@@ -3035,6 +4034,20 @@ export const ReasonEnum = {
 export type ReasonEnum = typeof ReasonEnum[keyof typeof ReasonEnum];
 
 
+/**
+ * * `plan_stale` - plan_stale * `confirmation_invalid` - confirmation_invalid * `busy` - busy * `unavailable` - unavailable
+ */
+
+export const RefusalEnum = {
+    PlanStale: 'plan_stale',
+    ConfirmationInvalid: 'confirmation_invalid',
+    Busy: 'busy',
+    Unavailable: 'unavailable',
+} as const;
+
+export type RefusalEnum = typeof RefusalEnum[keyof typeof RefusalEnum];
+
+
 export interface ReinstallRequest {
     'os_id': number;
 }
@@ -3143,6 +4156,46 @@ export interface ReverseDNSRequest {
      * Fully-qualified domain name for PTR record (e.g., host.example.com)
      */
     'reverse_dns': string;
+}
+/**
+ * * `ok` - ok * `missing` - missing * `duplicate` - duplicate * `obsolete` - obsolete * `unknown` - unknown
+ */
+
+export const RouteConfigEnum = {
+    Ok: 'ok',
+    Missing: 'missing',
+    Duplicate: 'duplicate',
+    Obsolete: 'obsolete',
+    Unknown: 'unknown',
+} as const;
+
+export type RouteConfigEnum = typeof RouteConfigEnum[keyof typeof RouteConfigEnum];
+
+
+/**
+ * * `running` - running * `stopped` - stopped * `unknown` - unknown
+ */
+
+export const RoutePowerEnum = {
+    Running: 'running',
+    Stopped: 'stopped',
+    Unknown: 'unknown',
+} as const;
+
+export type RoutePowerEnum = typeof RoutePowerEnum[keyof typeof RoutePowerEnum];
+
+
+export interface RouteStatus {
+    'network': number;
+    /**
+     * The gateway that routes for the network, or null.
+     */
+    'gateway': number | null;
+    'servers': Array<ServerRoute>;
+    /**
+     * The network\'s route applies, newest first.
+     */
+    'operations': Array<GatewayOperation>;
 }
 export interface SSHKey {
     'id': number;
@@ -3328,7 +4381,10 @@ export interface ServerDetachIPv4Response {
 export interface ServerDetail {
     'billing': ResourceBilling | null;
     'id': number;
-    'hostname': string;
+    /**
+     * Renaming also moves reverse DNS still on the old name. The server takes the new name at its next reboot from the panel or API, which also creates new SSH host keys and resets the login password and SSH keys to the ones saved here.
+     */
+    'hostname'?: string;
     'project'?: string;
     'image': string;
     'package': string;
@@ -3365,6 +4421,10 @@ export interface ServerDetail {
 
 
 export interface ServerDetailRequest {
+    /**
+     * Renaming also moves reverse DNS still on the old name. The server takes the new name at its next reboot from the panel or API, which also creates new SSH host keys and resets the login password and SSH keys to the ones saved here.
+     */
+    'hostname'?: string;
     'project'?: string;
     'password'?: string;
     /**
@@ -3412,6 +4472,32 @@ export interface ServerPublicNetwork {
     'ipv6'?: string;
     'interfaces'?: Array<ServerPublicInterface>;
 }
+/**
+ * A server\'s default route on the network (spec 6.3): cloud-init evidence from Proxmox, not proof that the running guest has the route. A server Proxmox could not tell about is unknown.
+ */
+export interface ServerRoute {
+    'server': number;
+    'hostname': string;
+    'power': RoutePowerEnum;
+    /**
+     * The spec 6.2 rule over current config.  * `ok` - ok * `missing` - missing * `duplicate` - duplicate * `obsolete` - obsolete * `unknown` - unknown
+     */
+    'config': RouteConfigEnum;
+    /**
+     * The rule over the config a reboot applies; null without one.  * `ok` - ok * `missing` - missing * `duplicate` - duplicate * `obsolete` - obsolete * `unknown` - unknown
+     */
+    'pending': RouteConfigEnum | null;
+    /**
+     * The rule gives this network\'s interface the default route.
+     */
+    'routes_here': boolean;
+    /**
+     * The last route apply\'s config and boot still hold.
+     */
+    'acknowledged': boolean;
+}
+
+
 export interface ServerTrafficResponse {
     'year': number;
     'month': number;
@@ -8451,6 +9537,2019 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
+         * Reserve a gateway and queue its provisioning (spec 11.1); its state shows the progress.
+         * @param {GatewayCreateRequest} gatewayCreateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysCreate: async (gatewayCreateRequest: GatewayCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayCreateRequest' is not null or undefined
+            assertParamExists('cloudGatewaysCreate', 'gatewayCreateRequest', gatewayCreateRequest)
+            const localVarPath = `/api/cloud/gateways/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(gatewayCreateRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Delete the gateway (spec 11.5): its VM is destroyed, then its networks and IPv4 are released. Without the preview\'s revision, networks and servers, 409 with a fresh preview.
+         * @param {string} id 
+         * @param {Array<number>} [networks] The preview\&#39;s network ids.
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {Array<number>} [servers] The preview\&#39;s server ids.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysDestroy: async (id: string, networks?: Array<number>, revision?: number, servers?: Array<number>, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysDestroy', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{id}/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (networks) {
+                localVarQueryParameter['networks'] = networks;
+            }
+
+            if (revision !== undefined) {
+                localVarQueryParameter['revision'] = revision;
+            }
+
+            if (servers) {
+                localVarQueryParameter['servers'] = servers;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Add a rule after the last one (spec 5.7); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {GatewayFirewallRuleWriteRequest} gatewayFirewallRuleWriteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesCreate: async (gatewayId: number, gatewayFirewallRuleWriteRequest: GatewayFirewallRuleWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesCreate', 'gatewayId', gatewayId)
+            // verify required parameter 'gatewayFirewallRuleWriteRequest' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesCreate', 'gatewayFirewallRuleWriteRequest', gatewayFirewallRuleWriteRequest)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/firewall-rules/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(gatewayFirewallRuleWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Delete a rule (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesDestroy: async (gatewayId: number, id: number, revision?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesDestroy', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesDestroy', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/firewall-rules/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (revision !== undefined) {
+                localVarQueryParameter['revision'] = revision;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s firewall rules, in evaluation order
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesList: async (gatewayId: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesList', 'gatewayId', gatewayId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/firewall-rules/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Move a rule to a position, the others keeping their order. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {GatewayFirewallMoveRequest} gatewayFirewallMoveRequest 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesMoveCreate: async (gatewayId: number, id: number, gatewayFirewallMoveRequest: GatewayFirewallMoveRequest, revision?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesMoveCreate', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesMoveCreate', 'id', id)
+            // verify required parameter 'gatewayFirewallMoveRequest' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesMoveCreate', 'gatewayFirewallMoveRequest', gatewayFirewallMoveRequest)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/firewall-rules/{id}/move/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (revision !== undefined) {
+                localVarQueryParameter['revision'] = revision;
+            }
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(gatewayFirewallMoveRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Change a rule\'s fields; a source or destination is replaced whole. Its position stays.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayFirewallRuleWriteRequest} [patchedGatewayFirewallRuleWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesPartialUpdate: async (gatewayId: number, id: number, patchedGatewayFirewallRuleWriteRequest?: PatchedGatewayFirewallRuleWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesPartialUpdate', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesPartialUpdate', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/firewall-rules/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedGatewayFirewallRuleWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s firewall rules, in evaluation order
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesRetrieve: async (gatewayId: number, id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesRetrieve', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysFirewallRulesRetrieve', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/firewall-rules/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Manage gateways
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysList: async (page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/cloud/gateways/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Add a listener (spec 6.8): tcp and udp name a pool, http takes routes. Pending until applied.
+         * @param {number} gatewayId 
+         * @param {GatewayLBListenerWriteRequest} [gatewayLBListenerWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersCreate: async (gatewayId: number, gatewayLBListenerWriteRequest?: GatewayLBListenerWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersCreate', 'gatewayId', gatewayId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/listeners/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(gatewayLBListenerWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Delete a listener and its routes (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersDestroy: async (gatewayId: number, id: number, revision?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersDestroy', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysListenersDestroy', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/listeners/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (revision !== undefined) {
+                localVarQueryParameter['revision'] = revision;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s load balancer listeners
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersList: async (gatewayId: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersList', 'gatewayId', gatewayId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/listeners/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Change a listener\'s pool, sources, comment or enabled flag; protocol, port and mode are fixed.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayLBListenerWriteRequest} [patchedGatewayLBListenerWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersPartialUpdate: async (gatewayId: number, id: number, patchedGatewayLBListenerWriteRequest?: PatchedGatewayLBListenerWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersPartialUpdate', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysListenersPartialUpdate', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/listeners/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedGatewayLBListenerWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s load balancer listeners
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRetrieve: async (gatewayId: number, id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRetrieve', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRetrieve', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/listeners/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Add a route (spec 5.6): hostnames and a path prefix to a pool. Pending until applied.
+         * @param {number} gatewayId 
+         * @param {number} listenerId 
+         * @param {GatewayRouteWriteRequest} [gatewayRouteWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRoutesCreate: async (gatewayId: number, listenerId: number, gatewayRouteWriteRequest?: GatewayRouteWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesCreate', 'gatewayId', gatewayId)
+            // verify required parameter 'listenerId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesCreate', 'listenerId', listenerId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{listener_id}', encodeURIComponent(String(listenerId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(gatewayRouteWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Delete a route (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} listenerId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRoutesDestroy: async (gatewayId: number, id: number, listenerId: number, revision?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesDestroy', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesDestroy', 'id', id)
+            // verify required parameter 'listenerId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesDestroy', 'listenerId', listenerId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)))
+                .replace('{listener_id}', encodeURIComponent(String(listenerId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (revision !== undefined) {
+                localVarQueryParameter['revision'] = revision;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * An http listener\'s routes
+         * @param {number} gatewayId 
+         * @param {number} listenerId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRoutesList: async (gatewayId: number, listenerId: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesList', 'gatewayId', gatewayId)
+            // verify required parameter 'listenerId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesList', 'listenerId', listenerId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{listener_id}', encodeURIComponent(String(listenerId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Change a route; hostnames are replaced whole.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} listenerId 
+         * @param {PatchedGatewayRouteWriteRequest} [patchedGatewayRouteWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRoutesPartialUpdate: async (gatewayId: number, id: number, listenerId: number, patchedGatewayRouteWriteRequest?: PatchedGatewayRouteWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesPartialUpdate', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesPartialUpdate', 'id', id)
+            // verify required parameter 'listenerId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesPartialUpdate', 'listenerId', listenerId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)))
+                .replace('{listener_id}', encodeURIComponent(String(listenerId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedGatewayRouteWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * An http listener\'s routes
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} listenerId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRoutesRetrieve: async (gatewayId: number, id: number, listenerId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesRetrieve', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesRetrieve', 'id', id)
+            // verify required parameter 'listenerId' is not null or undefined
+            assertParamExists('cloudGatewaysListenersRoutesRetrieve', 'listenerId', listenerId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)))
+                .replace('{listener_id}', encodeURIComponent(String(listenerId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Attach a network (spec 11.3): the operation reserves it and hotplugs the gateway\'s NIC.
+         * @param {number} gatewayId 
+         * @param {GatewayNetworkCreateRequest} gatewayNetworkCreateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysNetworksCreate: async (gatewayId: number, gatewayNetworkCreateRequest: GatewayNetworkCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysNetworksCreate', 'gatewayId', gatewayId)
+            // verify required parameter 'gatewayNetworkCreateRequest' is not null or undefined
+            assertParamExists('cloudGatewaysNetworksCreate', 'gatewayNetworkCreateRequest', gatewayNetworkCreateRequest)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/networks/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(gatewayNetworkCreateRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Detach a network (spec 11.3). Without the preview\'s revision and servers, 409 with a fresh preview.
+         * @param {number} gatewayId 
+         * @param {number} networkId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {Array<number>} [servers] The preview\&#39;s server ids.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysNetworksDestroy: async (gatewayId: number, networkId: number, revision?: number, servers?: Array<number>, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysNetworksDestroy', 'gatewayId', gatewayId)
+            // verify required parameter 'networkId' is not null or undefined
+            assertParamExists('cloudGatewaysNetworksDestroy', 'networkId', networkId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/networks/{network_id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{network_id}', encodeURIComponent(String(networkId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (revision !== undefined) {
+                localVarQueryParameter['revision'] = revision;
+            }
+
+            if (servers) {
+                localVarQueryParameter['servers'] = servers;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s private networks, by network id
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysNetworksList: async (gatewayId: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysNetworksList', 'gatewayId', gatewayId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/networks/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Switch a router network\'s SNAT (spec 6.4). Turning it off without the preview\'s revision and servers answers 409 with a fresh preview; the change is pending until the agent applies it.
+         * @param {number} gatewayId 
+         * @param {number} networkId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {Array<number>} [servers] The preview\&#39;s server ids.
+         * @param {PatchedGatewayNetworkUpdateRequest} [patchedGatewayNetworkUpdateRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysNetworksPartialUpdate: async (gatewayId: number, networkId: number, revision?: number, servers?: Array<number>, patchedGatewayNetworkUpdateRequest?: PatchedGatewayNetworkUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysNetworksPartialUpdate', 'gatewayId', gatewayId)
+            // verify required parameter 'networkId' is not null or undefined
+            assertParamExists('cloudGatewaysNetworksPartialUpdate', 'networkId', networkId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/networks/{network_id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{network_id}', encodeURIComponent(String(networkId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (revision !== undefined) {
+                localVarQueryParameter['revision'] = revision;
+            }
+
+            if (servers) {
+                localVarQueryParameter['servers'] = servers;
+            }
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedGatewayNetworkUpdateRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s private networks, by network id
+         * @param {number} gatewayId 
+         * @param {number} networkId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysNetworksRetrieve: async (gatewayId: number, networkId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysNetworksRetrieve', 'gatewayId', gatewayId)
+            // verify required parameter 'networkId' is not null or undefined
+            assertParamExists('cloudGatewaysNetworksRetrieve', 'networkId', networkId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/networks/{network_id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{network_id}', encodeURIComponent(String(networkId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s operations, newest first
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysOperationsList: async (gatewayId: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysOperationsList', 'gatewayId', gatewayId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/operations/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s operations, newest first
+         * @param {number} gatewayId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysOperationsRetrieve: async (gatewayId: number, id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysOperationsRetrieve', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysOperationsRetrieve', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/operations/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Rename the gateway or change its maintenance window. The name is not compiled, so no revision follows; a new window reaches the agent in a new revision (spec 11.4).
+         * @param {string} id 
+         * @param {PatchedGatewayUpdateRequest} [patchedGatewayUpdateRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPartialUpdate: async (id: string, patchedGatewayUpdateRequest?: PatchedGatewayUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysPartialUpdate', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{id}/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedGatewayUpdateRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Add a server to the pool (spec 5.5); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {number} poolId 
+         * @param {GatewayBackendWriteRequest} [gatewayBackendWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsBackendsCreate: async (gatewayId: number, poolId: number, gatewayBackendWriteRequest?: GatewayBackendWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsCreate', 'gatewayId', gatewayId)
+            // verify required parameter 'poolId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsCreate', 'poolId', poolId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{pool_id}', encodeURIComponent(String(poolId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(gatewayBackendWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Remove a server (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} poolId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsBackendsDestroy: async (gatewayId: number, id: number, poolId: number, revision?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsDestroy', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsDestroy', 'id', id)
+            // verify required parameter 'poolId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsDestroy', 'poolId', poolId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)))
+                .replace('{pool_id}', encodeURIComponent(String(poolId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (revision !== undefined) {
+                localVarQueryParameter['revision'] = revision;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A backend pool\'s servers
+         * @param {number} gatewayId 
+         * @param {number} poolId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsBackendsList: async (gatewayId: number, poolId: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsList', 'gatewayId', gatewayId)
+            // verify required parameter 'poolId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsList', 'poolId', poolId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{pool_id}', encodeURIComponent(String(poolId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Change a server. The last enabled server of a pool in use cannot be disabled.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} poolId 
+         * @param {PatchedGatewayBackendWriteRequest} [patchedGatewayBackendWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsBackendsPartialUpdate: async (gatewayId: number, id: number, poolId: number, patchedGatewayBackendWriteRequest?: PatchedGatewayBackendWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsPartialUpdate', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsPartialUpdate', 'id', id)
+            // verify required parameter 'poolId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsPartialUpdate', 'poolId', poolId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)))
+                .replace('{pool_id}', encodeURIComponent(String(poolId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedGatewayBackendWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A backend pool\'s servers
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} poolId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsBackendsRetrieve: async (gatewayId: number, id: number, poolId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsRetrieve', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsRetrieve', 'id', id)
+            // verify required parameter 'poolId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsBackendsRetrieve', 'poolId', poolId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)))
+                .replace('{pool_id}', encodeURIComponent(String(poolId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Add a backend pool (spec 5.5); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {GatewayBackendPoolWriteRequest} [gatewayBackendPoolWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsCreate: async (gatewayId: number, gatewayBackendPoolWriteRequest?: GatewayBackendPoolWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsCreate', 'gatewayId', gatewayId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/pools/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(gatewayBackendPoolWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Delete an unused pool and its servers (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsDestroy: async (gatewayId: number, id: number, revision?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsDestroy', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsDestroy', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/pools/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (revision !== undefined) {
+                localVarQueryParameter['revision'] = revision;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s backend pools
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsList: async (gatewayId: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsList', 'gatewayId', gatewayId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/pools/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Change a pool; health_check takes the fields to change. Every listener and route on it must still fit.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayBackendPoolWriteRequest} [patchedGatewayBackendPoolWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsPartialUpdate: async (gatewayId: number, id: number, patchedGatewayBackendPoolWriteRequest?: PatchedGatewayBackendPoolWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsPartialUpdate', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsPartialUpdate', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/pools/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedGatewayBackendPoolWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s backend pools
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsRetrieve: async (gatewayId: number, id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsRetrieve', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysPoolsRetrieve', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/pools/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Add a port forward (spec 6.7); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {GatewayForwardWriteRequest} gatewayForwardWriteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPortForwardsCreate: async (gatewayId: number, gatewayForwardWriteRequest: GatewayForwardWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPortForwardsCreate', 'gatewayId', gatewayId)
+            // verify required parameter 'gatewayForwardWriteRequest' is not null or undefined
+            assertParamExists('cloudGatewaysPortForwardsCreate', 'gatewayForwardWriteRequest', gatewayForwardWriteRequest)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/port-forwards/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(gatewayForwardWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Delete a forward (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPortForwardsDestroy: async (gatewayId: number, id: number, revision?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPortForwardsDestroy', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysPortForwardsDestroy', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/port-forwards/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (revision !== undefined) {
+                localVarQueryParameter['revision'] = revision;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s port forwards
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPortForwardsList: async (gatewayId: number, page?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPortForwardsList', 'gatewayId', gatewayId)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/port-forwards/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Change a forward\'s fields; public_ports and target are each replaced whole.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayForwardWriteRequest} [patchedGatewayForwardWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPortForwardsPartialUpdate: async (gatewayId: number, id: number, patchedGatewayForwardWriteRequest?: PatchedGatewayForwardWriteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPortForwardsPartialUpdate', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysPortForwardsPartialUpdate', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/port-forwards/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(patchedGatewayForwardWriteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * A gateway\'s port forwards
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPortForwardsRetrieve: async (gatewayId: number, id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gatewayId' is not null or undefined
+            assertParamExists('cloudGatewaysPortForwardsRetrieve', 'gatewayId', gatewayId)
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysPortForwardsRetrieve', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{gateway_id}/port-forwards/{id}/`
+                .replace('{gateway_id}', encodeURIComponent(String(gatewayId)))
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Re-enroll the gateway (spec 8.1 step 6): its agent token is revoked and it restarts to enroll again. Without the preview\'s revision, networks and servers, 409 with a fresh preview.
+         * @param {string} id 
+         * @param {GatewayReenrollRequest} [gatewayReenrollRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysReenrollCreate: async (id: string, gatewayReenrollRequest?: GatewayReenrollRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysReenrollCreate', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{id}/reenroll/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(gatewayReenrollRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Manage gateways
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysRetrieve: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysRetrieve', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{id}/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * The gateway\'s state and the customer part of its agent\'s last report (spec 9.5).
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysStatusRetrieve: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudGatewaysStatusRetrieve', 'id', id)
+            const localVarPath = `/api/cloud/gateways/{id}/status/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @summary List hardware generations
          * @param {*} [options] Override http request option.
@@ -9178,6 +12277,49 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
+         * Re-render the named servers\' routes and reboot them (spec 6.3); naming a server acknowledges its reboot.
+         * @param {number} id 
+         * @param {ApplyRouteRequest} applyRouteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudPrivateNetworksApplyRouteCreate: async (id: number, applyRouteRequest: ApplyRouteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudPrivateNetworksApplyRouteCreate', 'id', id)
+            // verify required parameter 'applyRouteRequest' is not null or undefined
+            assertParamExists('cloudPrivateNetworksApplyRouteCreate', 'applyRouteRequest', applyRouteRequest)
+            const localVarPath = `/api/cloud/private-networks/{id}/apply-route/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(applyRouteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Manage private networks
          * @param {PrivateNetworkRequest} privateNetworkRequest 
          * @param {*} [options] Override http request option.
@@ -9386,6 +12528,44 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             // verify required parameter 'id' is not null or undefined
             assertParamExists('cloudPrivateNetworksRetrieve', 'id', id)
             const localVarPath = `/api/cloud/private-networks/{id}/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Each server\'s default route against the spec 6.2 rule, read from Proxmox, and the network\'s route applies.
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudPrivateNetworksRouteStatusRetrieve: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudPrivateNetworksRouteStatusRetrieve', 'id', id)
+            const localVarPath = `/api/cloud/private-networks/{id}/route-status/`
                 .replace('{id}', encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -11818,6 +14998,618 @@ export const CloudApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Reserve a gateway and queue its provisioning (spec 11.1); its state shows the progress.
+         * @param {GatewayCreateRequest} gatewayCreateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysCreate(gatewayCreateRequest: GatewayCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Gateway>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysCreate(gatewayCreateRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Delete the gateway (spec 11.5): its VM is destroyed, then its networks and IPv4 are released. Without the preview\'s revision, networks and servers, 409 with a fresh preview.
+         * @param {string} id 
+         * @param {Array<number>} [networks] The preview\&#39;s network ids.
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {Array<number>} [servers] The preview\&#39;s server ids.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysDestroy(id: string, networks?: Array<number>, revision?: number, servers?: Array<number>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysDestroy(id, networks, revision, servers, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysDestroy']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Add a rule after the last one (spec 5.7); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {GatewayFirewallRuleWriteRequest} gatewayFirewallRuleWriteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysFirewallRulesCreate(gatewayId: number, gatewayFirewallRuleWriteRequest: GatewayFirewallRuleWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayFirewallRule>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysFirewallRulesCreate(gatewayId, gatewayFirewallRuleWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysFirewallRulesCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Delete a rule (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysFirewallRulesDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysFirewallRulesDestroy(gatewayId, id, revision, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysFirewallRulesDestroy']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s firewall rules, in evaluation order
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysFirewallRulesList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedGatewayFirewallRuleList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysFirewallRulesList(gatewayId, page, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysFirewallRulesList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Move a rule to a position, the others keeping their order. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {GatewayFirewallMoveRequest} gatewayFirewallMoveRequest 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysFirewallRulesMoveCreate(gatewayId: number, id: number, gatewayFirewallMoveRequest: GatewayFirewallMoveRequest, revision?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayFirewallRule>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysFirewallRulesMoveCreate(gatewayId, id, gatewayFirewallMoveRequest, revision, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysFirewallRulesMoveCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Change a rule\'s fields; a source or destination is replaced whole. Its position stays.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayFirewallRuleWriteRequest} [patchedGatewayFirewallRuleWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysFirewallRulesPartialUpdate(gatewayId: number, id: number, patchedGatewayFirewallRuleWriteRequest?: PatchedGatewayFirewallRuleWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayFirewallRule>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysFirewallRulesPartialUpdate(gatewayId, id, patchedGatewayFirewallRuleWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysFirewallRulesPartialUpdate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s firewall rules, in evaluation order
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysFirewallRulesRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayFirewallRule>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysFirewallRulesRetrieve(gatewayId, id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysFirewallRulesRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Manage gateways
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysList(page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedGatewayList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysList(page, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Add a listener (spec 6.8): tcp and udp name a pool, http takes routes. Pending until applied.
+         * @param {number} gatewayId 
+         * @param {GatewayLBListenerWriteRequest} [gatewayLBListenerWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysListenersCreate(gatewayId: number, gatewayLBListenerWriteRequest?: GatewayLBListenerWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayLBListener>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysListenersCreate(gatewayId, gatewayLBListenerWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysListenersCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Delete a listener and its routes (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysListenersDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysListenersDestroy(gatewayId, id, revision, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysListenersDestroy']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s load balancer listeners
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysListenersList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedGatewayLBListenerList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysListenersList(gatewayId, page, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysListenersList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Change a listener\'s pool, sources, comment or enabled flag; protocol, port and mode are fixed.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayLBListenerWriteRequest} [patchedGatewayLBListenerWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysListenersPartialUpdate(gatewayId: number, id: number, patchedGatewayLBListenerWriteRequest?: PatchedGatewayLBListenerWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayLBListener>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysListenersPartialUpdate(gatewayId, id, patchedGatewayLBListenerWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysListenersPartialUpdate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s load balancer listeners
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysListenersRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayLBListener>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysListenersRetrieve(gatewayId, id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysListenersRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Add a route (spec 5.6): hostnames and a path prefix to a pool. Pending until applied.
+         * @param {number} gatewayId 
+         * @param {number} listenerId 
+         * @param {GatewayRouteWriteRequest} [gatewayRouteWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysListenersRoutesCreate(gatewayId: number, listenerId: number, gatewayRouteWriteRequest?: GatewayRouteWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysListenersRoutesCreate(gatewayId, listenerId, gatewayRouteWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysListenersRoutesCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Delete a route (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} listenerId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysListenersRoutesDestroy(gatewayId: number, id: number, listenerId: number, revision?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysListenersRoutesDestroy(gatewayId, id, listenerId, revision, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysListenersRoutesDestroy']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * An http listener\'s routes
+         * @param {number} gatewayId 
+         * @param {number} listenerId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysListenersRoutesList(gatewayId: number, listenerId: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedGatewayRouteList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysListenersRoutesList(gatewayId, listenerId, page, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysListenersRoutesList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Change a route; hostnames are replaced whole.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} listenerId 
+         * @param {PatchedGatewayRouteWriteRequest} [patchedGatewayRouteWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysListenersRoutesPartialUpdate(gatewayId: number, id: number, listenerId: number, patchedGatewayRouteWriteRequest?: PatchedGatewayRouteWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysListenersRoutesPartialUpdate(gatewayId, id, listenerId, patchedGatewayRouteWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysListenersRoutesPartialUpdate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * An http listener\'s routes
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} listenerId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysListenersRoutesRetrieve(gatewayId: number, id: number, listenerId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayRoute>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysListenersRoutesRetrieve(gatewayId, id, listenerId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysListenersRoutesRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Attach a network (spec 11.3): the operation reserves it and hotplugs the gateway\'s NIC.
+         * @param {number} gatewayId 
+         * @param {GatewayNetworkCreateRequest} gatewayNetworkCreateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysNetworksCreate(gatewayId: number, gatewayNetworkCreateRequest: GatewayNetworkCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysNetworksCreate(gatewayId, gatewayNetworkCreateRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysNetworksCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Detach a network (spec 11.3). Without the preview\'s revision and servers, 409 with a fresh preview.
+         * @param {number} gatewayId 
+         * @param {number} networkId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {Array<number>} [servers] The preview\&#39;s server ids.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysNetworksDestroy(gatewayId: number, networkId: number, revision?: number, servers?: Array<number>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysNetworksDestroy(gatewayId, networkId, revision, servers, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysNetworksDestroy']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s private networks, by network id
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysNetworksList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedGatewayNetworkList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysNetworksList(gatewayId, page, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysNetworksList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Switch a router network\'s SNAT (spec 6.4). Turning it off without the preview\'s revision and servers answers 409 with a fresh preview; the change is pending until the agent applies it.
+         * @param {number} gatewayId 
+         * @param {number} networkId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {Array<number>} [servers] The preview\&#39;s server ids.
+         * @param {PatchedGatewayNetworkUpdateRequest} [patchedGatewayNetworkUpdateRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysNetworksPartialUpdate(gatewayId: number, networkId: number, revision?: number, servers?: Array<number>, patchedGatewayNetworkUpdateRequest?: PatchedGatewayNetworkUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayNetwork>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysNetworksPartialUpdate(gatewayId, networkId, revision, servers, patchedGatewayNetworkUpdateRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysNetworksPartialUpdate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s private networks, by network id
+         * @param {number} gatewayId 
+         * @param {number} networkId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysNetworksRetrieve(gatewayId: number, networkId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayNetwork>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysNetworksRetrieve(gatewayId, networkId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysNetworksRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s operations, newest first
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysOperationsList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedGatewayOperationList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysOperationsList(gatewayId, page, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysOperationsList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s operations, newest first
+         * @param {number} gatewayId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysOperationsRetrieve(gatewayId: number, id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysOperationsRetrieve(gatewayId, id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysOperationsRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Rename the gateway or change its maintenance window. The name is not compiled, so no revision follows; a new window reaches the agent in a new revision (spec 11.4).
+         * @param {string} id 
+         * @param {PatchedGatewayUpdateRequest} [patchedGatewayUpdateRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPartialUpdate(id: string, patchedGatewayUpdateRequest?: PatchedGatewayUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Gateway>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPartialUpdate(id, patchedGatewayUpdateRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPartialUpdate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Add a server to the pool (spec 5.5); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {number} poolId 
+         * @param {GatewayBackendWriteRequest} [gatewayBackendWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPoolsBackendsCreate(gatewayId: number, poolId: number, gatewayBackendWriteRequest?: GatewayBackendWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayBackend>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPoolsBackendsCreate(gatewayId, poolId, gatewayBackendWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPoolsBackendsCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Remove a server (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} poolId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPoolsBackendsDestroy(gatewayId: number, id: number, poolId: number, revision?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPoolsBackendsDestroy(gatewayId, id, poolId, revision, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPoolsBackendsDestroy']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A backend pool\'s servers
+         * @param {number} gatewayId 
+         * @param {number} poolId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPoolsBackendsList(gatewayId: number, poolId: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedGatewayBackendList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPoolsBackendsList(gatewayId, poolId, page, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPoolsBackendsList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Change a server. The last enabled server of a pool in use cannot be disabled.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} poolId 
+         * @param {PatchedGatewayBackendWriteRequest} [patchedGatewayBackendWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPoolsBackendsPartialUpdate(gatewayId: number, id: number, poolId: number, patchedGatewayBackendWriteRequest?: PatchedGatewayBackendWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayBackend>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPoolsBackendsPartialUpdate(gatewayId, id, poolId, patchedGatewayBackendWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPoolsBackendsPartialUpdate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A backend pool\'s servers
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} poolId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPoolsBackendsRetrieve(gatewayId: number, id: number, poolId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayBackend>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPoolsBackendsRetrieve(gatewayId, id, poolId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPoolsBackendsRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Add a backend pool (spec 5.5); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {GatewayBackendPoolWriteRequest} [gatewayBackendPoolWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPoolsCreate(gatewayId: number, gatewayBackendPoolWriteRequest?: GatewayBackendPoolWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayBackendPool>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPoolsCreate(gatewayId, gatewayBackendPoolWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPoolsCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Delete an unused pool and its servers (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPoolsDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPoolsDestroy(gatewayId, id, revision, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPoolsDestroy']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s backend pools
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPoolsList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedGatewayBackendPoolList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPoolsList(gatewayId, page, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPoolsList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Change a pool; health_check takes the fields to change. Every listener and route on it must still fit.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayBackendPoolWriteRequest} [patchedGatewayBackendPoolWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPoolsPartialUpdate(gatewayId: number, id: number, patchedGatewayBackendPoolWriteRequest?: PatchedGatewayBackendPoolWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayBackendPool>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPoolsPartialUpdate(gatewayId, id, patchedGatewayBackendPoolWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPoolsPartialUpdate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s backend pools
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPoolsRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayBackendPool>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPoolsRetrieve(gatewayId, id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPoolsRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Add a port forward (spec 6.7); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {GatewayForwardWriteRequest} gatewayForwardWriteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPortForwardsCreate(gatewayId: number, gatewayForwardWriteRequest: GatewayForwardWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayForward>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPortForwardsCreate(gatewayId, gatewayForwardWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPortForwardsCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Delete a forward (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPortForwardsDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPortForwardsDestroy(gatewayId, id, revision, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPortForwardsDestroy']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s port forwards
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPortForwardsList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedGatewayForwardList>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPortForwardsList(gatewayId, page, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPortForwardsList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Change a forward\'s fields; public_ports and target are each replaced whole.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayForwardWriteRequest} [patchedGatewayForwardWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPortForwardsPartialUpdate(gatewayId: number, id: number, patchedGatewayForwardWriteRequest?: PatchedGatewayForwardWriteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayForward>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPortForwardsPartialUpdate(gatewayId, id, patchedGatewayForwardWriteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPortForwardsPartialUpdate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * A gateway\'s port forwards
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysPortForwardsRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayForward>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysPortForwardsRetrieve(gatewayId, id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysPortForwardsRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Re-enroll the gateway (spec 8.1 step 6): its agent token is revoked and it restarts to enroll again. Without the preview\'s revision, networks and servers, 409 with a fresh preview.
+         * @param {string} id 
+         * @param {GatewayReenrollRequest} [gatewayReenrollRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysReenrollCreate(id: string, gatewayReenrollRequest?: GatewayReenrollRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysReenrollCreate(id, gatewayReenrollRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysReenrollCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Manage gateways
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysRetrieve(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Gateway>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysRetrieve(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * The gateway\'s state and the customer part of its agent\'s last report (spec 9.5).
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudGatewaysStatusRetrieve(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayStatus>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudGatewaysStatusRetrieve(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudGatewaysStatusRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @summary List hardware generations
          * @param {*} [options] Override http request option.
@@ -12047,6 +15839,19 @@ export const CloudApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Re-render the named servers\' routes and reboot them (spec 6.3); naming a server acknowledges its reboot.
+         * @param {number} id 
+         * @param {ApplyRouteRequest} applyRouteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudPrivateNetworksApplyRouteCreate(id: number, applyRouteRequest: ApplyRouteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GatewayOperation>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksApplyRouteCreate(id, applyRouteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudPrivateNetworksApplyRouteCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Manage private networks
          * @param {PrivateNetworkRequest} privateNetworkRequest 
          * @param {*} [options] Override http request option.
@@ -12118,6 +15923,18 @@ export const CloudApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksRetrieve(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudPrivateNetworksRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Each server\'s default route against the spec 6.2 rule, read from Proxmox, and the network\'s route applies.
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudPrivateNetworksRouteStatusRetrieve(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<RouteStatus>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudPrivateNetworksRouteStatusRetrieve(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudPrivateNetworksRouteStatusRetrieve']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -13088,6 +16905,483 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.cloudFloatingIpv6UnauthorizeCreate(id, floatingIPAuthorizeRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * Reserve a gateway and queue its provisioning (spec 11.1); its state shows the progress.
+         * @param {GatewayCreateRequest} gatewayCreateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysCreate(gatewayCreateRequest: GatewayCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<Gateway> {
+            return localVarFp.cloudGatewaysCreate(gatewayCreateRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Delete the gateway (spec 11.5): its VM is destroyed, then its networks and IPv4 are released. Without the preview\'s revision, networks and servers, 409 with a fresh preview.
+         * @param {string} id 
+         * @param {Array<number>} [networks] The preview\&#39;s network ids.
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {Array<number>} [servers] The preview\&#39;s server ids.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysDestroy(id: string, networks?: Array<number>, revision?: number, servers?: Array<number>, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudGatewaysDestroy(id, networks, revision, servers, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Add a rule after the last one (spec 5.7); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {GatewayFirewallRuleWriteRequest} gatewayFirewallRuleWriteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesCreate(gatewayId: number, gatewayFirewallRuleWriteRequest: GatewayFirewallRuleWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayFirewallRule> {
+            return localVarFp.cloudGatewaysFirewallRulesCreate(gatewayId, gatewayFirewallRuleWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Delete a rule (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudGatewaysFirewallRulesDestroy(gatewayId, id, revision, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s firewall rules, in evaluation order
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedGatewayFirewallRuleList> {
+            return localVarFp.cloudGatewaysFirewallRulesList(gatewayId, page, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Move a rule to a position, the others keeping their order. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {GatewayFirewallMoveRequest} gatewayFirewallMoveRequest 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesMoveCreate(gatewayId: number, id: number, gatewayFirewallMoveRequest: GatewayFirewallMoveRequest, revision?: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayFirewallRule> {
+            return localVarFp.cloudGatewaysFirewallRulesMoveCreate(gatewayId, id, gatewayFirewallMoveRequest, revision, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Change a rule\'s fields; a source or destination is replaced whole. Its position stays.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayFirewallRuleWriteRequest} [patchedGatewayFirewallRuleWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesPartialUpdate(gatewayId: number, id: number, patchedGatewayFirewallRuleWriteRequest?: PatchedGatewayFirewallRuleWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayFirewallRule> {
+            return localVarFp.cloudGatewaysFirewallRulesPartialUpdate(gatewayId, id, patchedGatewayFirewallRuleWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s firewall rules, in evaluation order
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysFirewallRulesRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayFirewallRule> {
+            return localVarFp.cloudGatewaysFirewallRulesRetrieve(gatewayId, id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Manage gateways
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysList(page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedGatewayList> {
+            return localVarFp.cloudGatewaysList(page, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Add a listener (spec 6.8): tcp and udp name a pool, http takes routes. Pending until applied.
+         * @param {number} gatewayId 
+         * @param {GatewayLBListenerWriteRequest} [gatewayLBListenerWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersCreate(gatewayId: number, gatewayLBListenerWriteRequest?: GatewayLBListenerWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayLBListener> {
+            return localVarFp.cloudGatewaysListenersCreate(gatewayId, gatewayLBListenerWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Delete a listener and its routes (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudGatewaysListenersDestroy(gatewayId, id, revision, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s load balancer listeners
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedGatewayLBListenerList> {
+            return localVarFp.cloudGatewaysListenersList(gatewayId, page, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Change a listener\'s pool, sources, comment or enabled flag; protocol, port and mode are fixed.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayLBListenerWriteRequest} [patchedGatewayLBListenerWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersPartialUpdate(gatewayId: number, id: number, patchedGatewayLBListenerWriteRequest?: PatchedGatewayLBListenerWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayLBListener> {
+            return localVarFp.cloudGatewaysListenersPartialUpdate(gatewayId, id, patchedGatewayLBListenerWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s load balancer listeners
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayLBListener> {
+            return localVarFp.cloudGatewaysListenersRetrieve(gatewayId, id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Add a route (spec 5.6): hostnames and a path prefix to a pool. Pending until applied.
+         * @param {number} gatewayId 
+         * @param {number} listenerId 
+         * @param {GatewayRouteWriteRequest} [gatewayRouteWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRoutesCreate(gatewayId: number, listenerId: number, gatewayRouteWriteRequest?: GatewayRouteWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayRoute> {
+            return localVarFp.cloudGatewaysListenersRoutesCreate(gatewayId, listenerId, gatewayRouteWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Delete a route (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} listenerId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRoutesDestroy(gatewayId: number, id: number, listenerId: number, revision?: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudGatewaysListenersRoutesDestroy(gatewayId, id, listenerId, revision, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * An http listener\'s routes
+         * @param {number} gatewayId 
+         * @param {number} listenerId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRoutesList(gatewayId: number, listenerId: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedGatewayRouteList> {
+            return localVarFp.cloudGatewaysListenersRoutesList(gatewayId, listenerId, page, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Change a route; hostnames are replaced whole.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} listenerId 
+         * @param {PatchedGatewayRouteWriteRequest} [patchedGatewayRouteWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRoutesPartialUpdate(gatewayId: number, id: number, listenerId: number, patchedGatewayRouteWriteRequest?: PatchedGatewayRouteWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayRoute> {
+            return localVarFp.cloudGatewaysListenersRoutesPartialUpdate(gatewayId, id, listenerId, patchedGatewayRouteWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * An http listener\'s routes
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} listenerId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysListenersRoutesRetrieve(gatewayId: number, id: number, listenerId: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayRoute> {
+            return localVarFp.cloudGatewaysListenersRoutesRetrieve(gatewayId, id, listenerId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Attach a network (spec 11.3): the operation reserves it and hotplugs the gateway\'s NIC.
+         * @param {number} gatewayId 
+         * @param {GatewayNetworkCreateRequest} gatewayNetworkCreateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysNetworksCreate(gatewayId: number, gatewayNetworkCreateRequest: GatewayNetworkCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudGatewaysNetworksCreate(gatewayId, gatewayNetworkCreateRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Detach a network (spec 11.3). Without the preview\'s revision and servers, 409 with a fresh preview.
+         * @param {number} gatewayId 
+         * @param {number} networkId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {Array<number>} [servers] The preview\&#39;s server ids.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysNetworksDestroy(gatewayId: number, networkId: number, revision?: number, servers?: Array<number>, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudGatewaysNetworksDestroy(gatewayId, networkId, revision, servers, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s private networks, by network id
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysNetworksList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedGatewayNetworkList> {
+            return localVarFp.cloudGatewaysNetworksList(gatewayId, page, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Switch a router network\'s SNAT (spec 6.4). Turning it off without the preview\'s revision and servers answers 409 with a fresh preview; the change is pending until the agent applies it.
+         * @param {number} gatewayId 
+         * @param {number} networkId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {Array<number>} [servers] The preview\&#39;s server ids.
+         * @param {PatchedGatewayNetworkUpdateRequest} [patchedGatewayNetworkUpdateRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysNetworksPartialUpdate(gatewayId: number, networkId: number, revision?: number, servers?: Array<number>, patchedGatewayNetworkUpdateRequest?: PatchedGatewayNetworkUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayNetwork> {
+            return localVarFp.cloudGatewaysNetworksPartialUpdate(gatewayId, networkId, revision, servers, patchedGatewayNetworkUpdateRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s private networks, by network id
+         * @param {number} gatewayId 
+         * @param {number} networkId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysNetworksRetrieve(gatewayId: number, networkId: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayNetwork> {
+            return localVarFp.cloudGatewaysNetworksRetrieve(gatewayId, networkId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s operations, newest first
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysOperationsList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedGatewayOperationList> {
+            return localVarFp.cloudGatewaysOperationsList(gatewayId, page, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s operations, newest first
+         * @param {number} gatewayId 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysOperationsRetrieve(gatewayId: number, id: string, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudGatewaysOperationsRetrieve(gatewayId, id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Rename the gateway or change its maintenance window. The name is not compiled, so no revision follows; a new window reaches the agent in a new revision (spec 11.4).
+         * @param {string} id 
+         * @param {PatchedGatewayUpdateRequest} [patchedGatewayUpdateRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPartialUpdate(id: string, patchedGatewayUpdateRequest?: PatchedGatewayUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<Gateway> {
+            return localVarFp.cloudGatewaysPartialUpdate(id, patchedGatewayUpdateRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Add a server to the pool (spec 5.5); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {number} poolId 
+         * @param {GatewayBackendWriteRequest} [gatewayBackendWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsBackendsCreate(gatewayId: number, poolId: number, gatewayBackendWriteRequest?: GatewayBackendWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayBackend> {
+            return localVarFp.cloudGatewaysPoolsBackendsCreate(gatewayId, poolId, gatewayBackendWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Remove a server (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} poolId 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsBackendsDestroy(gatewayId: number, id: number, poolId: number, revision?: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudGatewaysPoolsBackendsDestroy(gatewayId, id, poolId, revision, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A backend pool\'s servers
+         * @param {number} gatewayId 
+         * @param {number} poolId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsBackendsList(gatewayId: number, poolId: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedGatewayBackendList> {
+            return localVarFp.cloudGatewaysPoolsBackendsList(gatewayId, poolId, page, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Change a server. The last enabled server of a pool in use cannot be disabled.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} poolId 
+         * @param {PatchedGatewayBackendWriteRequest} [patchedGatewayBackendWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsBackendsPartialUpdate(gatewayId: number, id: number, poolId: number, patchedGatewayBackendWriteRequest?: PatchedGatewayBackendWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayBackend> {
+            return localVarFp.cloudGatewaysPoolsBackendsPartialUpdate(gatewayId, id, poolId, patchedGatewayBackendWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A backend pool\'s servers
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} poolId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsBackendsRetrieve(gatewayId: number, id: number, poolId: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayBackend> {
+            return localVarFp.cloudGatewaysPoolsBackendsRetrieve(gatewayId, id, poolId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Add a backend pool (spec 5.5); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {GatewayBackendPoolWriteRequest} [gatewayBackendPoolWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsCreate(gatewayId: number, gatewayBackendPoolWriteRequest?: GatewayBackendPoolWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayBackendPool> {
+            return localVarFp.cloudGatewaysPoolsCreate(gatewayId, gatewayBackendPoolWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Delete an unused pool and its servers (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudGatewaysPoolsDestroy(gatewayId, id, revision, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s backend pools
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedGatewayBackendPoolList> {
+            return localVarFp.cloudGatewaysPoolsList(gatewayId, page, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Change a pool; health_check takes the fields to change. Every listener and route on it must still fit.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayBackendPoolWriteRequest} [patchedGatewayBackendPoolWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsPartialUpdate(gatewayId: number, id: number, patchedGatewayBackendPoolWriteRequest?: PatchedGatewayBackendPoolWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayBackendPool> {
+            return localVarFp.cloudGatewaysPoolsPartialUpdate(gatewayId, id, patchedGatewayBackendPoolWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s backend pools
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPoolsRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayBackendPool> {
+            return localVarFp.cloudGatewaysPoolsRetrieve(gatewayId, id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Add a port forward (spec 6.7); it is pending until the agent applies its revision.
+         * @param {number} gatewayId 
+         * @param {GatewayForwardWriteRequest} gatewayForwardWriteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPortForwardsCreate(gatewayId: number, gatewayForwardWriteRequest: GatewayForwardWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayForward> {
+            return localVarFp.cloudGatewaysPortForwardsCreate(gatewayId, gatewayForwardWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Delete a forward (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPortForwardsDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudGatewaysPortForwardsDestroy(gatewayId, id, revision, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s port forwards
+         * @param {number} gatewayId 
+         * @param {number} [page] A page number within the paginated result set.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPortForwardsList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedGatewayForwardList> {
+            return localVarFp.cloudGatewaysPortForwardsList(gatewayId, page, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Change a forward\'s fields; public_ports and target are each replaced whole.
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {PatchedGatewayForwardWriteRequest} [patchedGatewayForwardWriteRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPortForwardsPartialUpdate(gatewayId: number, id: number, patchedGatewayForwardWriteRequest?: PatchedGatewayForwardWriteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayForward> {
+            return localVarFp.cloudGatewaysPortForwardsPartialUpdate(gatewayId, id, patchedGatewayForwardWriteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * A gateway\'s port forwards
+         * @param {number} gatewayId 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysPortForwardsRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig): AxiosPromise<GatewayForward> {
+            return localVarFp.cloudGatewaysPortForwardsRetrieve(gatewayId, id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Re-enroll the gateway (spec 8.1 step 6): its agent token is revoked and it restarts to enroll again. Without the preview\'s revision, networks and servers, 409 with a fresh preview.
+         * @param {string} id 
+         * @param {GatewayReenrollRequest} [gatewayReenrollRequest] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysReenrollCreate(id: string, gatewayReenrollRequest?: GatewayReenrollRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudGatewaysReenrollCreate(id, gatewayReenrollRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Manage gateways
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysRetrieve(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Gateway> {
+            return localVarFp.cloudGatewaysRetrieve(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * The gateway\'s state and the customer part of its agent\'s last report (spec 9.5).
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudGatewaysStatusRetrieve(id: string, options?: RawAxiosRequestConfig): AxiosPromise<GatewayStatus> {
+            return localVarFp.cloudGatewaysStatusRetrieve(id, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @summary List hardware generations
          * @param {*} [options] Override http request option.
@@ -13260,6 +17554,16 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.cloudPrivateNetworksAddServerCreate(id, privateNetworkAddHostRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * Re-render the named servers\' routes and reboot them (spec 6.3); naming a server acknowledges its reboot.
+         * @param {number} id 
+         * @param {ApplyRouteRequest} applyRouteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudPrivateNetworksApplyRouteCreate(id: number, applyRouteRequest: ApplyRouteRequest, options?: RawAxiosRequestConfig): AxiosPromise<GatewayOperation> {
+            return localVarFp.cloudPrivateNetworksApplyRouteCreate(id, applyRouteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Manage private networks
          * @param {PrivateNetworkRequest} privateNetworkRequest 
          * @param {*} [options] Override http request option.
@@ -13314,6 +17618,15 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
          */
         cloudPrivateNetworksRetrieve(id: number, options?: RawAxiosRequestConfig): AxiosPromise<PrivateNetwork> {
             return localVarFp.cloudPrivateNetworksRetrieve(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Each server\'s default route against the spec 6.2 rule, read from Proxmox, and the network\'s route applies.
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudPrivateNetworksRouteStatusRetrieve(id: number, options?: RawAxiosRequestConfig): AxiosPromise<RouteStatus> {
+            return localVarFp.cloudPrivateNetworksRouteStatusRetrieve(id, options).then((request) => request(axios, basePath));
         },
         /**
          * Manage private networks
@@ -14175,6 +18488,528 @@ export class CloudApi extends BaseAPI {
     }
 
     /**
+     * Reserve a gateway and queue its provisioning (spec 11.1); its state shows the progress.
+     * @param {GatewayCreateRequest} gatewayCreateRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysCreate(gatewayCreateRequest: GatewayCreateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysCreate(gatewayCreateRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Delete the gateway (spec 11.5): its VM is destroyed, then its networks and IPv4 are released. Without the preview\'s revision, networks and servers, 409 with a fresh preview.
+     * @param {string} id 
+     * @param {Array<number>} [networks] The preview\&#39;s network ids.
+     * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+     * @param {Array<number>} [servers] The preview\&#39;s server ids.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysDestroy(id: string, networks?: Array<number>, revision?: number, servers?: Array<number>, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysDestroy(id, networks, revision, servers, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Add a rule after the last one (spec 5.7); it is pending until the agent applies its revision.
+     * @param {number} gatewayId 
+     * @param {GatewayFirewallRuleWriteRequest} gatewayFirewallRuleWriteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysFirewallRulesCreate(gatewayId: number, gatewayFirewallRuleWriteRequest: GatewayFirewallRuleWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysFirewallRulesCreate(gatewayId, gatewayFirewallRuleWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Delete a rule (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysFirewallRulesDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysFirewallRulesDestroy(gatewayId, id, revision, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s firewall rules, in evaluation order
+     * @param {number} gatewayId 
+     * @param {number} [page] A page number within the paginated result set.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysFirewallRulesList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysFirewallRulesList(gatewayId, page, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Move a rule to a position, the others keeping their order. Without the preview\'s revision, 409 with a fresh one.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {GatewayFirewallMoveRequest} gatewayFirewallMoveRequest 
+     * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysFirewallRulesMoveCreate(gatewayId: number, id: number, gatewayFirewallMoveRequest: GatewayFirewallMoveRequest, revision?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysFirewallRulesMoveCreate(gatewayId, id, gatewayFirewallMoveRequest, revision, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Change a rule\'s fields; a source or destination is replaced whole. Its position stays.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {PatchedGatewayFirewallRuleWriteRequest} [patchedGatewayFirewallRuleWriteRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysFirewallRulesPartialUpdate(gatewayId: number, id: number, patchedGatewayFirewallRuleWriteRequest?: PatchedGatewayFirewallRuleWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysFirewallRulesPartialUpdate(gatewayId, id, patchedGatewayFirewallRuleWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s firewall rules, in evaluation order
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysFirewallRulesRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysFirewallRulesRetrieve(gatewayId, id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Manage gateways
+     * @param {number} [page] A page number within the paginated result set.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysList(page?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysList(page, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Add a listener (spec 6.8): tcp and udp name a pool, http takes routes. Pending until applied.
+     * @param {number} gatewayId 
+     * @param {GatewayLBListenerWriteRequest} [gatewayLBListenerWriteRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysListenersCreate(gatewayId: number, gatewayLBListenerWriteRequest?: GatewayLBListenerWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysListenersCreate(gatewayId, gatewayLBListenerWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Delete a listener and its routes (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysListenersDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysListenersDestroy(gatewayId, id, revision, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s load balancer listeners
+     * @param {number} gatewayId 
+     * @param {number} [page] A page number within the paginated result set.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysListenersList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysListenersList(gatewayId, page, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Change a listener\'s pool, sources, comment or enabled flag; protocol, port and mode are fixed.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {PatchedGatewayLBListenerWriteRequest} [patchedGatewayLBListenerWriteRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysListenersPartialUpdate(gatewayId: number, id: number, patchedGatewayLBListenerWriteRequest?: PatchedGatewayLBListenerWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysListenersPartialUpdate(gatewayId, id, patchedGatewayLBListenerWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s load balancer listeners
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysListenersRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysListenersRetrieve(gatewayId, id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Add a route (spec 5.6): hostnames and a path prefix to a pool. Pending until applied.
+     * @param {number} gatewayId 
+     * @param {number} listenerId 
+     * @param {GatewayRouteWriteRequest} [gatewayRouteWriteRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysListenersRoutesCreate(gatewayId: number, listenerId: number, gatewayRouteWriteRequest?: GatewayRouteWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysListenersRoutesCreate(gatewayId, listenerId, gatewayRouteWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Delete a route (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {number} listenerId 
+     * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysListenersRoutesDestroy(gatewayId: number, id: number, listenerId: number, revision?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysListenersRoutesDestroy(gatewayId, id, listenerId, revision, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * An http listener\'s routes
+     * @param {number} gatewayId 
+     * @param {number} listenerId 
+     * @param {number} [page] A page number within the paginated result set.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysListenersRoutesList(gatewayId: number, listenerId: number, page?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysListenersRoutesList(gatewayId, listenerId, page, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Change a route; hostnames are replaced whole.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {number} listenerId 
+     * @param {PatchedGatewayRouteWriteRequest} [patchedGatewayRouteWriteRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysListenersRoutesPartialUpdate(gatewayId: number, id: number, listenerId: number, patchedGatewayRouteWriteRequest?: PatchedGatewayRouteWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysListenersRoutesPartialUpdate(gatewayId, id, listenerId, patchedGatewayRouteWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * An http listener\'s routes
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {number} listenerId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysListenersRoutesRetrieve(gatewayId: number, id: number, listenerId: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysListenersRoutesRetrieve(gatewayId, id, listenerId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Attach a network (spec 11.3): the operation reserves it and hotplugs the gateway\'s NIC.
+     * @param {number} gatewayId 
+     * @param {GatewayNetworkCreateRequest} gatewayNetworkCreateRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysNetworksCreate(gatewayId: number, gatewayNetworkCreateRequest: GatewayNetworkCreateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysNetworksCreate(gatewayId, gatewayNetworkCreateRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Detach a network (spec 11.3). Without the preview\'s revision and servers, 409 with a fresh preview.
+     * @param {number} gatewayId 
+     * @param {number} networkId 
+     * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+     * @param {Array<number>} [servers] The preview\&#39;s server ids.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysNetworksDestroy(gatewayId: number, networkId: number, revision?: number, servers?: Array<number>, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysNetworksDestroy(gatewayId, networkId, revision, servers, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s private networks, by network id
+     * @param {number} gatewayId 
+     * @param {number} [page] A page number within the paginated result set.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysNetworksList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysNetworksList(gatewayId, page, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Switch a router network\'s SNAT (spec 6.4). Turning it off without the preview\'s revision and servers answers 409 with a fresh preview; the change is pending until the agent applies it.
+     * @param {number} gatewayId 
+     * @param {number} networkId 
+     * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+     * @param {Array<number>} [servers] The preview\&#39;s server ids.
+     * @param {PatchedGatewayNetworkUpdateRequest} [patchedGatewayNetworkUpdateRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysNetworksPartialUpdate(gatewayId: number, networkId: number, revision?: number, servers?: Array<number>, patchedGatewayNetworkUpdateRequest?: PatchedGatewayNetworkUpdateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysNetworksPartialUpdate(gatewayId, networkId, revision, servers, patchedGatewayNetworkUpdateRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s private networks, by network id
+     * @param {number} gatewayId 
+     * @param {number} networkId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysNetworksRetrieve(gatewayId: number, networkId: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysNetworksRetrieve(gatewayId, networkId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s operations, newest first
+     * @param {number} gatewayId 
+     * @param {number} [page] A page number within the paginated result set.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysOperationsList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysOperationsList(gatewayId, page, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s operations, newest first
+     * @param {number} gatewayId 
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysOperationsRetrieve(gatewayId: number, id: string, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysOperationsRetrieve(gatewayId, id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Rename the gateway or change its maintenance window. The name is not compiled, so no revision follows; a new window reaches the agent in a new revision (spec 11.4).
+     * @param {string} id 
+     * @param {PatchedGatewayUpdateRequest} [patchedGatewayUpdateRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPartialUpdate(id: string, patchedGatewayUpdateRequest?: PatchedGatewayUpdateRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPartialUpdate(id, patchedGatewayUpdateRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Add a server to the pool (spec 5.5); it is pending until the agent applies its revision.
+     * @param {number} gatewayId 
+     * @param {number} poolId 
+     * @param {GatewayBackendWriteRequest} [gatewayBackendWriteRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPoolsBackendsCreate(gatewayId: number, poolId: number, gatewayBackendWriteRequest?: GatewayBackendWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPoolsBackendsCreate(gatewayId, poolId, gatewayBackendWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Remove a server (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {number} poolId 
+     * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPoolsBackendsDestroy(gatewayId: number, id: number, poolId: number, revision?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPoolsBackendsDestroy(gatewayId, id, poolId, revision, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A backend pool\'s servers
+     * @param {number} gatewayId 
+     * @param {number} poolId 
+     * @param {number} [page] A page number within the paginated result set.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPoolsBackendsList(gatewayId: number, poolId: number, page?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPoolsBackendsList(gatewayId, poolId, page, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Change a server. The last enabled server of a pool in use cannot be disabled.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {number} poolId 
+     * @param {PatchedGatewayBackendWriteRequest} [patchedGatewayBackendWriteRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPoolsBackendsPartialUpdate(gatewayId: number, id: number, poolId: number, patchedGatewayBackendWriteRequest?: PatchedGatewayBackendWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPoolsBackendsPartialUpdate(gatewayId, id, poolId, patchedGatewayBackendWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A backend pool\'s servers
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {number} poolId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPoolsBackendsRetrieve(gatewayId: number, id: number, poolId: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPoolsBackendsRetrieve(gatewayId, id, poolId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Add a backend pool (spec 5.5); it is pending until the agent applies its revision.
+     * @param {number} gatewayId 
+     * @param {GatewayBackendPoolWriteRequest} [gatewayBackendPoolWriteRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPoolsCreate(gatewayId: number, gatewayBackendPoolWriteRequest?: GatewayBackendPoolWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPoolsCreate(gatewayId, gatewayBackendPoolWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Delete an unused pool and its servers (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPoolsDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPoolsDestroy(gatewayId, id, revision, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s backend pools
+     * @param {number} gatewayId 
+     * @param {number} [page] A page number within the paginated result set.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPoolsList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPoolsList(gatewayId, page, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Change a pool; health_check takes the fields to change. Every listener and route on it must still fit.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {PatchedGatewayBackendPoolWriteRequest} [patchedGatewayBackendPoolWriteRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPoolsPartialUpdate(gatewayId: number, id: number, patchedGatewayBackendPoolWriteRequest?: PatchedGatewayBackendPoolWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPoolsPartialUpdate(gatewayId, id, patchedGatewayBackendPoolWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s backend pools
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPoolsRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPoolsRetrieve(gatewayId, id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Add a port forward (spec 6.7); it is pending until the agent applies its revision.
+     * @param {number} gatewayId 
+     * @param {GatewayForwardWriteRequest} gatewayForwardWriteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPortForwardsCreate(gatewayId: number, gatewayForwardWriteRequest: GatewayForwardWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPortForwardsCreate(gatewayId, gatewayForwardWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Delete a forward (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {number} [revision] The gateway\&#39;s desired revision from the preview; without it, a preview.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPortForwardsDestroy(gatewayId: number, id: number, revision?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPortForwardsDestroy(gatewayId, id, revision, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s port forwards
+     * @param {number} gatewayId 
+     * @param {number} [page] A page number within the paginated result set.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPortForwardsList(gatewayId: number, page?: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPortForwardsList(gatewayId, page, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Change a forward\'s fields; public_ports and target are each replaced whole.
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {PatchedGatewayForwardWriteRequest} [patchedGatewayForwardWriteRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPortForwardsPartialUpdate(gatewayId: number, id: number, patchedGatewayForwardWriteRequest?: PatchedGatewayForwardWriteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPortForwardsPartialUpdate(gatewayId, id, patchedGatewayForwardWriteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * A gateway\'s port forwards
+     * @param {number} gatewayId 
+     * @param {number} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysPortForwardsRetrieve(gatewayId: number, id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysPortForwardsRetrieve(gatewayId, id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Re-enroll the gateway (spec 8.1 step 6): its agent token is revoked and it restarts to enroll again. Without the preview\'s revision, networks and servers, 409 with a fresh preview.
+     * @param {string} id 
+     * @param {GatewayReenrollRequest} [gatewayReenrollRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysReenrollCreate(id: string, gatewayReenrollRequest?: GatewayReenrollRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysReenrollCreate(id, gatewayReenrollRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Manage gateways
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysRetrieve(id: string, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysRetrieve(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * The gateway\'s state and the customer part of its agent\'s last report (spec 9.5).
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudGatewaysStatusRetrieve(id: string, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudGatewaysStatusRetrieve(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
      * @summary List hardware generations
      * @param {*} [options] Override http request option.
@@ -14366,6 +19201,17 @@ export class CloudApi extends BaseAPI {
     }
 
     /**
+     * Re-render the named servers\' routes and reboot them (spec 6.3); naming a server acknowledges its reboot.
+     * @param {number} id 
+     * @param {ApplyRouteRequest} applyRouteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudPrivateNetworksApplyRouteCreate(id: number, applyRouteRequest: ApplyRouteRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudPrivateNetworksApplyRouteCreate(id, applyRouteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * Manage private networks
      * @param {PrivateNetworkRequest} privateNetworkRequest 
      * @param {*} [options] Override http request option.
@@ -14425,6 +19271,16 @@ export class CloudApi extends BaseAPI {
      */
     public cloudPrivateNetworksRetrieve(id: number, options?: RawAxiosRequestConfig) {
         return CloudApiFp(this.configuration).cloudPrivateNetworksRetrieve(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Each server\'s default route against the spec 6.2 rule, read from Proxmox, and the network\'s route applies.
+     * @param {number} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudPrivateNetworksRouteStatusRetrieve(id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudPrivateNetworksRouteStatusRetrieve(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -22735,6 +27591,87 @@ export const KubernetesApiAxiosParamCreator = function (configuration?: Configur
             };
         },
         /**
+         * Start a load-balancer replacement now. Traffic through the load balancer stops while it is switched over. Support can roll back for 24 hours after it completes. OAuth access tokens cannot start one.
+         * @param {string} id 
+         * @param {LBReimageRequest} lBReimageRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersLbReimageCreate: async (id: string, lBReimageRequest: LBReimageRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersLbReimageCreate', 'id', id)
+            // verify required parameter 'lBReimageRequest' is not null or undefined
+            assertParamExists('kubernetesClustersLbReimageCreate', 'lBReimageRequest', lBReimageRequest)
+            const localVarPath = `/api/kubernetes/clusters/{id}/lb-reimage/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(lBReimageRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Show the latest load-balancer replacement on this cluster and whether one can start now.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersLbReimageRetrieve: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('kubernetesClustersLbReimageRetrieve', 'id', id)
+            const localVarPath = `/api/kubernetes/clusters/{id}/lb-reimage/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
@@ -24972,6 +29909,31 @@ export const KubernetesApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Start a load-balancer replacement now. Traffic through the load balancer stops while it is switched over. Support can roll back for 24 hours after it completes. OAuth access tokens cannot start one.
+         * @param {string} id 
+         * @param {LBReimageRequest} lBReimageRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersLbReimageCreate(id: string, lBReimageRequest: LBReimageRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LBReimageStarted>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersLbReimageCreate(id, lBReimageRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersLbReimageCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Show the latest load-balancer replacement on this cluster and whether one can start now.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async kubernetesClustersLbReimageRetrieve(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LBReimageStatus>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.kubernetesClustersLbReimageRetrieve(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KubernetesApi.kubernetesClustersLbReimageRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
@@ -25812,6 +30774,25 @@ export const KubernetesApiFactory = function (configuration?: Configuration, bas
             return localVarFp.kubernetesClustersLbFirewallUpdate(clusterId, id, lBFirewallRuleRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * Start a load-balancer replacement now. Traffic through the load balancer stops while it is switched over. Support can roll back for 24 hours after it completes. OAuth access tokens cannot start one.
+         * @param {string} id 
+         * @param {LBReimageRequest} lBReimageRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersLbReimageCreate(id: string, lBReimageRequest: LBReimageRequest, options?: RawAxiosRequestConfig): AxiosPromise<LBReimageStarted> {
+            return localVarFp.kubernetesClustersLbReimageCreate(id, lBReimageRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Show the latest load-balancer replacement on this cluster and whether one can start now.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        kubernetesClustersLbReimageRetrieve(id: string, options?: RawAxiosRequestConfig): AxiosPromise<LBReimageStatus> {
+            return localVarFp.kubernetesClustersLbReimageRetrieve(id, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
          * @param {number} [page] A page number within the paginated result set.
          * @param {*} [options] Override http request option.
@@ -26540,6 +31521,27 @@ export class KubernetesApi extends BaseAPI {
      */
     public kubernetesClustersLbFirewallUpdate(clusterId: number, id: string, lBFirewallRuleRequest?: LBFirewallRuleRequest, options?: RawAxiosRequestConfig) {
         return KubernetesApiFp(this.configuration).kubernetesClustersLbFirewallUpdate(clusterId, id, lBFirewallRuleRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Start a load-balancer replacement now. Traffic through the load balancer stops while it is switched over. Support can roll back for 24 hours after it completes. OAuth access tokens cannot start one.
+     * @param {string} id 
+     * @param {LBReimageRequest} lBReimageRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersLbReimageCreate(id: string, lBReimageRequest: LBReimageRequest, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersLbReimageCreate(id, lBReimageRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Show the latest load-balancer replacement on this cluster and whether one can start now.
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public kubernetesClustersLbReimageRetrieve(id: string, options?: RawAxiosRequestConfig) {
+        return KubernetesApiFp(this.configuration).kubernetesClustersLbReimageRetrieve(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

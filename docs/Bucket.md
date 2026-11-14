@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **billing** | [**ResourceBilling**](ResourceBilling.md) |  | [readonly] [default to undefined]
 **id** | **number** |  | [readonly] [default to undefined]
 **name** | **string** |  | [readonly] [default to undefined]
-**full_name** | **string** |  | [readonly] [default to undefined]
+**full_name** | **string** |  | [readonly] [default to '']
 **quota_gb** | **number** |  | [readonly] [default to undefined]
 **used_bytes** | **number** |  | [readonly] [default to undefined]
 **object_count** | **number** |  | [readonly] [default to undefined]

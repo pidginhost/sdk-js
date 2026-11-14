@@ -42,6 +42,51 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**cloudFloatingIpv6RdnsRetrieve**](#cloudfloatingipv6rdnsretrieve) | **GET** /api/cloud/floating-ipv6/{id}/rdns/ | |
 |[**cloudFloatingIpv6Retrieve**](#cloudfloatingipv6retrieve) | **GET** /api/cloud/floating-ipv6/{id}/ | |
 |[**cloudFloatingIpv6UnauthorizeCreate**](#cloudfloatingipv6unauthorizecreate) | **POST** /api/cloud/floating-ipv6/{id}/unauthorize/ | |
+|[**cloudGatewaysCreate**](#cloudgatewayscreate) | **POST** /api/cloud/gateways/ | |
+|[**cloudGatewaysDestroy**](#cloudgatewaysdestroy) | **DELETE** /api/cloud/gateways/{id}/ | |
+|[**cloudGatewaysFirewallRulesCreate**](#cloudgatewaysfirewallrulescreate) | **POST** /api/cloud/gateways/{gateway_id}/firewall-rules/ | |
+|[**cloudGatewaysFirewallRulesDestroy**](#cloudgatewaysfirewallrulesdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/firewall-rules/{id}/ | |
+|[**cloudGatewaysFirewallRulesList**](#cloudgatewaysfirewallruleslist) | **GET** /api/cloud/gateways/{gateway_id}/firewall-rules/ | |
+|[**cloudGatewaysFirewallRulesMoveCreate**](#cloudgatewaysfirewallrulesmovecreate) | **POST** /api/cloud/gateways/{gateway_id}/firewall-rules/{id}/move/ | |
+|[**cloudGatewaysFirewallRulesPartialUpdate**](#cloudgatewaysfirewallrulespartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/firewall-rules/{id}/ | |
+|[**cloudGatewaysFirewallRulesRetrieve**](#cloudgatewaysfirewallrulesretrieve) | **GET** /api/cloud/gateways/{gateway_id}/firewall-rules/{id}/ | |
+|[**cloudGatewaysList**](#cloudgatewayslist) | **GET** /api/cloud/gateways/ | |
+|[**cloudGatewaysListenersCreate**](#cloudgatewayslistenerscreate) | **POST** /api/cloud/gateways/{gateway_id}/listeners/ | |
+|[**cloudGatewaysListenersDestroy**](#cloudgatewayslistenersdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/listeners/{id}/ | |
+|[**cloudGatewaysListenersList**](#cloudgatewayslistenerslist) | **GET** /api/cloud/gateways/{gateway_id}/listeners/ | |
+|[**cloudGatewaysListenersPartialUpdate**](#cloudgatewayslistenerspartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/listeners/{id}/ | |
+|[**cloudGatewaysListenersRetrieve**](#cloudgatewayslistenersretrieve) | **GET** /api/cloud/gateways/{gateway_id}/listeners/{id}/ | |
+|[**cloudGatewaysListenersRoutesCreate**](#cloudgatewayslistenersroutescreate) | **POST** /api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/ | |
+|[**cloudGatewaysListenersRoutesDestroy**](#cloudgatewayslistenersroutesdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/{id}/ | |
+|[**cloudGatewaysListenersRoutesList**](#cloudgatewayslistenersrouteslist) | **GET** /api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/ | |
+|[**cloudGatewaysListenersRoutesPartialUpdate**](#cloudgatewayslistenersroutespartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/{id}/ | |
+|[**cloudGatewaysListenersRoutesRetrieve**](#cloudgatewayslistenersroutesretrieve) | **GET** /api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/{id}/ | |
+|[**cloudGatewaysNetworksCreate**](#cloudgatewaysnetworkscreate) | **POST** /api/cloud/gateways/{gateway_id}/networks/ | |
+|[**cloudGatewaysNetworksDestroy**](#cloudgatewaysnetworksdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/networks/{network_id}/ | |
+|[**cloudGatewaysNetworksList**](#cloudgatewaysnetworkslist) | **GET** /api/cloud/gateways/{gateway_id}/networks/ | |
+|[**cloudGatewaysNetworksPartialUpdate**](#cloudgatewaysnetworkspartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/networks/{network_id}/ | |
+|[**cloudGatewaysNetworksRetrieve**](#cloudgatewaysnetworksretrieve) | **GET** /api/cloud/gateways/{gateway_id}/networks/{network_id}/ | |
+|[**cloudGatewaysOperationsList**](#cloudgatewaysoperationslist) | **GET** /api/cloud/gateways/{gateway_id}/operations/ | |
+|[**cloudGatewaysOperationsRetrieve**](#cloudgatewaysoperationsretrieve) | **GET** /api/cloud/gateways/{gateway_id}/operations/{id}/ | |
+|[**cloudGatewaysPartialUpdate**](#cloudgatewayspartialupdate) | **PATCH** /api/cloud/gateways/{id}/ | |
+|[**cloudGatewaysPoolsBackendsCreate**](#cloudgatewayspoolsbackendscreate) | **POST** /api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/ | |
+|[**cloudGatewaysPoolsBackendsDestroy**](#cloudgatewayspoolsbackendsdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/{id}/ | |
+|[**cloudGatewaysPoolsBackendsList**](#cloudgatewayspoolsbackendslist) | **GET** /api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/ | |
+|[**cloudGatewaysPoolsBackendsPartialUpdate**](#cloudgatewayspoolsbackendspartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/{id}/ | |
+|[**cloudGatewaysPoolsBackendsRetrieve**](#cloudgatewayspoolsbackendsretrieve) | **GET** /api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/{id}/ | |
+|[**cloudGatewaysPoolsCreate**](#cloudgatewayspoolscreate) | **POST** /api/cloud/gateways/{gateway_id}/pools/ | |
+|[**cloudGatewaysPoolsDestroy**](#cloudgatewayspoolsdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/pools/{id}/ | |
+|[**cloudGatewaysPoolsList**](#cloudgatewayspoolslist) | **GET** /api/cloud/gateways/{gateway_id}/pools/ | |
+|[**cloudGatewaysPoolsPartialUpdate**](#cloudgatewayspoolspartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/pools/{id}/ | |
+|[**cloudGatewaysPoolsRetrieve**](#cloudgatewayspoolsretrieve) | **GET** /api/cloud/gateways/{gateway_id}/pools/{id}/ | |
+|[**cloudGatewaysPortForwardsCreate**](#cloudgatewaysportforwardscreate) | **POST** /api/cloud/gateways/{gateway_id}/port-forwards/ | |
+|[**cloudGatewaysPortForwardsDestroy**](#cloudgatewaysportforwardsdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/port-forwards/{id}/ | |
+|[**cloudGatewaysPortForwardsList**](#cloudgatewaysportforwardslist) | **GET** /api/cloud/gateways/{gateway_id}/port-forwards/ | |
+|[**cloudGatewaysPortForwardsPartialUpdate**](#cloudgatewaysportforwardspartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/port-forwards/{id}/ | |
+|[**cloudGatewaysPortForwardsRetrieve**](#cloudgatewaysportforwardsretrieve) | **GET** /api/cloud/gateways/{gateway_id}/port-forwards/{id}/ | |
+|[**cloudGatewaysReenrollCreate**](#cloudgatewaysreenrollcreate) | **POST** /api/cloud/gateways/{id}/reenroll/ | |
+|[**cloudGatewaysRetrieve**](#cloudgatewaysretrieve) | **GET** /api/cloud/gateways/{id}/ | |
+|[**cloudGatewaysStatusRetrieve**](#cloudgatewaysstatusretrieve) | **GET** /api/cloud/gateways/{id}/status/ | |
 |[**cloudGenerationsList**](#cloudgenerationslist) | **GET** /api/cloud/generations/ | List hardware generations|
 |[**cloudGenerationsRetrieve**](#cloudgenerationsretrieve) | **GET** /api/cloud/generations/{slug}/ | |
 |[**cloudImagesList**](#cloudimageslist) | **GET** /api/cloud/images/ | |
@@ -61,12 +106,14 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**cloudIpv6RdnsRetrieve**](#cloudipv6rdnsretrieve) | **GET** /api/cloud/ipv6/{id}/rdns/ | |
 |[**cloudIpv6Retrieve**](#cloudipv6retrieve) | **GET** /api/cloud/ipv6/{id}/ | |
 |[**cloudPrivateNetworksAddServerCreate**](#cloudprivatenetworksaddservercreate) | **POST** /api/cloud/private-networks/{id}/add-server/ | |
+|[**cloudPrivateNetworksApplyRouteCreate**](#cloudprivatenetworksapplyroutecreate) | **POST** /api/cloud/private-networks/{id}/apply-route/ | |
 |[**cloudPrivateNetworksCreate**](#cloudprivatenetworkscreate) | **POST** /api/cloud/private-networks/ | |
 |[**cloudPrivateNetworksDestroy**](#cloudprivatenetworksdestroy) | **DELETE** /api/cloud/private-networks/{id}/ | |
 |[**cloudPrivateNetworksList**](#cloudprivatenetworkslist) | **GET** /api/cloud/private-networks/ | |
 |[**cloudPrivateNetworksPartialUpdate**](#cloudprivatenetworkspartialupdate) | **PATCH** /api/cloud/private-networks/{id}/ | |
 |[**cloudPrivateNetworksRemoveServerCreate**](#cloudprivatenetworksremoveservercreate) | **POST** /api/cloud/private-networks/{id}/remove-server/ | |
 |[**cloudPrivateNetworksRetrieve**](#cloudprivatenetworksretrieve) | **GET** /api/cloud/private-networks/{id}/ | |
+|[**cloudPrivateNetworksRouteStatusRetrieve**](#cloudprivatenetworksroutestatusretrieve) | **GET** /api/cloud/private-networks/{id}/route-status/ | |
 |[**cloudPrivateNetworksUpdate**](#cloudprivatenetworksupdate) | **PUT** /api/cloud/private-networks/{id}/ | |
 |[**cloudServerPackagesByGenerationRetrieve**](#cloudserverpackagesbygenerationretrieve) | **GET** /api/cloud/server-packages/by-generation/ | |
 |[**cloudServerPackagesList**](#cloudserverpackageslist) | **GET** /api/cloud/server-packages/ | |
@@ -2114,6 +2161,2560 @@ const { status, data } = await apiInstance.cloudFloatingIpv6UnauthorizeCreate(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **cloudGatewaysCreate**
+> Gateway cloudGatewaysCreate(gatewayCreateRequest)
+
+Reserve a gateway and queue its provisioning (spec 11.1); its state shows the progress.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    GatewayCreateRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayCreateRequest: GatewayCreateRequest; //
+
+const { status, data } = await apiInstance.cloudGatewaysCreate(
+    gatewayCreateRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayCreateRequest** | **GatewayCreateRequest**|  | |
+
+
+### Return type
+
+**Gateway**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysDestroy**
+> GatewayOperation cloudGatewaysDestroy()
+
+Delete the gateway (spec 11.5): its VM is destroyed, then its networks and IPv4 are released. Without the preview\'s revision, networks and servers, 409 with a fresh preview.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let id: string; // (default to undefined)
+let networks: Array<number>; //The preview\'s network ids. (optional) (default to undefined)
+let revision: number; //The gateway\'s desired revision from the preview; without it, a preview. (optional) (default to undefined)
+let servers: Array<number>; //The preview\'s server ids. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysDestroy(
+    id,
+    networks,
+    revision,
+    servers
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+| **networks** | **Array&lt;number&gt;** | The preview\&#39;s network ids. | (optional) defaults to undefined|
+| **revision** | [**number**] | The gateway\&#39;s desired revision from the preview; without it, a preview. | (optional) defaults to undefined|
+| **servers** | **Array&lt;number&gt;** | The preview\&#39;s server ids. | (optional) defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysFirewallRulesCreate**
+> GatewayFirewallRule cloudGatewaysFirewallRulesCreate(gatewayFirewallRuleWriteRequest)
+
+Add a rule after the last one (spec 5.7); it is pending until the agent applies its revision.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    GatewayFirewallRuleWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let gatewayFirewallRuleWriteRequest: GatewayFirewallRuleWriteRequest; //
+
+const { status, data } = await apiInstance.cloudGatewaysFirewallRulesCreate(
+    gatewayId,
+    gatewayFirewallRuleWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayFirewallRuleWriteRequest** | **GatewayFirewallRuleWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayFirewallRule**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysFirewallRulesDestroy**
+> GatewayOperation cloudGatewaysFirewallRulesDestroy()
+
+Delete a rule (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let revision: number; //The gateway\'s desired revision from the preview; without it, a preview. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysFirewallRulesDestroy(
+    gatewayId,
+    id,
+    revision
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+| **revision** | [**number**] | The gateway\&#39;s desired revision from the preview; without it, a preview. | (optional) defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysFirewallRulesList**
+> PaginatedGatewayFirewallRuleList cloudGatewaysFirewallRulesList()
+
+A gateway\'s firewall rules, in evaluation order
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysFirewallRulesList(
+    gatewayId,
+    page
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+
+
+### Return type
+
+**PaginatedGatewayFirewallRuleList**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysFirewallRulesMoveCreate**
+> GatewayFirewallRule cloudGatewaysFirewallRulesMoveCreate(gatewayFirewallMoveRequest)
+
+Move a rule to a position, the others keeping their order. Without the preview\'s revision, 409 with a fresh one.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    GatewayFirewallMoveRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let gatewayFirewallMoveRequest: GatewayFirewallMoveRequest; //
+let revision: number; //The gateway\'s desired revision from the preview; without it, a preview. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysFirewallRulesMoveCreate(
+    gatewayId,
+    id,
+    gatewayFirewallMoveRequest,
+    revision
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayFirewallMoveRequest** | **GatewayFirewallMoveRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+| **revision** | [**number**] | The gateway\&#39;s desired revision from the preview; without it, a preview. | (optional) defaults to undefined|
+
+
+### Return type
+
+**GatewayFirewallRule**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysFirewallRulesPartialUpdate**
+> GatewayFirewallRule cloudGatewaysFirewallRulesPartialUpdate()
+
+Change a rule\'s fields; a source or destination is replaced whole. Its position stays.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    PatchedGatewayFirewallRuleWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let patchedGatewayFirewallRuleWriteRequest: PatchedGatewayFirewallRuleWriteRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysFirewallRulesPartialUpdate(
+    gatewayId,
+    id,
+    patchedGatewayFirewallRuleWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **patchedGatewayFirewallRuleWriteRequest** | **PatchedGatewayFirewallRuleWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayFirewallRule**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysFirewallRulesRetrieve**
+> GatewayFirewallRule cloudGatewaysFirewallRulesRetrieve()
+
+A gateway\'s firewall rules, in evaluation order
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysFirewallRulesRetrieve(
+    gatewayId,
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayFirewallRule**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysList**
+> PaginatedGatewayList cloudGatewaysList()
+
+Manage gateways
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysList(
+    page
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+
+
+### Return type
+
+**PaginatedGatewayList**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysListenersCreate**
+> GatewayLBListener cloudGatewaysListenersCreate()
+
+Add a listener (spec 6.8): tcp and udp name a pool, http takes routes. Pending until applied.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    GatewayLBListenerWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let gatewayLBListenerWriteRequest: GatewayLBListenerWriteRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysListenersCreate(
+    gatewayId,
+    gatewayLBListenerWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayLBListenerWriteRequest** | **GatewayLBListenerWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayLBListener**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysListenersDestroy**
+> GatewayOperation cloudGatewaysListenersDestroy()
+
+Delete a listener and its routes (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let revision: number; //The gateway\'s desired revision from the preview; without it, a preview. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysListenersDestroy(
+    gatewayId,
+    id,
+    revision
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+| **revision** | [**number**] | The gateway\&#39;s desired revision from the preview; without it, a preview. | (optional) defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysListenersList**
+> PaginatedGatewayLBListenerList cloudGatewaysListenersList()
+
+A gateway\'s load balancer listeners
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysListenersList(
+    gatewayId,
+    page
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+
+
+### Return type
+
+**PaginatedGatewayLBListenerList**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysListenersPartialUpdate**
+> GatewayLBListener cloudGatewaysListenersPartialUpdate()
+
+Change a listener\'s pool, sources, comment or enabled flag; protocol, port and mode are fixed.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    PatchedGatewayLBListenerWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let patchedGatewayLBListenerWriteRequest: PatchedGatewayLBListenerWriteRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysListenersPartialUpdate(
+    gatewayId,
+    id,
+    patchedGatewayLBListenerWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **patchedGatewayLBListenerWriteRequest** | **PatchedGatewayLBListenerWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayLBListener**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysListenersRetrieve**
+> GatewayLBListener cloudGatewaysListenersRetrieve()
+
+A gateway\'s load balancer listeners
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysListenersRetrieve(
+    gatewayId,
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayLBListener**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysListenersRoutesCreate**
+> GatewayRoute cloudGatewaysListenersRoutesCreate()
+
+Add a route (spec 5.6): hostnames and a path prefix to a pool. Pending until applied.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    GatewayRouteWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let listenerId: number; // (default to undefined)
+let gatewayRouteWriteRequest: GatewayRouteWriteRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysListenersRoutesCreate(
+    gatewayId,
+    listenerId,
+    gatewayRouteWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayRouteWriteRequest** | **GatewayRouteWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **listenerId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayRoute**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysListenersRoutesDestroy**
+> GatewayOperation cloudGatewaysListenersRoutesDestroy()
+
+Delete a route (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let listenerId: number; // (default to undefined)
+let revision: number; //The gateway\'s desired revision from the preview; without it, a preview. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysListenersRoutesDestroy(
+    gatewayId,
+    id,
+    listenerId,
+    revision
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+| **listenerId** | [**number**] |  | defaults to undefined|
+| **revision** | [**number**] | The gateway\&#39;s desired revision from the preview; without it, a preview. | (optional) defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysListenersRoutesList**
+> PaginatedGatewayRouteList cloudGatewaysListenersRoutesList()
+
+An http listener\'s routes
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let listenerId: number; // (default to undefined)
+let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysListenersRoutesList(
+    gatewayId,
+    listenerId,
+    page
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **listenerId** | [**number**] |  | defaults to undefined|
+| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+
+
+### Return type
+
+**PaginatedGatewayRouteList**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysListenersRoutesPartialUpdate**
+> GatewayRoute cloudGatewaysListenersRoutesPartialUpdate()
+
+Change a route; hostnames are replaced whole.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    PatchedGatewayRouteWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let listenerId: number; // (default to undefined)
+let patchedGatewayRouteWriteRequest: PatchedGatewayRouteWriteRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysListenersRoutesPartialUpdate(
+    gatewayId,
+    id,
+    listenerId,
+    patchedGatewayRouteWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **patchedGatewayRouteWriteRequest** | **PatchedGatewayRouteWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+| **listenerId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayRoute**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysListenersRoutesRetrieve**
+> GatewayRoute cloudGatewaysListenersRoutesRetrieve()
+
+An http listener\'s routes
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let listenerId: number; // (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysListenersRoutesRetrieve(
+    gatewayId,
+    id,
+    listenerId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+| **listenerId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayRoute**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysNetworksCreate**
+> GatewayOperation cloudGatewaysNetworksCreate(gatewayNetworkCreateRequest)
+
+Attach a network (spec 11.3): the operation reserves it and hotplugs the gateway\'s NIC.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    GatewayNetworkCreateRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let gatewayNetworkCreateRequest: GatewayNetworkCreateRequest; //
+
+const { status, data } = await apiInstance.cloudGatewaysNetworksCreate(
+    gatewayId,
+    gatewayNetworkCreateRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayNetworkCreateRequest** | **GatewayNetworkCreateRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysNetworksDestroy**
+> GatewayOperation cloudGatewaysNetworksDestroy()
+
+Detach a network (spec 11.3). Without the preview\'s revision and servers, 409 with a fresh preview.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let networkId: number; // (default to undefined)
+let revision: number; //The gateway\'s desired revision from the preview; without it, a preview. (optional) (default to undefined)
+let servers: Array<number>; //The preview\'s server ids. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysNetworksDestroy(
+    gatewayId,
+    networkId,
+    revision,
+    servers
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **networkId** | [**number**] |  | defaults to undefined|
+| **revision** | [**number**] | The gateway\&#39;s desired revision from the preview; without it, a preview. | (optional) defaults to undefined|
+| **servers** | **Array&lt;number&gt;** | The preview\&#39;s server ids. | (optional) defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysNetworksList**
+> PaginatedGatewayNetworkList cloudGatewaysNetworksList()
+
+A gateway\'s private networks, by network id
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysNetworksList(
+    gatewayId,
+    page
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+
+
+### Return type
+
+**PaginatedGatewayNetworkList**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysNetworksPartialUpdate**
+> GatewayNetwork cloudGatewaysNetworksPartialUpdate()
+
+Switch a router network\'s SNAT (spec 6.4). Turning it off without the preview\'s revision and servers answers 409 with a fresh preview; the change is pending until the agent applies it.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    PatchedGatewayNetworkUpdateRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let networkId: number; // (default to undefined)
+let revision: number; //The gateway\'s desired revision from the preview; without it, a preview. (optional) (default to undefined)
+let servers: Array<number>; //The preview\'s server ids. (optional) (default to undefined)
+let patchedGatewayNetworkUpdateRequest: PatchedGatewayNetworkUpdateRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysNetworksPartialUpdate(
+    gatewayId,
+    networkId,
+    revision,
+    servers,
+    patchedGatewayNetworkUpdateRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **patchedGatewayNetworkUpdateRequest** | **PatchedGatewayNetworkUpdateRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **networkId** | [**number**] |  | defaults to undefined|
+| **revision** | [**number**] | The gateway\&#39;s desired revision from the preview; without it, a preview. | (optional) defaults to undefined|
+| **servers** | **Array&lt;number&gt;** | The preview\&#39;s server ids. | (optional) defaults to undefined|
+
+
+### Return type
+
+**GatewayNetwork**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysNetworksRetrieve**
+> GatewayNetwork cloudGatewaysNetworksRetrieve()
+
+A gateway\'s private networks, by network id
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let networkId: number; // (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysNetworksRetrieve(
+    gatewayId,
+    networkId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **networkId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayNetwork**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysOperationsList**
+> PaginatedGatewayOperationList cloudGatewaysOperationsList()
+
+A gateway\'s operations, newest first
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysOperationsList(
+    gatewayId,
+    page
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+
+
+### Return type
+
+**PaginatedGatewayOperationList**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysOperationsRetrieve**
+> GatewayOperation cloudGatewaysOperationsRetrieve()
+
+A gateway\'s operations, newest first
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysOperationsRetrieve(
+    gatewayId,
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPartialUpdate**
+> Gateway cloudGatewaysPartialUpdate()
+
+Rename the gateway or change its maintenance window. The name is not compiled, so no revision follows; a new window reaches the agent in a new revision (spec 11.4).
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    PatchedGatewayUpdateRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let id: string; // (default to undefined)
+let patchedGatewayUpdateRequest: PatchedGatewayUpdateRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysPartialUpdate(
+    id,
+    patchedGatewayUpdateRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **patchedGatewayUpdateRequest** | **PatchedGatewayUpdateRequest**|  | |
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**Gateway**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPoolsBackendsCreate**
+> GatewayBackend cloudGatewaysPoolsBackendsCreate()
+
+Add a server to the pool (spec 5.5); it is pending until the agent applies its revision.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    GatewayBackendWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let poolId: number; // (default to undefined)
+let gatewayBackendWriteRequest: GatewayBackendWriteRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysPoolsBackendsCreate(
+    gatewayId,
+    poolId,
+    gatewayBackendWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayBackendWriteRequest** | **GatewayBackendWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **poolId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayBackend**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPoolsBackendsDestroy**
+> GatewayOperation cloudGatewaysPoolsBackendsDestroy()
+
+Remove a server (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let poolId: number; // (default to undefined)
+let revision: number; //The gateway\'s desired revision from the preview; without it, a preview. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysPoolsBackendsDestroy(
+    gatewayId,
+    id,
+    poolId,
+    revision
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+| **poolId** | [**number**] |  | defaults to undefined|
+| **revision** | [**number**] | The gateway\&#39;s desired revision from the preview; without it, a preview. | (optional) defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPoolsBackendsList**
+> PaginatedGatewayBackendList cloudGatewaysPoolsBackendsList()
+
+A backend pool\'s servers
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let poolId: number; // (default to undefined)
+let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysPoolsBackendsList(
+    gatewayId,
+    poolId,
+    page
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **poolId** | [**number**] |  | defaults to undefined|
+| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+
+
+### Return type
+
+**PaginatedGatewayBackendList**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPoolsBackendsPartialUpdate**
+> GatewayBackend cloudGatewaysPoolsBackendsPartialUpdate()
+
+Change a server. The last enabled server of a pool in use cannot be disabled.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    PatchedGatewayBackendWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let poolId: number; // (default to undefined)
+let patchedGatewayBackendWriteRequest: PatchedGatewayBackendWriteRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysPoolsBackendsPartialUpdate(
+    gatewayId,
+    id,
+    poolId,
+    patchedGatewayBackendWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **patchedGatewayBackendWriteRequest** | **PatchedGatewayBackendWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+| **poolId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayBackend**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPoolsBackendsRetrieve**
+> GatewayBackend cloudGatewaysPoolsBackendsRetrieve()
+
+A backend pool\'s servers
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let poolId: number; // (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysPoolsBackendsRetrieve(
+    gatewayId,
+    id,
+    poolId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+| **poolId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayBackend**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPoolsCreate**
+> GatewayBackendPool cloudGatewaysPoolsCreate()
+
+Add a backend pool (spec 5.5); it is pending until the agent applies its revision.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    GatewayBackendPoolWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let gatewayBackendPoolWriteRequest: GatewayBackendPoolWriteRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysPoolsCreate(
+    gatewayId,
+    gatewayBackendPoolWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayBackendPoolWriteRequest** | **GatewayBackendPoolWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayBackendPool**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPoolsDestroy**
+> GatewayOperation cloudGatewaysPoolsDestroy()
+
+Delete an unused pool and its servers (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let revision: number; //The gateway\'s desired revision from the preview; without it, a preview. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysPoolsDestroy(
+    gatewayId,
+    id,
+    revision
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+| **revision** | [**number**] | The gateway\&#39;s desired revision from the preview; without it, a preview. | (optional) defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPoolsList**
+> PaginatedGatewayBackendPoolList cloudGatewaysPoolsList()
+
+A gateway\'s backend pools
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysPoolsList(
+    gatewayId,
+    page
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+
+
+### Return type
+
+**PaginatedGatewayBackendPoolList**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPoolsPartialUpdate**
+> GatewayBackendPool cloudGatewaysPoolsPartialUpdate()
+
+Change a pool; health_check takes the fields to change. Every listener and route on it must still fit.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    PatchedGatewayBackendPoolWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let patchedGatewayBackendPoolWriteRequest: PatchedGatewayBackendPoolWriteRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysPoolsPartialUpdate(
+    gatewayId,
+    id,
+    patchedGatewayBackendPoolWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **patchedGatewayBackendPoolWriteRequest** | **PatchedGatewayBackendPoolWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayBackendPool**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPoolsRetrieve**
+> GatewayBackendPool cloudGatewaysPoolsRetrieve()
+
+A gateway\'s backend pools
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysPoolsRetrieve(
+    gatewayId,
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayBackendPool**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPortForwardsCreate**
+> GatewayForward cloudGatewaysPortForwardsCreate(gatewayForwardWriteRequest)
+
+Add a port forward (spec 6.7); it is pending until the agent applies its revision.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    GatewayForwardWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let gatewayForwardWriteRequest: GatewayForwardWriteRequest; //
+
+const { status, data } = await apiInstance.cloudGatewaysPortForwardsCreate(
+    gatewayId,
+    gatewayForwardWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayForwardWriteRequest** | **GatewayForwardWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayForward**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPortForwardsDestroy**
+> GatewayOperation cloudGatewaysPortForwardsDestroy()
+
+Delete a forward (spec 5.11): 202 with the record the agent\'s acknowledgement completes. Without the preview\'s revision, 409 with a fresh one.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let revision: number; //The gateway\'s desired revision from the preview; without it, a preview. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysPortForwardsDestroy(
+    gatewayId,
+    id,
+    revision
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+| **revision** | [**number**] | The gateway\&#39;s desired revision from the preview; without it, a preview. | (optional) defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPortForwardsList**
+> PaginatedGatewayForwardList cloudGatewaysPortForwardsList()
+
+A gateway\'s port forwards
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let page: number; //A page number within the paginated result set. (optional) (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysPortForwardsList(
+    gatewayId,
+    page
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **page** | [**number**] | A page number within the paginated result set. | (optional) defaults to undefined|
+
+
+### Return type
+
+**PaginatedGatewayForwardList**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPortForwardsPartialUpdate**
+> GatewayForward cloudGatewaysPortForwardsPartialUpdate()
+
+Change a forward\'s fields; public_ports and target are each replaced whole.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    PatchedGatewayForwardWriteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+let patchedGatewayForwardWriteRequest: PatchedGatewayForwardWriteRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysPortForwardsPartialUpdate(
+    gatewayId,
+    id,
+    patchedGatewayForwardWriteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **patchedGatewayForwardWriteRequest** | **PatchedGatewayForwardWriteRequest**|  | |
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayForward**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysPortForwardsRetrieve**
+> GatewayForward cloudGatewaysPortForwardsRetrieve()
+
+A gateway\'s port forwards
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let gatewayId: number; // (default to undefined)
+let id: number; // (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysPortForwardsRetrieve(
+    gatewayId,
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayId** | [**number**] |  | defaults to undefined|
+| **id** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayForward**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysReenrollCreate**
+> GatewayOperation cloudGatewaysReenrollCreate()
+
+Re-enroll the gateway (spec 8.1 step 6): its agent token is revoked and it restarts to enroll again. Without the preview\'s revision, networks and servers, 409 with a fresh preview.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    GatewayReenrollRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let id: string; // (default to undefined)
+let gatewayReenrollRequest: GatewayReenrollRequest; // (optional)
+
+const { status, data } = await apiInstance.cloudGatewaysReenrollCreate(
+    id,
+    gatewayReenrollRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **gatewayReenrollRequest** | **GatewayReenrollRequest**|  | |
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysRetrieve**
+> Gateway cloudGatewaysRetrieve()
+
+Manage gateways
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysRetrieve(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**Gateway**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudGatewaysStatusRetrieve**
+> GatewayStatus cloudGatewaysStatusRetrieve()
+
+The gateway\'s state and the customer part of its agent\'s last report (spec 9.5).
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.cloudGatewaysStatusRetrieve(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayStatus**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **cloudGenerationsList**
 > Array<HardwareGeneration> cloudGenerationsList()
 
@@ -3074,6 +5675,62 @@ const { status, data } = await apiInstance.cloudPrivateNetworksAddServerCreate(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **cloudPrivateNetworksApplyRouteCreate**
+> GatewayOperation cloudPrivateNetworksApplyRouteCreate(applyRouteRequest)
+
+Re-render the named servers\' routes and reboot them (spec 6.3); naming a server acknowledges its reboot.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    ApplyRouteRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let id: number; // (default to undefined)
+let applyRouteRequest: ApplyRouteRequest; //
+
+const { status, data } = await apiInstance.cloudPrivateNetworksApplyRouteCreate(
+    id,
+    applyRouteRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **applyRouteRequest** | **ApplyRouteRequest**|  | |
+| **id** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**GatewayOperation**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** |  |  * Location - The cluster\&#39;s encryption status resource, to poll for the outcome. <br>  |
+|**409** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **cloudPrivateNetworksCreate**
 > PrivateNetwork cloudPrivateNetworksCreate(privateNetworkRequest)
 
@@ -3371,6 +6028,57 @@ const { status, data } = await apiInstance.cloudPrivateNetworksRetrieve(
 ### Return type
 
 **PrivateNetwork**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudPrivateNetworksRouteStatusRetrieve**
+> RouteStatus cloudPrivateNetworksRouteStatusRetrieve()
+
+Each server\'s default route against the spec 6.2 rule, read from Proxmox, and the network\'s route applies.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let id: number; // (default to undefined)
+
+const { status, data } = await apiInstance.cloudPrivateNetworksRouteStatusRetrieve(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+**RouteStatus**
 
 ### Authorization
 

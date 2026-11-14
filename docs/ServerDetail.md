@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **billing** | [**ResourceBilling**](ResourceBilling.md) |  | [readonly] [default to undefined]
 **id** | **number** |  | [readonly] [default to undefined]
-**hostname** | **string** |  | [readonly] [default to undefined]
+**hostname** | **string** | Renaming also moves reverse DNS still on the old name. The server takes the new name at its next reboot from the panel or API, which also creates new SSH host keys and resets the login password and SSH keys to the ones saved here. | [optional] [default to undefined]
 **project** | **string** |  | [optional] [default to undefined]
 **image** | **string** |  | [readonly] [default to undefined]
 **_package** | **string** |  | [readonly] [default to undefined]

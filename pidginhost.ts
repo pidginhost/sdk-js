@@ -1,4 +1,4 @@
-import { Configuration, AccountApi, AuthApi, BillingApi, CloudApi, DedicatedApi, DomainApi, FreednsApi, HostingApi, KubernetesApi, SupportApi } from "./index";
+import { Configuration, AccountApi, AuthApi, BillingApi, CloudApi, DedicatedApi, DomainApi, EmailApi, FreednsApi, HostingApi, KubernetesApi, SupportApi } from "./index";
 
 export class PidginHost {
   public account: AccountApi;
@@ -7,6 +7,7 @@ export class PidginHost {
   public cloud: CloudApi;
   public dedicated: DedicatedApi;
   public domain: DomainApi;
+  public email: EmailApi;
   public freedns: FreednsApi;
   public hosting: HostingApi;
   public kubernetes: KubernetesApi;
@@ -24,6 +25,7 @@ export class PidginHost {
     this.cloud = new CloudApi(config);
     this.dedicated = new DedicatedApi(config);
     this.domain = new DomainApi(config);
+    this.email = new EmailApi(config);
     this.freedns = new FreednsApi(config);
     this.hosting = new HostingApi(config);
     this.kubernetes = new KubernetesApi(config);

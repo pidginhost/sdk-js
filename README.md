@@ -1,4 +1,4 @@
-## @pidginhost/sdk@0.16.0
+## @pidginhost/sdk@0.17.0
 
 This generator creates TypeScript/JavaScript client that utilizes [axios](https://github.com/axios/axios). The generated Node module can be used in the following environments:
 
@@ -36,7 +36,7 @@ navigate to the folder of your consuming project and run one of the following co
 _published:_
 
 ```
-npm install @pidginhost/sdk@0.16.0 --save
+npm install @pidginhost/sdk@0.17.0 --save
 ```
 
 _unPublished (not recommended):_
@@ -69,6 +69,7 @@ The `PidginHost` client exposes these API groups:
 - `client.cloud` -- servers, images, volumes, IPs, firewalls, networks
 - `client.dedicated` -- dedicated servers
 - `client.domain` -- domains, registrants, TLDs
+- `client.email` -- email services, sending domains, credentials, suppressions
 - `client.freedns` -- free DNS zones and records
 - `client.hosting` -- web hosting
 - `client.kubernetes` -- clusters, resource pools, routes
@@ -159,6 +160,51 @@ Class | Method | HTTP request | Description
 *CloudApi* | [**cloudFloatingIpv6RdnsRetrieve**](docs/CloudApi.md#cloudfloatingipv6rdnsretrieve) | **GET** /api/cloud/floating-ipv6/{id}/rdns/ | 
 *CloudApi* | [**cloudFloatingIpv6Retrieve**](docs/CloudApi.md#cloudfloatingipv6retrieve) | **GET** /api/cloud/floating-ipv6/{id}/ | 
 *CloudApi* | [**cloudFloatingIpv6UnauthorizeCreate**](docs/CloudApi.md#cloudfloatingipv6unauthorizecreate) | **POST** /api/cloud/floating-ipv6/{id}/unauthorize/ | 
+*CloudApi* | [**cloudGatewaysCreate**](docs/CloudApi.md#cloudgatewayscreate) | **POST** /api/cloud/gateways/ | 
+*CloudApi* | [**cloudGatewaysDestroy**](docs/CloudApi.md#cloudgatewaysdestroy) | **DELETE** /api/cloud/gateways/{id}/ | 
+*CloudApi* | [**cloudGatewaysFirewallRulesCreate**](docs/CloudApi.md#cloudgatewaysfirewallrulescreate) | **POST** /api/cloud/gateways/{gateway_id}/firewall-rules/ | 
+*CloudApi* | [**cloudGatewaysFirewallRulesDestroy**](docs/CloudApi.md#cloudgatewaysfirewallrulesdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/firewall-rules/{id}/ | 
+*CloudApi* | [**cloudGatewaysFirewallRulesList**](docs/CloudApi.md#cloudgatewaysfirewallruleslist) | **GET** /api/cloud/gateways/{gateway_id}/firewall-rules/ | 
+*CloudApi* | [**cloudGatewaysFirewallRulesMoveCreate**](docs/CloudApi.md#cloudgatewaysfirewallrulesmovecreate) | **POST** /api/cloud/gateways/{gateway_id}/firewall-rules/{id}/move/ | 
+*CloudApi* | [**cloudGatewaysFirewallRulesPartialUpdate**](docs/CloudApi.md#cloudgatewaysfirewallrulespartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/firewall-rules/{id}/ | 
+*CloudApi* | [**cloudGatewaysFirewallRulesRetrieve**](docs/CloudApi.md#cloudgatewaysfirewallrulesretrieve) | **GET** /api/cloud/gateways/{gateway_id}/firewall-rules/{id}/ | 
+*CloudApi* | [**cloudGatewaysList**](docs/CloudApi.md#cloudgatewayslist) | **GET** /api/cloud/gateways/ | 
+*CloudApi* | [**cloudGatewaysListenersCreate**](docs/CloudApi.md#cloudgatewayslistenerscreate) | **POST** /api/cloud/gateways/{gateway_id}/listeners/ | 
+*CloudApi* | [**cloudGatewaysListenersDestroy**](docs/CloudApi.md#cloudgatewayslistenersdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/listeners/{id}/ | 
+*CloudApi* | [**cloudGatewaysListenersList**](docs/CloudApi.md#cloudgatewayslistenerslist) | **GET** /api/cloud/gateways/{gateway_id}/listeners/ | 
+*CloudApi* | [**cloudGatewaysListenersPartialUpdate**](docs/CloudApi.md#cloudgatewayslistenerspartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/listeners/{id}/ | 
+*CloudApi* | [**cloudGatewaysListenersRetrieve**](docs/CloudApi.md#cloudgatewayslistenersretrieve) | **GET** /api/cloud/gateways/{gateway_id}/listeners/{id}/ | 
+*CloudApi* | [**cloudGatewaysListenersRoutesCreate**](docs/CloudApi.md#cloudgatewayslistenersroutescreate) | **POST** /api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/ | 
+*CloudApi* | [**cloudGatewaysListenersRoutesDestroy**](docs/CloudApi.md#cloudgatewayslistenersroutesdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/{id}/ | 
+*CloudApi* | [**cloudGatewaysListenersRoutesList**](docs/CloudApi.md#cloudgatewayslistenersrouteslist) | **GET** /api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/ | 
+*CloudApi* | [**cloudGatewaysListenersRoutesPartialUpdate**](docs/CloudApi.md#cloudgatewayslistenersroutespartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/{id}/ | 
+*CloudApi* | [**cloudGatewaysListenersRoutesRetrieve**](docs/CloudApi.md#cloudgatewayslistenersroutesretrieve) | **GET** /api/cloud/gateways/{gateway_id}/listeners/{listener_id}/routes/{id}/ | 
+*CloudApi* | [**cloudGatewaysNetworksCreate**](docs/CloudApi.md#cloudgatewaysnetworkscreate) | **POST** /api/cloud/gateways/{gateway_id}/networks/ | 
+*CloudApi* | [**cloudGatewaysNetworksDestroy**](docs/CloudApi.md#cloudgatewaysnetworksdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/networks/{network_id}/ | 
+*CloudApi* | [**cloudGatewaysNetworksList**](docs/CloudApi.md#cloudgatewaysnetworkslist) | **GET** /api/cloud/gateways/{gateway_id}/networks/ | 
+*CloudApi* | [**cloudGatewaysNetworksPartialUpdate**](docs/CloudApi.md#cloudgatewaysnetworkspartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/networks/{network_id}/ | 
+*CloudApi* | [**cloudGatewaysNetworksRetrieve**](docs/CloudApi.md#cloudgatewaysnetworksretrieve) | **GET** /api/cloud/gateways/{gateway_id}/networks/{network_id}/ | 
+*CloudApi* | [**cloudGatewaysOperationsList**](docs/CloudApi.md#cloudgatewaysoperationslist) | **GET** /api/cloud/gateways/{gateway_id}/operations/ | 
+*CloudApi* | [**cloudGatewaysOperationsRetrieve**](docs/CloudApi.md#cloudgatewaysoperationsretrieve) | **GET** /api/cloud/gateways/{gateway_id}/operations/{id}/ | 
+*CloudApi* | [**cloudGatewaysPartialUpdate**](docs/CloudApi.md#cloudgatewayspartialupdate) | **PATCH** /api/cloud/gateways/{id}/ | 
+*CloudApi* | [**cloudGatewaysPoolsBackendsCreate**](docs/CloudApi.md#cloudgatewayspoolsbackendscreate) | **POST** /api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/ | 
+*CloudApi* | [**cloudGatewaysPoolsBackendsDestroy**](docs/CloudApi.md#cloudgatewayspoolsbackendsdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/{id}/ | 
+*CloudApi* | [**cloudGatewaysPoolsBackendsList**](docs/CloudApi.md#cloudgatewayspoolsbackendslist) | **GET** /api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/ | 
+*CloudApi* | [**cloudGatewaysPoolsBackendsPartialUpdate**](docs/CloudApi.md#cloudgatewayspoolsbackendspartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/{id}/ | 
+*CloudApi* | [**cloudGatewaysPoolsBackendsRetrieve**](docs/CloudApi.md#cloudgatewayspoolsbackendsretrieve) | **GET** /api/cloud/gateways/{gateway_id}/pools/{pool_id}/backends/{id}/ | 
+*CloudApi* | [**cloudGatewaysPoolsCreate**](docs/CloudApi.md#cloudgatewayspoolscreate) | **POST** /api/cloud/gateways/{gateway_id}/pools/ | 
+*CloudApi* | [**cloudGatewaysPoolsDestroy**](docs/CloudApi.md#cloudgatewayspoolsdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/pools/{id}/ | 
+*CloudApi* | [**cloudGatewaysPoolsList**](docs/CloudApi.md#cloudgatewayspoolslist) | **GET** /api/cloud/gateways/{gateway_id}/pools/ | 
+*CloudApi* | [**cloudGatewaysPoolsPartialUpdate**](docs/CloudApi.md#cloudgatewayspoolspartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/pools/{id}/ | 
+*CloudApi* | [**cloudGatewaysPoolsRetrieve**](docs/CloudApi.md#cloudgatewayspoolsretrieve) | **GET** /api/cloud/gateways/{gateway_id}/pools/{id}/ | 
+*CloudApi* | [**cloudGatewaysPortForwardsCreate**](docs/CloudApi.md#cloudgatewaysportforwardscreate) | **POST** /api/cloud/gateways/{gateway_id}/port-forwards/ | 
+*CloudApi* | [**cloudGatewaysPortForwardsDestroy**](docs/CloudApi.md#cloudgatewaysportforwardsdestroy) | **DELETE** /api/cloud/gateways/{gateway_id}/port-forwards/{id}/ | 
+*CloudApi* | [**cloudGatewaysPortForwardsList**](docs/CloudApi.md#cloudgatewaysportforwardslist) | **GET** /api/cloud/gateways/{gateway_id}/port-forwards/ | 
+*CloudApi* | [**cloudGatewaysPortForwardsPartialUpdate**](docs/CloudApi.md#cloudgatewaysportforwardspartialupdate) | **PATCH** /api/cloud/gateways/{gateway_id}/port-forwards/{id}/ | 
+*CloudApi* | [**cloudGatewaysPortForwardsRetrieve**](docs/CloudApi.md#cloudgatewaysportforwardsretrieve) | **GET** /api/cloud/gateways/{gateway_id}/port-forwards/{id}/ | 
+*CloudApi* | [**cloudGatewaysReenrollCreate**](docs/CloudApi.md#cloudgatewaysreenrollcreate) | **POST** /api/cloud/gateways/{id}/reenroll/ | 
+*CloudApi* | [**cloudGatewaysRetrieve**](docs/CloudApi.md#cloudgatewaysretrieve) | **GET** /api/cloud/gateways/{id}/ | 
+*CloudApi* | [**cloudGatewaysStatusRetrieve**](docs/CloudApi.md#cloudgatewaysstatusretrieve) | **GET** /api/cloud/gateways/{id}/status/ | 
 *CloudApi* | [**cloudGenerationsList**](docs/CloudApi.md#cloudgenerationslist) | **GET** /api/cloud/generations/ | List hardware generations
 *CloudApi* | [**cloudGenerationsRetrieve**](docs/CloudApi.md#cloudgenerationsretrieve) | **GET** /api/cloud/generations/{slug}/ | 
 *CloudApi* | [**cloudImagesList**](docs/CloudApi.md#cloudimageslist) | **GET** /api/cloud/images/ | 
@@ -178,12 +224,14 @@ Class | Method | HTTP request | Description
 *CloudApi* | [**cloudIpv6RdnsRetrieve**](docs/CloudApi.md#cloudipv6rdnsretrieve) | **GET** /api/cloud/ipv6/{id}/rdns/ | 
 *CloudApi* | [**cloudIpv6Retrieve**](docs/CloudApi.md#cloudipv6retrieve) | **GET** /api/cloud/ipv6/{id}/ | 
 *CloudApi* | [**cloudPrivateNetworksAddServerCreate**](docs/CloudApi.md#cloudprivatenetworksaddservercreate) | **POST** /api/cloud/private-networks/{id}/add-server/ | 
+*CloudApi* | [**cloudPrivateNetworksApplyRouteCreate**](docs/CloudApi.md#cloudprivatenetworksapplyroutecreate) | **POST** /api/cloud/private-networks/{id}/apply-route/ | 
 *CloudApi* | [**cloudPrivateNetworksCreate**](docs/CloudApi.md#cloudprivatenetworkscreate) | **POST** /api/cloud/private-networks/ | 
 *CloudApi* | [**cloudPrivateNetworksDestroy**](docs/CloudApi.md#cloudprivatenetworksdestroy) | **DELETE** /api/cloud/private-networks/{id}/ | 
 *CloudApi* | [**cloudPrivateNetworksList**](docs/CloudApi.md#cloudprivatenetworkslist) | **GET** /api/cloud/private-networks/ | 
 *CloudApi* | [**cloudPrivateNetworksPartialUpdate**](docs/CloudApi.md#cloudprivatenetworkspartialupdate) | **PATCH** /api/cloud/private-networks/{id}/ | 
 *CloudApi* | [**cloudPrivateNetworksRemoveServerCreate**](docs/CloudApi.md#cloudprivatenetworksremoveservercreate) | **POST** /api/cloud/private-networks/{id}/remove-server/ | 
 *CloudApi* | [**cloudPrivateNetworksRetrieve**](docs/CloudApi.md#cloudprivatenetworksretrieve) | **GET** /api/cloud/private-networks/{id}/ | 
+*CloudApi* | [**cloudPrivateNetworksRouteStatusRetrieve**](docs/CloudApi.md#cloudprivatenetworksroutestatusretrieve) | **GET** /api/cloud/private-networks/{id}/route-status/ | 
 *CloudApi* | [**cloudPrivateNetworksUpdate**](docs/CloudApi.md#cloudprivatenetworksupdate) | **PUT** /api/cloud/private-networks/{id}/ | 
 *CloudApi* | [**cloudServerPackagesByGenerationRetrieve**](docs/CloudApi.md#cloudserverpackagesbygenerationretrieve) | **GET** /api/cloud/server-packages/by-generation/ | 
 *CloudApi* | [**cloudServerPackagesList**](docs/CloudApi.md#cloudserverpackageslist) | **GET** /api/cloud/server-packages/ | 
@@ -348,6 +396,8 @@ Class | Method | HTTP request | Description
 *KubernetesApi* | [**kubernetesClustersLbFirewallPartialUpdate**](docs/KubernetesApi.md#kubernetesclusterslbfirewallpartialupdate) | **PATCH** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersLbFirewallRetrieve**](docs/KubernetesApi.md#kubernetesclusterslbfirewallretrieve) | **GET** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | 
 *KubernetesApi* | [**kubernetesClustersLbFirewallUpdate**](docs/KubernetesApi.md#kubernetesclusterslbfirewallupdate) | **PUT** /api/kubernetes/clusters/{cluster_id}/lb-firewall/{id}/ | 
+*KubernetesApi* | [**kubernetesClustersLbReimageCreate**](docs/KubernetesApi.md#kubernetesclusterslbreimagecreate) | **POST** /api/kubernetes/clusters/{id}/lb-reimage/ | 
+*KubernetesApi* | [**kubernetesClustersLbReimageRetrieve**](docs/KubernetesApi.md#kubernetesclusterslbreimageretrieve) | **GET** /api/kubernetes/clusters/{id}/lb-reimage/ | 
 *KubernetesApi* | [**kubernetesClustersList**](docs/KubernetesApi.md#kubernetesclusterslist) | **GET** /api/kubernetes/clusters/ | 
 *KubernetesApi* | [**kubernetesClustersNodeOperationsCancelCreate**](docs/KubernetesApi.md#kubernetesclustersnodeoperationscancelcreate) | **POST** /api/kubernetes/clusters/{cluster_id}/node-operations/{id}/cancel/ | 
 *KubernetesApi* | [**kubernetesClustersNodeOperationsList**](docs/KubernetesApi.md#kubernetesclustersnodeoperationslist) | **GET** /api/kubernetes/clusters/{cluster_id}/node-operations/ | 
@@ -418,6 +468,7 @@ Class | Method | HTTP request | Description
  - [AddressRequest](docs/AddressRequest.md)
  - [ApiCredential](docs/ApiCredential.md)
  - [ApiCredentialCreated](docs/ApiCredentialCreated.md)
+ - [ApplyRouteRequest](docs/ApplyRouteRequest.md)
  - [AttachIPv4Request](docs/AttachIPv4Request.md)
  - [AttachIPv4Response](docs/AttachIPv4Response.md)
  - [AttachIPv6Request](docs/AttachIPv6Request.md)
@@ -548,6 +599,61 @@ Class | Method | HTTP request | Description
  - [FundsBalanceResponse](docs/FundsBalanceResponse.md)
  - [FundsLog](docs/FundsLog.md)
  - [FwPolicyOutEnum](docs/FwPolicyOutEnum.md)
+ - [Gateway](docs/Gateway.md)
+ - [GatewayApplyError](docs/GatewayApplyError.md)
+ - [GatewayBackend](docs/GatewayBackend.md)
+ - [GatewayBackendHealthEnum](docs/GatewayBackendHealthEnum.md)
+ - [GatewayBackendPool](docs/GatewayBackendPool.md)
+ - [GatewayBackendPoolPolicyEnum](docs/GatewayBackendPoolPolicyEnum.md)
+ - [GatewayBackendPoolWriteRequest](docs/GatewayBackendPoolWriteRequest.md)
+ - [GatewayBackendWriteRequest](docs/GatewayBackendWriteRequest.md)
+ - [GatewayConflict](docs/GatewayConflict.md)
+ - [GatewayConflictExtra](docs/GatewayConflictExtra.md)
+ - [GatewayConntrack](docs/GatewayConntrack.md)
+ - [GatewayCreateRequest](docs/GatewayCreateRequest.md)
+ - [GatewayDeleteConflict](docs/GatewayDeleteConflict.md)
+ - [GatewayDeleteConflictExtra](docs/GatewayDeleteConflictExtra.md)
+ - [GatewayDeletePreview](docs/GatewayDeletePreview.md)
+ - [GatewayEgressProbe](docs/GatewayEgressProbe.md)
+ - [GatewayFirewallDestination](docs/GatewayFirewallDestination.md)
+ - [GatewayFirewallDestinationRequest](docs/GatewayFirewallDestinationRequest.md)
+ - [GatewayFirewallMoveRequest](docs/GatewayFirewallMoveRequest.md)
+ - [GatewayFirewallProtocolEnum](docs/GatewayFirewallProtocolEnum.md)
+ - [GatewayFirewallRule](docs/GatewayFirewallRule.md)
+ - [GatewayFirewallRuleWriteRequest](docs/GatewayFirewallRuleWriteRequest.md)
+ - [GatewayFirewallSource](docs/GatewayFirewallSource.md)
+ - [GatewayFirewallSourceRequest](docs/GatewayFirewallSourceRequest.md)
+ - [GatewayForward](docs/GatewayForward.md)
+ - [GatewayForwardProtocolEnum](docs/GatewayForwardProtocolEnum.md)
+ - [GatewayForwardTarget](docs/GatewayForwardTarget.md)
+ - [GatewayForwardTargetRequest](docs/GatewayForwardTargetRequest.md)
+ - [GatewayForwardWriteRequest](docs/GatewayForwardWriteRequest.md)
+ - [GatewayHealthCheck](docs/GatewayHealthCheck.md)
+ - [GatewayHealthCheckTypeEnum](docs/GatewayHealthCheckTypeEnum.md)
+ - [GatewayHealthCheckWriteRequest](docs/GatewayHealthCheckWriteRequest.md)
+ - [GatewayInterface](docs/GatewayInterface.md)
+ - [GatewayLBListener](docs/GatewayLBListener.md)
+ - [GatewayLBListenerModeEnum](docs/GatewayLBListenerModeEnum.md)
+ - [GatewayLBListenerWriteRequest](docs/GatewayLBListenerWriteRequest.md)
+ - [GatewayNetwork](docs/GatewayNetwork.md)
+ - [GatewayNetworkCreateRequest](docs/GatewayNetworkCreateRequest.md)
+ - [GatewayNetworkRoleEnum](docs/GatewayNetworkRoleEnum.md)
+ - [GatewayNetworkStateEnum](docs/GatewayNetworkStateEnum.md)
+ - [GatewayOperation](docs/GatewayOperation.md)
+ - [GatewayOperationKindEnum](docs/GatewayOperationKindEnum.md)
+ - [GatewayOperationStatusEnum](docs/GatewayOperationStatusEnum.md)
+ - [GatewayPortRange](docs/GatewayPortRange.md)
+ - [GatewayPortRangeRequest](docs/GatewayPortRangeRequest.md)
+ - [GatewayPreview](docs/GatewayPreview.md)
+ - [GatewayPreviewNetwork](docs/GatewayPreviewNetwork.md)
+ - [GatewayPreviewServer](docs/GatewayPreviewServer.md)
+ - [GatewayReenrollConflict](docs/GatewayReenrollConflict.md)
+ - [GatewayReenrollRequest](docs/GatewayReenrollRequest.md)
+ - [GatewayRoute](docs/GatewayRoute.md)
+ - [GatewayRouteOutcome](docs/GatewayRouteOutcome.md)
+ - [GatewayRouteWriteRequest](docs/GatewayRouteWriteRequest.md)
+ - [GatewayStateEnum](docs/GatewayStateEnum.md)
+ - [GatewayStatus](docs/GatewayStatus.md)
  - [HTTPRoute](docs/HTTPRoute.md)
  - [HTTPRouteRequest](docs/HTTPRouteRequest.md)
  - [HardwareGeneration](docs/HardwareGeneration.md)
@@ -576,6 +682,14 @@ Class | Method | HTTP request | Description
  - [LBFirewallRuleActionEnum](docs/LBFirewallRuleActionEnum.md)
  - [LBFirewallRuleDirectionEnum](docs/LBFirewallRuleDirectionEnum.md)
  - [LBFirewallRuleRequest](docs/LBFirewallRuleRequest.md)
+ - [LBReimageAvailabilityEnum](docs/LBReimageAvailabilityEnum.md)
+ - [LBReimageOperation](docs/LBReimageOperation.md)
+ - [LBReimageOperationStateEnum](docs/LBReimageOperationStateEnum.md)
+ - [LBReimageRefused](docs/LBReimageRefused.md)
+ - [LBReimageRequest](docs/LBReimageRequest.md)
+ - [LBReimageStart](docs/LBReimageStart.md)
+ - [LBReimageStarted](docs/LBReimageStarted.md)
+ - [LBReimageStatus](docs/LBReimageStatus.md)
  - [LBUpgradeDispatchResponse](docs/LBUpgradeDispatchResponse.md)
  - [LBUpgradePlanResponse](docs/LBUpgradePlanResponse.md)
  - [LBUpgradeRequest](docs/LBUpgradeRequest.md)
@@ -611,6 +725,15 @@ Class | Method | HTTP request | Description
  - [PaginatedFloatingIPv4List](docs/PaginatedFloatingIPv4List.md)
  - [PaginatedFloatingIPv6List](docs/PaginatedFloatingIPv6List.md)
  - [PaginatedFundsLogList](docs/PaginatedFundsLogList.md)
+ - [PaginatedGatewayBackendList](docs/PaginatedGatewayBackendList.md)
+ - [PaginatedGatewayBackendPoolList](docs/PaginatedGatewayBackendPoolList.md)
+ - [PaginatedGatewayFirewallRuleList](docs/PaginatedGatewayFirewallRuleList.md)
+ - [PaginatedGatewayForwardList](docs/PaginatedGatewayForwardList.md)
+ - [PaginatedGatewayLBListenerList](docs/PaginatedGatewayLBListenerList.md)
+ - [PaginatedGatewayList](docs/PaginatedGatewayList.md)
+ - [PaginatedGatewayNetworkList](docs/PaginatedGatewayNetworkList.md)
+ - [PaginatedGatewayOperationList](docs/PaginatedGatewayOperationList.md)
+ - [PaginatedGatewayRouteList](docs/PaginatedGatewayRouteList.md)
  - [PaginatedHTTPRouteList](docs/PaginatedHTTPRouteList.md)
  - [PaginatedHostingServiceList](docs/PaginatedHostingServiceList.md)
  - [PaginatedInboundRouteList](docs/PaginatedInboundRouteList.md)
@@ -645,6 +768,14 @@ Class | Method | HTTP request | Description
  - [PatchedDomainRequest](docs/PatchedDomainRequest.md)
  - [PatchedFirewallRuleRequest](docs/PatchedFirewallRuleRequest.md)
  - [PatchedFirewallRulesSetRequest](docs/PatchedFirewallRulesSetRequest.md)
+ - [PatchedGatewayBackendPoolWriteRequest](docs/PatchedGatewayBackendPoolWriteRequest.md)
+ - [PatchedGatewayBackendWriteRequest](docs/PatchedGatewayBackendWriteRequest.md)
+ - [PatchedGatewayFirewallRuleWriteRequest](docs/PatchedGatewayFirewallRuleWriteRequest.md)
+ - [PatchedGatewayForwardWriteRequest](docs/PatchedGatewayForwardWriteRequest.md)
+ - [PatchedGatewayLBListenerWriteRequest](docs/PatchedGatewayLBListenerWriteRequest.md)
+ - [PatchedGatewayNetworkUpdateRequest](docs/PatchedGatewayNetworkUpdateRequest.md)
+ - [PatchedGatewayRouteWriteRequest](docs/PatchedGatewayRouteWriteRequest.md)
+ - [PatchedGatewayUpdateRequest](docs/PatchedGatewayUpdateRequest.md)
  - [PatchedHTTPRouteRequest](docs/PatchedHTTPRouteRequest.md)
  - [PatchedInboundRouteCreateRequest](docs/PatchedInboundRouteCreateRequest.md)
  - [PatchedK8sPortForwardRequest](docs/PatchedK8sPortForwardRequest.md)
@@ -682,6 +813,7 @@ Class | Method | HTTP request | Description
  - [PublicInterfaceRequest](docs/PublicInterfaceRequest.md)
  - [RDNSUpdateResponse](docs/RDNSUpdateResponse.md)
  - [ReasonEnum](docs/ReasonEnum.md)
+ - [RefusalEnum](docs/RefusalEnum.md)
  - [ReinstallRequest](docs/ReinstallRequest.md)
  - [ReinstallResponse](docs/ReinstallResponse.md)
  - [RemoveServerResponse](docs/RemoveServerResponse.md)
@@ -701,6 +833,9 @@ Class | Method | HTTP request | Description
  - [RetryProvision](docs/RetryProvision.md)
  - [ReverseDNS](docs/ReverseDNS.md)
  - [ReverseDNSRequest](docs/ReverseDNSRequest.md)
+ - [RouteConfigEnum](docs/RouteConfigEnum.md)
+ - [RoutePowerEnum](docs/RoutePowerEnum.md)
+ - [RouteStatus](docs/RouteStatus.md)
  - [SSHKey](docs/SSHKey.md)
  - [SSHKeyRequest](docs/SSHKeyRequest.md)
  - [SSHKeyUpdateRequest](docs/SSHKeyUpdateRequest.md)
@@ -722,6 +857,7 @@ Class | Method | HTTP request | Description
  - [ServerProductUpgradeRequest](docs/ServerProductUpgradeRequest.md)
  - [ServerPublicInterface](docs/ServerPublicInterface.md)
  - [ServerPublicNetwork](docs/ServerPublicNetwork.md)
+ - [ServerRoute](docs/ServerRoute.md)
  - [ServerTrafficResponse](docs/ServerTrafficResponse.md)
  - [ServerUpgradeResponse](docs/ServerUpgradeResponse.md)
  - [ServerUsageResponse](docs/ServerUsageResponse.md)
