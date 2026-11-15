@@ -5,6 +5,11 @@ All notable changes to the PidginHost JavaScript/TypeScript SDK are documented h
 This SDK is auto-generated from the [PidginHost API schema](https://www.pidginhost.com/api/schema/).
 Version bumps reflect schema changes, not hand-written code changes.
 
+## v0.17.1
+
+No API changes since v0.17.0. v0.17.0 was never published to npm, so this is
+the first npm release that includes its changes.
+
 ## v0.17.0
 
 ### Added

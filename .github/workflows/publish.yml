@@ -1,0 +1,45 @@
+# Publishes the JS/TS SDK to npm via trusted publishing (OIDC) -- there is no
+# npm token anywhere; npm trusts this repository, this workflow filename and
+# the `npm` environment. Renaming any of the three breaks publishing.
+#
+# This file is injected from the sdk repo (js/github/workflows/publish.yml)
+# by scripts/post-generate.sh. Every release replaces this repository's files
+# with the generated ones, so anything edited here directly is overwritten on
+# the next release -- change it in the sdk repo instead.
+name: Publish to npm
+
+on:
+  push:
+    # The GitLab publish job pushes `main` and the vX.Y.Z tag together. Trigger
+    # on the tag: only the tag marks a release.
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    # Trusted publishing only works on GitHub-hosted runners.
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      # Trusted publishing needs npm >= 11.5.1, which Node 24 ships.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Build package
+        run: |
+          npm install
+          npm run build
+
+      # No token and no --provenance: npm exchanges the OIDC identity for a
+      # short-lived credential and attaches provenance on its own. It requires
+      # package.json's repository.url to point at this repository.
+      - name: Publish to npm
+        run: npm publish --access public
