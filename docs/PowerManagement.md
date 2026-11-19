@@ -6,6 +6,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **status** | **string** |  | [default to undefined]
+**message** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -14,6 +15,7 @@ import { PowerManagement } from '@pidginhost/sdk';
 
 const instance: PowerManagement = {
     status,
+    message,
 };
 ```
 

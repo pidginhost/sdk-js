@@ -13,6 +13,7 @@ Name | Type | Description | Notes
 **used_bytes** | **number** |  | [readonly] [default to undefined]
 **object_count** | **number** |  | [readonly] [default to undefined]
 **public_read** | **boolean** |  | [readonly] [default to undefined]
+**destroy_protection** | **boolean** | Prevents the bucket from being deleted until disabled. | [readonly] [default to undefined]
 **status** | [**ResourceStatusEnum**](ResourceStatusEnum.md) |  | [readonly] [default to undefined]
 **endpoint** | **string** |  | [readonly] [default to undefined]
 **region** | **string** |  | [readonly] [default to undefined]
@@ -32,6 +33,7 @@ const instance: Bucket = {
     used_bytes,
     object_count,
     public_read,
+    destroy_protection,
     status,
     endpoint,
     region,

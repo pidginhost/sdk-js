@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 **uptime_text** | **string** |  | [default to undefined]
 **cpu** | **{ [key: string]: any; }** |  | [default to undefined]
 **memory** | **{ [key: string]: any; }** |  | [default to undefined]
+**message** | **string** | Why the status is unavailable, when it is. | [optional] [default to undefined]
 
 ## Example
 
@@ -22,6 +23,7 @@ const instance: ServerUsageResponse = {
     uptime_text,
     cpu,
     memory,
+    message,
 };
 ```
 

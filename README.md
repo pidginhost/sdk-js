@@ -1,4 +1,4 @@
-## @pidginhost/sdk@0.17.1
+## @pidginhost/sdk@0.18.0
 
 This generator creates TypeScript/JavaScript client that utilizes [axios](https://github.com/axios/axios). The generated Node module can be used in the following environments:
 
@@ -36,7 +36,7 @@ navigate to the folder of your consuming project and run one of the following co
 _published:_
 
 ```
-npm install @pidginhost/sdk@0.17.1 --save
+npm install @pidginhost/sdk@0.18.0 --save
 ```
 
 _unPublished (not recommended):_
@@ -126,6 +126,7 @@ Class | Method | HTTP request | Description
 *CloudApi* | [**cloudBucketsCredentialsRevealCreate**](docs/CloudApi.md#cloudbucketscredentialsrevealcreate) | **POST** /api/cloud/buckets/{id}/credentials/reveal/ | 
 *CloudApi* | [**cloudBucketsCredentialsRotateCreate**](docs/CloudApi.md#cloudbucketscredentialsrotatecreate) | **POST** /api/cloud/buckets/{id}/credentials/rotate/ | 
 *CloudApi* | [**cloudBucketsDestroy**](docs/CloudApi.md#cloudbucketsdestroy) | **DELETE** /api/cloud/buckets/{id}/ | 
+*CloudApi* | [**cloudBucketsDestroyProtectionCreate**](docs/CloudApi.md#cloudbucketsdestroyprotectioncreate) | **POST** /api/cloud/buckets/{id}/destroy-protection/ | 
 *CloudApi* | [**cloudBucketsList**](docs/CloudApi.md#cloudbucketslist) | **GET** /api/cloud/buckets/ | 
 *CloudApi* | [**cloudBucketsResizeCreate**](docs/CloudApi.md#cloudbucketsresizecreate) | **POST** /api/cloud/buckets/{id}/resize/ | 
 *CloudApi* | [**cloudBucketsRetrieve**](docs/CloudApi.md#cloudbucketsretrieve) | **GET** /api/cloud/buckets/{id}/ | 
@@ -248,6 +249,8 @@ Class | Method | HTTP request | Description
 *CloudApi* | [**cloudServersDetachIpv6Create**](docs/CloudApi.md#cloudserversdetachipv6create) | **POST** /api/cloud/servers/{id}/detach-ipv6/ | 
 *CloudApi* | [**cloudServersList**](docs/CloudApi.md#cloudserverslist) | **GET** /api/cloud/servers/ | 
 *CloudApi* | [**cloudServersModifyPackageCreate**](docs/CloudApi.md#cloudserversmodifypackagecreate) | **POST** /api/cloud/servers/{id}/modify-package/ | 
+*CloudApi* | [**cloudServersMonitoringRetrieve**](docs/CloudApi.md#cloudserversmonitoringretrieve) | **GET** /api/cloud/servers/{id}/monitoring/ | 
+*CloudApi* | [**cloudServersMonitoringUpdate**](docs/CloudApi.md#cloudserversmonitoringupdate) | **PUT** /api/cloud/servers/{id}/monitoring/ | 
 *CloudApi* | [**cloudServersPartialUpdate**](docs/CloudApi.md#cloudserverspartialupdate) | **PATCH** /api/cloud/servers/{id}/ | 
 *CloudApi* | [**cloudServersPowerManagementCreate**](docs/CloudApi.md#cloudserverspowermanagementcreate) | **POST** /api/cloud/servers/{id}/power-management/ | 
 *CloudApi* | [**cloudServersPowerManagementRetrieve**](docs/CloudApi.md#cloudserverspowermanagementretrieve) | **GET** /api/cloud/servers/{id}/power-management/ | 
@@ -544,6 +547,7 @@ Class | Method | HTTP request | Description
  - [Deposit](docs/Deposit.md)
  - [DepositCreateRequest](docs/DepositCreateRequest.md)
  - [DepositStatusEnum](docs/DepositStatusEnum.md)
+ - [DestroyProtection](docs/DestroyProtection.md)
  - [DestroyProtectionRequest](docs/DestroyProtectionRequest.md)
  - [DestroyProtectionResponse](docs/DestroyProtectionResponse.md)
  - [DetachIPv4Response](docs/DetachIPv4Response.md)
@@ -797,6 +801,7 @@ Class | Method | HTTP request | Description
  - [PowerActionRequest](docs/PowerActionRequest.md)
  - [PowerActionResponse](docs/PowerActionResponse.md)
  - [PowerManagement](docs/PowerManagement.md)
+ - [PowerManagementHostUnavailable](docs/PowerManagementHostUnavailable.md)
  - [PowerManagementRequest](docs/PowerManagementRequest.md)
  - [PowerManagementRequestActionEnum](docs/PowerManagementRequestActionEnum.md)
  - [PrivateNetwork](docs/PrivateNetwork.md)
@@ -851,6 +856,8 @@ Class | Method | HTTP request | Description
  - [ServerDetachIPv4Response](docs/ServerDetachIPv4Response.md)
  - [ServerDetail](docs/ServerDetail.md)
  - [ServerDetailRequest](docs/ServerDetailRequest.md)
+ - [ServerMonitoring](docs/ServerMonitoring.md)
+ - [ServerMonitoringRequest](docs/ServerMonitoringRequest.md)
  - [ServerNetworks](docs/ServerNetworks.md)
  - [ServerPrivateInterface](docs/ServerPrivateInterface.md)
  - [ServerProduct](docs/ServerProduct.md)

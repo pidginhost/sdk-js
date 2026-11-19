@@ -8,6 +8,7 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**cloudBucketsCredentialsRevealCreate**](#cloudbucketscredentialsrevealcreate) | **POST** /api/cloud/buckets/{id}/credentials/reveal/ | |
 |[**cloudBucketsCredentialsRotateCreate**](#cloudbucketscredentialsrotatecreate) | **POST** /api/cloud/buckets/{id}/credentials/rotate/ | |
 |[**cloudBucketsDestroy**](#cloudbucketsdestroy) | **DELETE** /api/cloud/buckets/{id}/ | |
+|[**cloudBucketsDestroyProtectionCreate**](#cloudbucketsdestroyprotectioncreate) | **POST** /api/cloud/buckets/{id}/destroy-protection/ | |
 |[**cloudBucketsList**](#cloudbucketslist) | **GET** /api/cloud/buckets/ | |
 |[**cloudBucketsResizeCreate**](#cloudbucketsresizecreate) | **POST** /api/cloud/buckets/{id}/resize/ | |
 |[**cloudBucketsRetrieve**](#cloudbucketsretrieve) | **GET** /api/cloud/buckets/{id}/ | |
@@ -130,6 +131,8 @@ All URIs are relative to *https://www.pidginhost.com*
 |[**cloudServersDetachIpv6Create**](#cloudserversdetachipv6create) | **POST** /api/cloud/servers/{id}/detach-ipv6/ | |
 |[**cloudServersList**](#cloudserverslist) | **GET** /api/cloud/servers/ | |
 |[**cloudServersModifyPackageCreate**](#cloudserversmodifypackagecreate) | **POST** /api/cloud/servers/{id}/modify-package/ | |
+|[**cloudServersMonitoringRetrieve**](#cloudserversmonitoringretrieve) | **GET** /api/cloud/servers/{id}/monitoring/ | |
+|[**cloudServersMonitoringUpdate**](#cloudserversmonitoringupdate) | **PUT** /api/cloud/servers/{id}/monitoring/ | |
 |[**cloudServersPartialUpdate**](#cloudserverspartialupdate) | **PATCH** /api/cloud/servers/{id}/ | |
 |[**cloudServersPowerManagementCreate**](#cloudserverspowermanagementcreate) | **POST** /api/cloud/servers/{id}/power-management/ | |
 |[**cloudServersPowerManagementRetrieve**](#cloudserverspowermanagementretrieve) | **GET** /api/cloud/servers/{id}/power-management/ | |
@@ -365,6 +368,61 @@ const { status, data } = await apiInstance.cloudBucketsDestroy(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**202** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudBucketsDestroyProtectionCreate**
+> DestroyProtection cloudBucketsDestroyProtectionCreate(destroyProtectionRequest)
+
+Enable or disable destroy protection.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    DestroyProtectionRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let id: number; //A unique integer value identifying this S3 bucket. (default to undefined)
+let destroyProtectionRequest: DestroyProtectionRequest; //
+
+const { status, data } = await apiInstance.cloudBucketsDestroyProtectionCreate(
+    id,
+    destroyProtectionRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **destroyProtectionRequest** | **DestroyProtectionRequest**|  | |
+| **id** | [**number**] | A unique integer value identifying this S3 bucket. | defaults to undefined|
+
+
+### Return type
+
+**DestroyProtection**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -6933,6 +6991,112 @@ const { status, data } = await apiInstance.cloudServersModifyPackageCreate(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **cloudServersMonitoringRetrieve**
+> ServerMonitoring cloudServersMonitoringRetrieve()
+
+Show whether monitoring alerts are on for this server.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let id: number; //A unique integer value identifying this virtual machine. (default to undefined)
+
+const { status, data } = await apiInstance.cloudServersMonitoringRetrieve(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**number**] | A unique integer value identifying this virtual machine. | defaults to undefined|
+
+
+### Return type
+
+**ServerMonitoring**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cloudServersMonitoringUpdate**
+> ServerMonitoring cloudServersMonitoringUpdate(serverMonitoringRequest)
+
+Turn monitoring alerts on or off. Only an active server can change it.
+
+### Example
+
+```typescript
+import {
+    CloudApi,
+    Configuration,
+    ServerMonitoringRequest
+} from '@pidginhost/sdk';
+
+const configuration = new Configuration();
+const apiInstance = new CloudApi(configuration);
+
+let id: number; //A unique integer value identifying this virtual machine. (default to undefined)
+let serverMonitoringRequest: ServerMonitoringRequest; //
+
+const { status, data } = await apiInstance.cloudServersMonitoringUpdate(
+    id,
+    serverMonitoringRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **serverMonitoringRequest** | **ServerMonitoringRequest**|  | |
+| **id** | [**number**] | A unique integer value identifying this virtual machine. | defaults to undefined|
+
+
+### Return type
+
+**ServerMonitoring**
+
+### Authorization
+
+[tokenAuth](../README.md#tokenAuth), [cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **cloudServersPartialUpdate**
 > ServerDetail cloudServersPartialUpdate()
 
@@ -6991,7 +7155,7 @@ const { status, data } = await apiInstance.cloudServersPartialUpdate(
 # **cloudServersPowerManagementCreate**
 > PowerManagement cloudServersPowerManagementCreate(powerManagementRequest)
 
-Server power management
+Queue a power action and return the state observed before queueing. If the state cannot be read, the action is refused with HTTP 503.
 
 ### Example
 
@@ -7040,13 +7204,14 @@ const { status, data } = await apiInstance.cloudServersPowerManagementCreate(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** |  |  -  |
+|**503** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cloudServersPowerManagementRetrieve**
 > PowerManagement cloudServersPowerManagementRetrieve()
 
-Server power management
+Read the server\'s power state and the reason if it is unavailable.
 
 ### Example
 

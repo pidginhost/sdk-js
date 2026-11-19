@@ -229,6 +229,10 @@ export interface Bucket {
     'used_bytes': number;
     'object_count': number;
     'public_read': boolean;
+    /**
+     * Prevents the bucket from being deleted until disabled.
+     */
+    'destroy_protection': boolean;
     'status': ResourceStatusEnum;
     'endpoint': string;
     'region': string;
@@ -1199,6 +1203,9 @@ export const DepositStatusEnum = {
 export type DepositStatusEnum = typeof DepositStatusEnum[keyof typeof DepositStatusEnum];
 
 
+export interface DestroyProtection {
+    'destroy_protection': boolean;
+}
 export interface DestroyProtectionRequest {
     'destroy_protection': boolean;
 }
@@ -3881,6 +3888,11 @@ export interface PowerActionResponse {
 }
 export interface PowerManagement {
     'status': string;
+    'message'?: string;
+}
+export interface PowerManagementHostUnavailable {
+    'status': string;
+    'message': string;
 }
 export interface PowerManagementRequest {
     'action': PowerManagementRequestActionEnum;
@@ -4432,6 +4444,18 @@ export interface ServerDetailRequest {
      */
     'ssh_pub_key'?: string;
 }
+export interface ServerMonitoring {
+    /**
+     * Email the account when this server stops unexpectedly or its host stops responding. Free.
+     */
+    'enabled': boolean;
+}
+export interface ServerMonitoringRequest {
+    /**
+     * Email the account when this server stops unexpectedly or its host stops responding. Free.
+     */
+    'enabled': boolean;
+}
 export interface ServerNetworks {
     'public': ServerPublicNetwork;
     'private': Array<ServerPrivateInterface>;
@@ -4543,6 +4567,10 @@ export interface ServerUsageResponse {
     'uptime_text': string;
     'cpu': { [key: string]: any; };
     'memory': { [key: string]: any; };
+    /**
+     * Why the status is unavailable, when it is.
+     */
+    'message'?: string;
 }
 export interface Service {
     'billing': ResourceBilling | null;
@@ -8162,6 +8190,49 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Enable or disable destroy protection.
+         * @param {number} id A unique integer value identifying this S3 bucket.
+         * @param {DestroyProtectionRequest} destroyProtectionRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudBucketsDestroyProtectionCreate: async (id: number, destroyProtectionRequest: DestroyProtectionRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudBucketsDestroyProtectionCreate', 'id', id)
+            // verify required parameter 'destroyProtectionRequest' is not null or undefined
+            assertParamExists('cloudBucketsDestroyProtectionCreate', 'destroyProtectionRequest', destroyProtectionRequest)
+            const localVarPath = `/api/cloud/buckets/{id}/destroy-protection/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(destroyProtectionRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -13234,6 +13305,87 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
+         * Show whether monitoring alerts are on for this server.
+         * @param {number} id A unique integer value identifying this virtual machine.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudServersMonitoringRetrieve: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudServersMonitoringRetrieve', 'id', id)
+            const localVarPath = `/api/cloud/servers/{id}/monitoring/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Turn monitoring alerts on or off. Only an active server can change it.
+         * @param {number} id A unique integer value identifying this virtual machine.
+         * @param {ServerMonitoringRequest} serverMonitoringRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudServersMonitoringUpdate: async (id: number, serverMonitoringRequest: ServerMonitoringRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cloudServersMonitoringUpdate', 'id', id)
+            // verify required parameter 'serverMonitoringRequest' is not null or undefined
+            assertParamExists('cloudServersMonitoringUpdate', 'serverMonitoringRequest', serverMonitoringRequest)
+            const localVarPath = `/api/cloud/servers/{id}/monitoring/`
+                .replace('{id}', encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication tokenAuth required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            // authentication cookieAuth required
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(serverMonitoringRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Cloud servers
          * @param {number} id A unique integer value identifying this virtual machine.
          * @param {PatchedServerDetailRequest} [patchedServerDetailRequest] 
@@ -13275,7 +13427,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
-         * Server power management
+         * Queue a power action and return the state observed before queueing. If the state cannot be read, the action is refused with HTTP 503.
          * @param {number} id A unique integer value identifying this virtual machine.
          * @param {PowerManagementRequest} powerManagementRequest 
          * @param {*} [options] Override http request option.
@@ -13318,7 +13470,7 @@ export const CloudApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
-         * Server power management
+         * Read the server\'s power state and the reason if it is unavailable.
          * @param {number} id A unique integer value identifying this virtual machine.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -14570,6 +14722,19 @@ export const CloudApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.cloudBucketsDestroy(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudBucketsDestroy']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Enable or disable destroy protection.
+         * @param {number} id A unique integer value identifying this S3 bucket.
+         * @param {DestroyProtectionRequest} destroyProtectionRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudBucketsDestroyProtectionCreate(id: number, destroyProtectionRequest: DestroyProtectionRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DestroyProtection>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudBucketsDestroyProtectionCreate(id, destroyProtectionRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudBucketsDestroyProtectionCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -16136,6 +16301,31 @@ export const CloudApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Show whether monitoring alerts are on for this server.
+         * @param {number} id A unique integer value identifying this virtual machine.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudServersMonitoringRetrieve(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServerMonitoring>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersMonitoringRetrieve(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersMonitoringRetrieve']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Turn monitoring alerts on or off. Only an active server can change it.
+         * @param {number} id A unique integer value identifying this virtual machine.
+         * @param {ServerMonitoringRequest} serverMonitoringRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async cloudServersMonitoringUpdate(id: number, serverMonitoringRequest: ServerMonitoringRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServerMonitoring>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cloudServersMonitoringUpdate(id, serverMonitoringRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CloudApi.cloudServersMonitoringUpdate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Cloud servers
          * @param {number} id A unique integer value identifying this virtual machine.
          * @param {PatchedServerDetailRequest} [patchedServerDetailRequest] 
@@ -16149,7 +16339,7 @@ export const CloudApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Server power management
+         * Queue a power action and return the state observed before queueing. If the state cannot be read, the action is refused with HTTP 503.
          * @param {number} id A unique integer value identifying this virtual machine.
          * @param {PowerManagementRequest} powerManagementRequest 
          * @param {*} [options] Override http request option.
@@ -16162,7 +16352,7 @@ export const CloudApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Server power management
+         * Read the server\'s power state and the reason if it is unavailable.
          * @param {number} id A unique integer value identifying this virtual machine.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -16580,6 +16770,16 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
          */
         cloudBucketsDestroy(id: number, options?: RawAxiosRequestConfig): AxiosPromise<BucketCancelResponse> {
             return localVarFp.cloudBucketsDestroy(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Enable or disable destroy protection.
+         * @param {number} id A unique integer value identifying this S3 bucket.
+         * @param {DestroyProtectionRequest} destroyProtectionRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudBucketsDestroyProtectionCreate(id: number, destroyProtectionRequest: DestroyProtectionRequest, options?: RawAxiosRequestConfig): AxiosPromise<DestroyProtection> {
+            return localVarFp.cloudBucketsDestroyProtectionCreate(id, destroyProtectionRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Adds :class:`~account.iam_enforcement.IAMActionPermission` as an intersection with the route\'s existing permission classes (spec §6).  Detail routes (``self.detail``) defer the role/scope check to ``has_object_permission`` so the account-scoped ``get_object`` answers 404 for foreign IDs before any role denial; every other route enforces in ``has_permission``. A detail action that never calls ``get_object`` would skip enforcement — the route probes pin the denial for each route.
@@ -17779,6 +17979,25 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.cloudServersModifyPackageCreate(id, serverProductUpgradeRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * Show whether monitoring alerts are on for this server.
+         * @param {number} id A unique integer value identifying this virtual machine.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudServersMonitoringRetrieve(id: number, options?: RawAxiosRequestConfig): AxiosPromise<ServerMonitoring> {
+            return localVarFp.cloudServersMonitoringRetrieve(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Turn monitoring alerts on or off. Only an active server can change it.
+         * @param {number} id A unique integer value identifying this virtual machine.
+         * @param {ServerMonitoringRequest} serverMonitoringRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        cloudServersMonitoringUpdate(id: number, serverMonitoringRequest: ServerMonitoringRequest, options?: RawAxiosRequestConfig): AxiosPromise<ServerMonitoring> {
+            return localVarFp.cloudServersMonitoringUpdate(id, serverMonitoringRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Cloud servers
          * @param {number} id A unique integer value identifying this virtual machine.
          * @param {PatchedServerDetailRequest} [patchedServerDetailRequest] 
@@ -17789,7 +18008,7 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.cloudServersPartialUpdate(id, patchedServerDetailRequest, options).then((request) => request(axios, basePath));
         },
         /**
-         * Server power management
+         * Queue a power action and return the state observed before queueing. If the state cannot be read, the action is refused with HTTP 503.
          * @param {number} id A unique integer value identifying this virtual machine.
          * @param {PowerManagementRequest} powerManagementRequest 
          * @param {*} [options] Override http request option.
@@ -17799,7 +18018,7 @@ export const CloudApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.cloudServersPowerManagementCreate(id, powerManagementRequest, options).then((request) => request(axios, basePath));
         },
         /**
-         * Server power management
+         * Read the server\'s power state and the reason if it is unavailable.
          * @param {number} id A unique integer value identifying this virtual machine.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -18128,6 +18347,17 @@ export class CloudApi extends BaseAPI {
      */
     public cloudBucketsDestroy(id: number, options?: RawAxiosRequestConfig) {
         return CloudApiFp(this.configuration).cloudBucketsDestroy(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Enable or disable destroy protection.
+     * @param {number} id A unique integer value identifying this S3 bucket.
+     * @param {DestroyProtectionRequest} destroyProtectionRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudBucketsDestroyProtectionCreate(id: number, destroyProtectionRequest: DestroyProtectionRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudBucketsDestroyProtectionCreate(id, destroyProtectionRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -19450,6 +19680,27 @@ export class CloudApi extends BaseAPI {
     }
 
     /**
+     * Show whether monitoring alerts are on for this server.
+     * @param {number} id A unique integer value identifying this virtual machine.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudServersMonitoringRetrieve(id: number, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersMonitoringRetrieve(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Turn monitoring alerts on or off. Only an active server can change it.
+     * @param {number} id A unique integer value identifying this virtual machine.
+     * @param {ServerMonitoringRequest} serverMonitoringRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public cloudServersMonitoringUpdate(id: number, serverMonitoringRequest: ServerMonitoringRequest, options?: RawAxiosRequestConfig) {
+        return CloudApiFp(this.configuration).cloudServersMonitoringUpdate(id, serverMonitoringRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * Cloud servers
      * @param {number} id A unique integer value identifying this virtual machine.
      * @param {PatchedServerDetailRequest} [patchedServerDetailRequest] 
@@ -19461,7 +19712,7 @@ export class CloudApi extends BaseAPI {
     }
 
     /**
-     * Server power management
+     * Queue a power action and return the state observed before queueing. If the state cannot be read, the action is refused with HTTP 503.
      * @param {number} id A unique integer value identifying this virtual machine.
      * @param {PowerManagementRequest} powerManagementRequest 
      * @param {*} [options] Override http request option.
@@ -19472,7 +19723,7 @@ export class CloudApi extends BaseAPI {
     }
 
     /**
-     * Server power management
+     * Read the server\'s power state and the reason if it is unavailable.
      * @param {number} id A unique integer value identifying this virtual machine.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
